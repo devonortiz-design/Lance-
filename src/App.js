@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx";
+import { saveAs } from "file-saver";
 
 const SUPABASE_URL = "https://dtqmzdteomgjresjfrog.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0cW16ZHRlb21nanJlc2pmcm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MTU1NDYsImV4cCI6MjA4NzQ5MTU0Nn0.C6PQfoGgx4Y6g0f26qlI6WwAaY46Mde6SUmMIUfBjSw";
@@ -129,6 +131,33 @@ Categories: ministry, teaching, personal, book, leadership, appdev, dnd, general
 Only flag memory when it genuinely matters. The goal is to know Pastor, not collect data.${mem}${ses}`;
 }
 
+function buildDocx(text) {
+  const lines = text.split("\n"), children = [];
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t) { children.push(new Paragraph({ children: [new TextRun("")] })); continue; }
+    if (/^# /.test(t)) { children.push(new Paragraph({ text: t.replace(/^# /,""), heading: HeadingLevel.HEADING_1, spacing:{before:240,after:120} })); }
+    else if (/^## /.test(t)) { children.push(new Paragraph({ text: t.replace(/^## /,""), heading: HeadingLevel.HEADING_2, spacing:{before:200,after:80} })); }
+    else if (/^### /.test(t)) { children.push(new Paragraph({ text: t.replace(/^### /,""), heading: HeadingLevel.HEADING_3, spacing:{before:160,after:60} })); }
+    else if (/^[*-] /.test(t)) { children.push(new Paragraph({ children: parseInline(t.replace(/^[*-] /,"")), bullet:{level:0}, spacing:{after:60} })); }
+    else { children.push(new Paragraph({ children: parseInline(t), spacing:{after:80} })); }
+  }
+  return new Document({ sections:[{ properties:{}, children }] });
+}
+function parseInline(text) {
+  const runs=[]; const re=/\*\*(.+?)\*\*/g; let last=0,m;
+  while((m=re.exec(text))!==null){
+    if(m.index>last) runs.push(new TextRun({text:text.slice(last,m.index)}));
+    runs.push(new TextRun({text:m[1],bold:true})); last=m.index+m[0].length;
+  }
+  if(last<text.length) runs.push(new TextRun({text:text.slice(last)}));
+  return runs.length>0?runs:[new TextRun({text})];
+}
+async function downloadDocx(text,filename) {
+  const blob=await Packer.toBlob(buildDocx(text));
+  saveAs(blob,filename||"lance-document.docx");
+}
+
 const LANES = [
   { id:"all",        label:"All Lanes",        icon:"◈" },
   { id:"ministry",  label:"Church & Ministry", icon:"⛪" },
@@ -242,6 +271,13 @@ function StopIcon(){
   );
 }
 
+
+function DownloadIcon(){
+  return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+    <path d="M6.5 1v7M3.5 5.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M2 10h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>);
+}
 function ChevronDown(){
   return(
     <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -479,6 +515,7 @@ export default function App(){
                   <button className={`speak-btn${speakingIdx===i?" active":""}`} onClick={()=>{ speakingIdx===i?stopSpeaking():speakMessage(m.content,i); }} style={{color:speakingIdx===i?"#82b1ff":"rgba(255,255,255,0.6)",marginLeft:"4px"}} title={speakingIdx===i?"Stop":"Hear Lance"}>
                     <SpeakerIcon active={speakingIdx===i} spinning={loadingIdx===i}/>
                   </button>
+                  <button className="speak-btn" onClick={()=>downloadDocx(m.content)} style={{color:"rgba(255,255,255,0.6)",marginLeft:"2px"}} title="Download as Word doc"><DownloadIcon/></button>
                 )}
               </div>
             </div>
