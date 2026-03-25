@@ -182,7 +182,23 @@ export default function App() {
   const handleDownload = async (text, idx) => {
     try {
       setDocxIdx(idx);
-      await downloadDocx(text);
+      // Inline docx download — calls Edge Function directly
+      const DOCX = "https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-docx";
+      const res = await fetch(DOCX, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, filename: "lance-document" }),
+      });
+      if (!res.ok) throw new Error("Docx failed: " + res.status);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "lance-document.docx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (e) {
       alert("Download failed: " + e.message);
     }
