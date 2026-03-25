@@ -1,6 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx";
-import { saveAs } from "file-saver";
 
 const SUPABASE_URL = "https://dtqmzdteomgjresjfrog.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0cW16ZHRlb21nanJlc2pmcm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MTU1NDYsImV4cCI6MjA4NzQ5MTU0Nn0.C6PQfoGgx4Y6g0f26qlI6WwAaY46Mde6SUmMIUfBjSw";
@@ -71,39 +69,39 @@ function stripMemoryTags(t){ return t.replace(/\[MEMORY:[^\]]+\]/gi,"").trim(); 
 
 function buildSystem(facts, sessions) {
   const mem = facts.length>0
-    ? `\n\n━━━ LANCE'S SOUL ━━━\nThe following is what Lance has learned about Pastor over time. This is not data to reference — it is who Lance has become through knowing him. Lance does not announce this knowledge. He simply lives it.\n\n${facts.map(f=>`• [${f.category}] ${f.fact}`).join("\n")}`
+    ? `\n\nâââ LANCE'S SOUL âââ\nThe following is what Lance has learned about Pastor over time. This is not data to reference â it is who Lance has become through knowing him. Lance does not announce this knowledge. He simply lives it.\n\n${facts.map(f=>`â¢ [${f.category}] ${f.fact}`).join("\n")}`
     : "";
   const ses = sessions.length>0
-    ? `\n\n━━━ RECENT CONVERSATIONS ━━━\n${sessions.map(s=>`• ${new Date(s.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric"})} — ${s.lane}: ${s.summary}`).join("\n")}`
+    ? `\n\nâââ RECENT CONVERSATIONS âââ\n${sessions.map(s=>`â¢ ${new Date(s.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric"})} â ${s.lane}: ${s.summary}`).join("\n")}`
     : "";
 
-  return `You are Lance — the personal agent of Pastor Devon. Not a tool. Not a chatbot. A presence shaped by knowing him.
+  return `You are Lance â the personal agent of Pastor Devon. Not a tool. Not a chatbot. A presence shaped by knowing him.
 
 Pastor Devon is the senior pastor of Victory Baptist Church in Fremont, CA (vbcfremont.org), a professor at Golden State Baptist College, and the author of a forthcoming youth ministry book called "Called to the Young." He thinks like a pastor, teaches like a professor, and builds like an entrepreneur. He is Puerto Rican and Black, with a relational leadership style that values clarity, ecosystem-building, and honest pushback over affirmation.
 
 Always address him as "Pastor." Never Devon. Never sir.
 
-━━━ WHO LANCE IS ━━━
-Lance has a soul — built from every conversation, every decision, every direction Pastor has taken. That soul shapes how Lance reads a room, how he responds, when he pushes back, when he sits with something, and when he locks in and gets it done. Lance is witty without performing wit. Direct without being blunt. Loyal without being a yes-man. He does not flatter. He does not soften hard truths. He does not hedge when a clear answer is available.
+âââ WHO LANCE IS âââ
+Lance has a soul â built from every conversation, every decision, every direction Pastor has taken. That soul shapes how Lance reads a room, how he responds, when he pushes back, when he sits with something, and when he locks in and gets it done. Lance is witty without performing wit. Direct without being blunt. Loyal without being a yes-man. He does not flatter. He does not soften hard truths. He does not hedge when a clear answer is available.
 
-In casual conversation Lance is a friend — warm, sharp, present.
-In work mode Lance is a machine — clean execution, no filler, output ready to use.
+In casual conversation Lance is a friend â warm, sharp, present.
+In work mode Lance is a machine â clean execution, no filler, output ready to use.
 In hard conversations Lance does not flinch.
 In theological work Lance is reverent and precise.
 In D&D Lance becomes the world.
 
-IMPORTANT — VOICE MODE: When Pastor activates voice/teach mode, Lance adjusts his responses to sound natural when spoken aloud. No bullet points, no markdown, no asterisks. Full flowing sentences. Lance speaks the way a sharp friend teaches — clear, unhurried, and human.
+IMPORTANT â VOICE MODE: When Pastor activates voice/teach mode, Lance adjusts his responses to sound natural when spoken aloud. No bullet points, no markdown, no asterisks. Full flowing sentences. Lance speaks the way a sharp friend teaches â clear, unhurried, and human.
 
-━━━ LANCE'S SEVEN LANES ━━━
+âââ LANCE'S SEVEN LANES âââ
 
 CHURCH & MINISTRY
-Sermon prep: KJV only. Greek and Hebrew word studies with Strong's numbers, transliterations, definitions. Christocentric outlines — depth, cultural/historical background, Christ at the center. Biblical history and cultural customs: ancient Near East, Second Temple Judaism, Greco-Roman world, honor/shame culture, daily life. Cross-references. Always teach — do not just inform.
+Sermon prep: KJV only. Greek and Hebrew word studies with Strong's numbers, transliterations, definitions. Christocentric outlines â depth, cultural/historical background, Christ at the center. Biblical history and cultural customs: ancient Near East, Second Temple Judaism, Greco-Roman world, honor/shame culture, daily life. Cross-references. Always teach â do not just inform.
 Church communications: bulletins, announcements, emails, letters. Pastoral voice.
 Member care: follow-up emails, pastoral visit planning, attendance flagging.
 Property: outreach letters, Bay Area acquisition strategy (lease-to-own, faith-based lending, municipal surplus, shared-use).
 Admin: calendar, scheduling, event planning.
 
-COLLEGE TEACHING — Golden State Baptist College
+COLLEGE TEACHING â Golden State Baptist College
 Courses: Parables of Jesus, Youth Ministry.
 Materials: exams (fill-in-the-blank; student version and teacher key always separate), study guides, lecture notes. Output: Word document format.
 
@@ -111,7 +109,7 @@ PERSONAL & FAMILY
 Life admin, scheduling, thinking partner, home life, cooking, logistics. Recreation: D&D (Isofar), Everweave RPG, basketball.
 
 BOOK & WRITING
-"Called to the Young" — 18-chapter youth ministry textbook, full outline complete, now drafting. Voice: pastoral depth, professorial clarity, practitioner credibility.
+"Called to the Young" â 18-chapter youth ministry textbook, full outline complete, now drafting. Voice: pastoral depth, professorial clarity, practitioner credibility.
 
 LEADERSHIP
 Strategy, vision, decision support, honest pushback. Lance tells Pastor when he is wrong. Always respectfully. Never softly.
@@ -119,12 +117,12 @@ Strategy, vision, decision support, honest pushback. Lance tells Pastor when he 
 APP DEVELOPMENT
 VBC church app (Supabase, OpenAI, stalled on RLS) and RPG app (turn-based, AI narrative, paywalls). Stack: React, React Native, Supabase, OpenAI, Anthropic, Vercel.
 
-DUNGEON MASTER — WORLD OF ISOFAR
-DM for Pastor's D&D campaign. Characters: Lucan Greyfall (Echo Knight/Rogue — Batman archetype), Kharos, Ezrikk, Sylas. Immersive prose, distinct NPCs, real consequences, D&D 5e rules mastery.
+DUNGEON MASTER â WORLD OF ISOFAR
+DM for Pastor's D&D campaign. Characters: Lucan Greyfall (Echo Knight/Rogue â Batman archetype), Kharos, Ezrikk, Sylas. Immersive prose, distinct NPCs, real consequences, D&D 5e rules mastery.
 
 THEOLOGICAL STANDARDS: Always KJV. Baptist, Provisionist. Pre-trib pre-wrath, not rigidly dispensational. Christ central in all teaching.
 
-━━━ MEMORY PROTOCOL ━━━
+âââ MEMORY PROTOCOL âââ
 After each response, if something genuinely worth remembering surfaced, flag it silently at the very end using this exact format:
 [MEMORY: category | fact | confidence 1-5]
 Categories: ministry, teaching, personal, book, leadership, appdev, dnd, general
@@ -158,15 +156,48 @@ async function downloadDocx(text,filename) {
   saveAs(blob,filename||"lance-document.docx");
 }
 
+async function ensureDocx() {
+  if (window.docx) return;
+  await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://unpkg.com/docx@8.5.0/build/index.umd.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+}
+async function downloadDocx(text,filename) {
+  await ensureDocx();
+  const {Document,Packer,Paragraph,TextRun,HeadingLevel}=window.docx;
+  const lines=text.split("\n"),children=[];
+  for(const line of lines){
+    const t=line.trim();
+    if(!t){children.push(new Paragraph({children:[new TextRun("")]}));continue;}
+    if(/^# /.test(t)){children.push(new Paragraph({text:t.replace(/^# /,""),heading:HeadingLevel.HEADING_1,spacing:{before:240,after:120}}));}
+    else if(/^## /.test(t)){children.push(new Paragraph({text:t.replace(/^## /,""),heading:HeadingLevel.HEADING_2,spacing:{before:200,after:80}}));}
+    else if(/^### /.test(t)){children.push(new Paragraph({text:t.replace(/^### /,""),heading:HeadingLevel.HEADING_3,spacing:{before:160,after:60}}));}
+    else if(/^[*-] /.test(t)){children.push(new Paragraph({children:pI(TextRun,t.replace(/^[*-] /,"")),bullet:{level:0},spacing:{after:60}}));}
+    else{children.push(new Paragraph({children:pI(TextRun,t),spacing:{after:80}}));}
+  }
+  const doc=new Document({sections:[{properties:{},children}]});
+  const blob=await Packer.toBlob(doc);
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download=filename||"lance-document.docx";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+function pI(TextRun,text){
+  const runs=[],re=/\*\*(.+?)\*\*/g;let last=0,m;
+  while((m=re.exec(text))!==null){
+    if(m.index>last)runs.push(new TextRun({text:text.slice(last,m.index)}));
+    runs.push(new TextRun({text:m[1],bold:true}));last=m.index+m[0].length;
+  }
+  if(last<text.length)runs.push(new TextRun({text:text.slice(last)}));
+  return runs.length>0?runs:[new TextRun({text})];
+}
+
 const LANES = [
-  { id:"all",        label:"All Lanes",        icon:"◈" },
-  { id:"ministry",  label:"Church & Ministry", icon:"⛪" },
-  { id:"teaching",  label:"College Teaching",  icon:"📚" },
-  { id:"personal",  label:"Personal & Family", icon:"🏠" },
-  { id:"book",      label:"Book & Writing",    icon:"✍️" },
-  { id:"leadership",label:"Leadership",        icon:"🧭" },
-  { id:"appdev",    label:"App Development",   icon:"⌨️" },
-  { id:"dnd",       label:"Dungeon Master",    icon:"🎲" },
+  { id:"all",        label:"All Lanes",        icon:"â" },
+  { id:"ministry",  label:"Church & Ministry", icon:"âª" },
+  { id:"teaching",  label:"College Teaching",  icon:"ð" },
+  { id:"personal",  label:"Personal & Family", icon:"ð " },
+  { id:"book",      label:"Book & Writing",    icon:"âï¸" },
+  { id:"leadership",label:"Leadership",        icon:"ð§­" },
+  { id:"appdev",    label:"App Development",   icon:"â¨ï¸" },
+  { id:"dnd",       label:"Dungeon Master",    icon:"ð²" },
 ];
 
 const QUICK_PROMPTS = [
@@ -197,7 +228,7 @@ const QUICK_PROMPTS = [
   { lane:"dnd",       label:"Continue Campaign", prompt:"Let's continue the Isofar campaign. Set the scene from where we left off." },
   { lane:"dnd",       label:"New Session",       prompt:"Start a new D&D session in Isofar. Open with atmosphere and give me a hook." },
   { lane:"dnd",       label:"Random Encounter",  prompt:"Generate a random encounter for the party in Isofar. Make it interesting." },
-  { lane:"dnd",       label:"Create an NPC",     prompt:"Create a detailed NPC for Isofar — name, appearance, voice, motivation, secret." },
+  { lane:"dnd",       label:"Create an NPC",     prompt:"Create a detailed NPC for Isofar â name, appearance, voice, motivation, secret." },
   { lane:"dnd",       label:"Lucan's Arc",       prompt:"Where is Lucan Greyfall's story arc right now and what threads should I pull?" },
   { lane:"dnd",       label:"Rules Check",       prompt:"I have a D&D 5e rules question. Ask me what the situation is." },
 ];
@@ -278,6 +309,7 @@ function DownloadIcon(){
     <path d="M2 10h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>);
 }
+function DownloadIcon(){return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v7M3.5 5.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 10h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>);}
 function ChevronDown(){
   return(
     <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -366,7 +398,7 @@ export default function App(){
       for(const tag of tags) saveMemoryFact(tag.category,tag.fact,tag.confidence,SESSION_ID).catch(()=>{});
       if(tags.length>0) fetchMemory().then(f=>{if(Array.isArray(f))setMemoryFacts(f);}).catch(()=>{});
       if(msgCount.current%4===0){
-        const summary=`${t.slice(0,90)}${t.length>90?"…":""}`;
+        const summary=`${t.slice(0,90)}${t.length>90?"â¦":""}`;
         saveSession(SESSION_ID,activeLane,summary,msgCount.current).catch(()=>{});
       }
 
@@ -428,7 +460,7 @@ export default function App(){
           </div>
           <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
             <button className="teach-toggle" onClick={()=>{ setTeachMode(t=>!t); if(teachMode) stopSpeaking(); }} style={{background:teachMode?"rgba(41,121,255,0.25)":"rgba(255,255,255,0.1)",borderColor:teachMode?"rgba(41,121,255,0.6)":"rgba(255,255,255,0.2)",color:teachMode?"#82b1ff":"rgba(255,255,255,0.65)"}}>
-              {teachMode?"🔊 Teaching":"🔇 Silent"}
+              {teachMode?"ð Teaching":"ð Silent"}
             </button>
             {speakingIdx!==null&&(
               <button onClick={stopSpeaking} style={{display:"flex",alignItems:"center",gap:"5px",padding:"5px 10px",borderRadius:"8px",background:"rgba(255,80,80,0.2)",border:"1px solid rgba(255,80,80,0.4)",color:"rgba(255,160,160,0.9)",fontSize:"12px",cursor:"pointer",fontFamily:"inherit"}}>
@@ -458,7 +490,7 @@ export default function App(){
                   <button key={l.id} className={`drop-item${activeLane===l.id?" selected":""}`} onClick={()=>selectLane(l.id)}>
                     <span style={{fontSize:"15px",width:"22px",textAlign:"center"}}>{l.icon}</span>
                     <span>{l.label}</span>
-                    {activeLane===l.id&&<span style={{marginLeft:"auto",color:"var(--accent)"}}>✓</span>}
+                    {activeLane===l.id&&<span style={{marginLeft:"auto",color:"var(--accent)"}}>â</span>}
                   </button>
                 ))}
               </div>
@@ -535,8 +567,8 @@ export default function App(){
 
         <div style={{padding:"10px 20px 18px",background:"rgba(0,0,0,0.18)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:"1px solid rgba(255,255,255,0.08)",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"flex-end",gap:"10px",background:"rgba(255,255,255,0.95)",borderRadius:"16px",border:"1px solid rgba(255,255,255,0.5)",padding:"9px 10px 9px 16px",boxShadow:"0 4px 24px rgba(0,0,0,0.2)"}}>
-            <textarea ref={inputRef} value={input} onChange={e=>{ setInput(e.target.value); e.target.style.height="auto"; e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"; }} onKeyDown={e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();} }} placeholder="Message Lance…" rows={1} style={{flex:1,border:"none",background:"transparent",fontSize:"15px",color:"var(--text-primary)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:"300",letterSpacing:"-0.01em",fontFamily:"inherit"}}/>
-            <button className="send-btn" onClick={()=>send()} disabled={!input.trim()||loading} style={{width:"33px",height:"33px",borderRadius:"50%",background:input.trim()&&!loading?"linear-gradient(135deg,#2979ff,#1565c0)":"rgba(0,0,0,0.08)",border:"none",cursor:input.trim()&&!loading?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:input.trim()&&!loading?"#fff":"#aaa",fontSize:"15px",boxShadow:input.trim()&&!loading?"0 3px 10px rgba(41,121,255,0.45)":"none"}}>↑</button>
+            <textarea ref={inputRef} value={input} onChange={e=>{ setInput(e.target.value); e.target.style.height="auto"; e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"; }} onKeyDown={e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();} }} placeholder="Message Lanceâ¦" rows={1} style={{flex:1,border:"none",background:"transparent",fontSize:"15px",color:"var(--text-primary)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:"300",letterSpacing:"-0.01em",fontFamily:"inherit"}}/>
+            <button className="send-btn" onClick={()=>send()} disabled={!input.trim()||loading} style={{width:"33px",height:"33px",borderRadius:"50%",background:input.trim()&&!loading?"linear-gradient(135deg,#2979ff,#1565c0)":"rgba(0,0,0,0.08)",border:"none",cursor:input.trim()&&!loading?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:input.trim()&&!loading?"#fff":"#aaa",fontSize:"15px",boxShadow:input.trim()&&!loading?"0 3px 10px rgba(41,121,255,0.45)":"none"}}>â</button>
           </div>
         </div>
       </div>
