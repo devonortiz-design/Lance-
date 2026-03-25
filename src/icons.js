@@ -2,23 +2,27 @@ import React from "react";
 
 export function LanceLogo({ size = 30 }) {
   const u = `lg${size}`;
+  const gold1 = "#C9A84C";
+  const gold2 = "#e8c96a";
+  const goldDark = "#8a6e2a";
   return (
-    <svg width={size} height={size} viewBox="0 0 36 36" fill="none">
+    <svg width={size} height={size} viewBox="0 0 40 48" fill="none">
       <defs>
-        <linearGradient id={`${u}a`} x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#2979ff"/>
-          <stop offset="100%" stopColor="#0d47a1"/>
-        </linearGradient>
-        <linearGradient id={`${u}b`} x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#82b1ff"/>
-          <stop offset="100%" stopColor="#2979ff"/>
+        <linearGradient id={`${u}g`} x1="20" y1="0" x2="20" y2="48" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={gold2}/>
+          <stop offset="100%" stopColor={goldDark}/>
         </linearGradient>
       </defs>
-      <path d="M18 2L4 7.5V18C4 25.5 10.5 31.5 18 34C25.5 31.5 32 25.5 32 18V7.5L18 2Z" fill={`url(#${u}a)`}/>
-      <path d="M18 5L7 9.8V18C7 24 12 29.2 18 31.5C24 29.2 29 24 29 18V9.8L18 5Z" fill={`url(#${u}b)`} opacity="0.22"/>
-      <line x1="24" y1="9" x2="10" y2="27" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
-      <polygon points="24,9 21,10.5 22.5,13" fill="white" opacity="0.95"/>
-      <line x1="13" y1="22" x2="19" y2="22" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.9"/>
+      {/* Outer left edge of spear */}
+      <path d="M20 2 L6 42 L20 34 Z" fill={`url(#${u}g)`} opacity="0.9"/>
+      {/* Outer right edge of spear */}
+      <path d="M20 2 L34 42 L20 34 Z" fill={`url(#${u}g)`} opacity="0.7"/>
+      {/* Inner cutout — left inner blade */}
+      <path d="M20 10 L12 40 L20 34 Z" fill="#0d1321" opacity="0.5"/>
+      {/* Inner cutout — right inner blade */}
+      <path d="M20 10 L28 40 L20 34 Z" fill="#0d1321" opacity="0.3"/>
+      {/* Center spine line */}
+      <line x1="20" y1="2" x2="20" y2="44" stroke={gold1} strokeWidth="1.2" opacity="0.6"/>
     </svg>
   );
 }
