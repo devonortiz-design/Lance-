@@ -1,4 +1,4 @@
-import { MODEL, VOICE_URL, DOCX_URL } from "./config";
+import { MODEL, VOICE_URL, DOCX_URL, SEARCH_URL } from "./config";
 import { buildSystem } from "./system";
 
 // ── Claude ────────────────────────────────────────────────────────────────────
@@ -114,6 +114,26 @@ export async function readFile(file) {
       reader.readAsText(file);
     }
   });
+}
+
+
+// ── Web Search ────────────────────────────────────────────────────────────────
+export async function webSearch(query, count = 5) {
+  const res = await fetch(SEARCH_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, count }),
+  });
+  if (!res.ok) throw new Error("Search failed");
+  return res.json();
+}
+
+// Format search results for Claude
+export function formatSearchResults(data) {
+  if (!data.results || data.results.length === 0) return "No results found.";
+  return data.results.map((r, i) =>
+    `[${i + 1}] ${r.title}\n${r.url}\n${r.description || ""}${r.age ? ` (${r.age})` : ""}`
+  ).join("\n\n");
 }
 
 // ── Gmail via Claude ──────────────────────────────────────────────────────────
