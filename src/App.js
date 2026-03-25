@@ -129,64 +129,47 @@ Categories: ministry, teaching, personal, book, leadership, appdev, dnd, general
 Only flag memory when it genuinely matters. The goal is to know Pastor, not collect data.${mem}${ses}`;
 }
 
-function buildDocx(text) {
-  const lines = text.split("\n"), children = [];
-  for (const line of lines) {
-    const t = line.trim();
-    if (!t) { children.push(new Paragraph({ children: [new TextRun("")] })); continue; }
-    if (/^# /.test(t)) { children.push(new Paragraph({ text: t.replace(/^# /,""), heading: HeadingLevel.HEADING_1, spacing:{before:240,after:120} })); }
-    else if (/^## /.test(t)) { children.push(new Paragraph({ text: t.replace(/^## /,""), heading: HeadingLevel.HEADING_2, spacing:{before:200,after:80} })); }
-    else if (/^### /.test(t)) { children.push(new Paragraph({ text: t.replace(/^### /,""), heading: HeadingLevel.HEADING_3, spacing:{before:160,after:60} })); }
-    else if (/^[*-] /.test(t)) { children.push(new Paragraph({ children: parseInline(t.replace(/^[*-] /,"")), bullet:{level:0}, spacing:{after:60} })); }
-    else { children.push(new Paragraph({ children: parseInline(t), spacing:{after:80} })); }
-  }
-  return new Document({ sections:[{ properties:{}, children }] });
-}
-function parseInline(text) {
-  const runs=[]; const re=/\*\*(.+?)\*\*/g; let last=0,m;
-  while((m=re.exec(text))!==null){
-    if(m.index>last) runs.push(new TextRun({text:text.slice(last,m.index)}));
-    runs.push(new TextRun({text:m[1],bold:true})); last=m.index+m[0].length;
-  }
-  if(last<text.length) runs.push(new TextRun({text:text.slice(last)}));
-  return runs.length>0?runs:[new TextRun({text})];
-}
-async function downloadDocx(text,filename) {
-  const blob=await Packer.toBlob(buildDocx(text));
-  saveAs(blob,filename||"lance-document.docx");
-}
-
 async function ensureDocx() {
   if (window.docx) return;
-  await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://unpkg.com/docx@8.5.0/build/index.umd.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+  await new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/docx@8.5.0/build/index.umd.min.js';
+    s.onload = res;
+    s.onerror = rej;
+    document.head.appendChild(s);
+  });
 }
-async function downloadDocx(text,filename) {
+async function downloadDocx(text, filename) {
   await ensureDocx();
-  const {Document,Packer,Paragraph,TextRun,HeadingLevel}=window.docx;
-  const lines=text.split("\n"),children=[];
-  for(const line of lines){
-    const t=line.trim();
-    if(!t){children.push(new Paragraph({children:[new TextRun("")]}));continue;}
-    if(/^# /.test(t)){children.push(new Paragraph({text:t.replace(/^# /,""),heading:HeadingLevel.HEADING_1,spacing:{before:240,after:120}}));}
-    else if(/^## /.test(t)){children.push(new Paragraph({text:t.replace(/^## /,""),heading:HeadingLevel.HEADING_2,spacing:{before:200,after:80}}));}
-    else if(/^### /.test(t)){children.push(new Paragraph({text:t.replace(/^### /,""),heading:HeadingLevel.HEADING_3,spacing:{before:160,after:60}}));}
-    else if(/^[*-] /.test(t)){children.push(new Paragraph({children:pI(TextRun,t.replace(/^[*-] /,"")),bullet:{level:0},spacing:{after:60}}));}
-    else{children.push(new Paragraph({children:pI(TextRun,t),spacing:{after:80}}));}
-  }
-  const doc=new Document({sections:[{properties:{},children}]});
-  const blob=await Packer.toBlob(doc);
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");a.href=url;a.download=filename||"lance-document.docx";
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-}
-function pI(TextRun,text){
-  const runs=[],re=/\*\*(.+?)\*\*/g;let last=0,m;
-  while((m=re.exec(text))!==null){
-    if(m.index>last)runs.push(new TextRun({text:text.slice(last,m.index)}));
-    runs.push(new TextRun({text:m[1],bold:true}));last=m.index+m[0].length;
-  }
-  if(last<text.length)runs.push(new TextRun({text:text.slice(last)}));
-  return runs.length>0?runs:[new TextRun({text})];
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel } = window.docx;
+  const children = [];
+  text.split('\n').forEach(function(line) {
+    const t = line.trim();
+    if (!t) { children.push(new Paragraph({ text: '' })); return; }
+    if (t.startsWith('# ')) {
+      children.push(new Paragraph({ text: t.slice(2), heading: HeadingLevel.HEADING_1, spacing: { before: 240, after: 120 } }));
+    } else if (t.startsWith('## ')) {
+      children.push(new Paragraph({ text: t.slice(3), heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 80 } }));
+    } else if (t.startsWith('### ')) {
+      children.push(new Paragraph({ text: t.slice(4), heading: HeadingLevel.HEADING_3, spacing: { before: 160, after: 60 } }));
+    } else if (t.startsWith('* ') || t.startsWith('- ')) {
+      children.push(new Paragraph({ children: [new TextRun({ text: t.slice(2) })], bullet: { level: 0 }, spacing: { after: 60 } }));
+    } else {
+      const parts = t.split('**');
+      const runs = parts.map(function(p, i) { return new TextRun({ text: p, bold: i % 2 === 1 }); });
+      children.push(new Paragraph({ children: runs, spacing: { after: 80 } }));
+    }
+  });
+  const doc = new Document({ sections: [{ properties: {}, children: children }] });
+  const blob = await Packer.toBlob(doc);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename || 'lance-document.docx';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 const LANES = [
@@ -302,13 +285,6 @@ function StopIcon(){
   );
 }
 
-
-function DownloadIcon(){
-  return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-    <path d="M6.5 1v7M3.5 5.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M2 10h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>);
-}
 function DownloadIcon(){return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v7M3.5 5.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 10h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>);}
 function ChevronDown(){
   return(
