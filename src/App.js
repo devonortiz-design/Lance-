@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { callClaude, speak, downloadDocx, readFile, detectDocumentContent } from "./api";
+import { callClaude, speak, downloadDocx, readFile, detectDocumentContent, webSearch, formatSearchResults } from "./api";
 import { loadMemory, loadRecentSessions, saveMessage, saveMemoryFact, saveSession, parseMemoryTags, stripMemoryTags } from "./memory";
 import { SESSION_ID } from "./config";
 import { LanceLogo, SendIcon, SpeakerIcon, StopIcon, DownloadIcon, AttachIcon, CloseIcon } from "./icons";
@@ -118,7 +118,26 @@ export default function App() {
     if (t) saveMessage("user", t).catch(() => {});
 
     try {
-      const raw   = await callClaude(next, memoryFacts, recentSessions, filesToSend);
+      // Auto-search: if message looks like it needs current info, search first
+      let searchContext = "";
+      const needsSearch = /\b(latest|current|recent|today|news|2024|2025|2026|price|weather|who is|what is|how much|when did|search|look up|find out|research)\b/i.test(t);
+      if (needsSearch && t.length > 10) {
+        try {
+          const searchData = await webSearch(t, 5);
+          if (searchData.results && searchData.results.length > 0) {
+            searchContext = "\n\n[WEB SEARCH RESULTS for: " + t + "]\n" + formatSearchResults(searchData) + "\n[END SEARCH RESULTS]";
+          }
+        } catch (searchErr) {
+          // Search failed silently — Lance continues without it
+        }
+      }
+
+      // Inject search results into the message if we got them
+      const messagesWithSearch = searchContext
+        ? [...next.slice(0, -1), { role: "user", content: (next[next.length-1].content || "") + searchContext }]
+        : next;
+
+      const raw   = await callClaude(messagesWithSearch, memoryFacts, recentSessions, filesToSend);
       const tags  = parseMemoryTags(raw);
       const clean = stripMemoryTags(raw);
       const idx   = next.length;
