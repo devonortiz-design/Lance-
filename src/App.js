@@ -26,6 +26,25 @@ textarea:focus,button:focus{outline:none;}
 .file-chip button:hover{color:#fff;}
 `;
 
+// ── Render markdown-free text for display ────────────────────────────────────
+function renderText(text) {
+  return text
+    .replace(/#{1,6} /g, "")           // remove heading markers
+    .replace(/\*\*(.*?)\*\*/g, "$1")   // remove bold
+    .replace(/\*(.*?)\*/g, "$1")       // remove italic
+    .replace(/__(.*?)__/g, "$1")       // remove underline bold
+    .replace(/`{3}[\s\S]*?`{3}/g, (m) => m.replace(/```\w*
+?/g, "").replace(/```/g, "").trim()) // clean code blocks
+    .replace(/`(.*?)`/g, "$1")         // inline code
+    .replace(/^[-*] /gm, "• ")         // convert bullets to •
+    .replace(/^---+$/gm, "")           // remove horizontal rules
+    .replace(/
+{3,}/g, "
+
+")        // max 2 newlines
+    .trim();
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   const [messages,       setMessages]       = useState([]);
@@ -140,7 +159,9 @@ export default function App() {
         apiMessages = [...next.slice(0, -1), { role: "user", content: lastContent + searchContext }];
       }
 
-      const raw   = await callClaude(apiMessages, memoryFacts, recentSessions, filesToSend);
+      // Strip UI-only props before sending to Anthropic API
+      const cleanMessages = apiMessages.map(({ role, content }) => ({ role, content }));
+      const raw   = await callClaude(cleanMessages, memoryFacts, recentSessions, filesToSend);
       const tags  = parseMemoryTags(raw);
       const clean = stripMemoryTags(raw);
       const idx   = next.length;
@@ -308,7 +329,7 @@ export default function App() {
                   border: m.role === "user" ? "none" : "1px solid rgba(255,255,255,0.5)",
                   letterSpacing: "-0.005em",
                 }}>
-                  {m.content}
+                  {renderText(m.content)}
                 </div>
 
                 {/* Action buttons for assistant messages */}
