@@ -3,7 +3,7 @@ export const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdX
 export const VOICE_URL = `${SUPABASE_URL}/functions/v1/lance-voice`;
 export const DOCX_URL   = `${SUPABASE_URL}/functions/v1/lance-docx`;
 export const SEARCH_URL  = `${SUPABASE_URL}/functions/v1/lance-search`;
-export const MODEL     = "claude-sonnet-4-20250514";
+export const MODEL     = "claude-opus-4-5";
 export const SESSION_ID = crypto.randomUUID();
 
 export const SB_HEADERS = {
