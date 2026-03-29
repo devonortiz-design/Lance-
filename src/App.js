@@ -7,19 +7,19 @@ import { LanceLogo, SendIcon, SpeakerIcon, StopIcon, DownloadIcon, AttachIcon, C
 // ── Styles ────────────────────────────────────────────────────────────────────
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
-:root { --accent:#2979ff; --text:#1a1a2e; --text2:#4a4a6a; }
+:root { --accent:#C9A84C; --text:#1a2340; --text2:#4a5568; }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body,#root{height:100%;-webkit-text-size-adjust:100%;}
 body{font-family:'DM Sans',-apple-system,sans-serif;-webkit-font-smoothing:antialiased;}
 textarea:focus,button:focus{outline:none;}
 ::-webkit-scrollbar{width:0;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-@keyframes pulseGlow{0%,100%{filter:drop-shadow(0 0 10px rgba(82,177,255,0.4));}50%{filter:drop-shadow(0 0 26px rgba(82,177,255,0.85));}}
+@keyframes pulseGlow{0%,100%{filter:drop-shadow(0 0 10px rgba(201,168,76,0.4));}50%{filter:drop-shadow(0 0 26px rgba(201,168,76,0.75));}}
 @keyframes dot{0%,80%,100%{transform:scale(0.55);opacity:0.3;}40%{transform:scale(1);opacity:1;}}
 @keyframes slideIn{from{opacity:0;transform:translateY(-6px) scale(0.97);}to{opacity:1;transform:translateY(0) scale(1);}}
 .speak-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:5px;border-radius:6px;transition:all 0.14s ease;opacity:0.55;}
-.speak-btn:hover{opacity:1;background:rgba(41,121,255,0.1);}
-.speak-btn.active{opacity:1;color:var(--accent);}
+.speak-btn:hover{opacity:1;background:rgba(201,168,76,0.12);}
+.speak-btn.active{opacity:1;color:#C9A84C;}
 .teach-toggle{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid;transition:all 0.18s ease;letter-spacing:0.02em;}
 .file-chip{display:flex;align-items:center;gap:6px;padding:5px 10px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:8px;font-size:13px;color:#fff;font-family:inherit;}
 .file-chip button{background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.6);display:flex;align-items:center;padding:0;transition:color 0.12s;}
@@ -132,12 +132,15 @@ export default function App() {
         }
       }
 
-      // Inject search results into the message if we got them
-      const messagesWithSearch = searchContext
-        ? [...next.slice(0, -1), { role: "user", content: (next[next.length-1].content || "") + searchContext }]
-        : next;
+      // Inject search results into the last user message if we got them
+      let apiMessages = next;
+      if (searchContext) {
+        const lastMsg = next[next.length - 1];
+        const lastContent = typeof lastMsg.content === "string" ? lastMsg.content : t;
+        apiMessages = [...next.slice(0, -1), { role: "user", content: lastContent + searchContext }];
+      }
 
-      const raw   = await callClaude(messagesWithSearch, memoryFacts, recentSessions, filesToSend);
+      const raw   = await callClaude(apiMessages, memoryFacts, recentSessions, filesToSend);
       const tags  = parseMemoryTags(raw);
       const clean = stripMemoryTags(raw);
       const idx   = next.length;
@@ -210,7 +213,7 @@ export default function App() {
     <>
       <style>{CSS}</style>
       <div
-        style={{ height: "100%", display: "flex", flexDirection: "column", background: "linear-gradient(145deg,#1a237e 0%,#283593 40%,#1565c0 100%)" }}
+        style={{ height: "100%", display: "flex", flexDirection: "column", background: "linear-gradient(160deg,#0d1321 0%,#1a2340 45%,#0f1b2d 100%)" }}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
@@ -223,7 +226,7 @@ export default function App() {
         )}
 
         {/* Header */}
-        <div style={{ height: "54px", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(0,0,0,0.18)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.10)", flexShrink: 0 }}>
+        <div style={{ paddingTop: "env(safe-area-inset-top,44px)", padding: "0 18px 0 18px", minHeight: "54px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(0,0,0,0.18)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.10)", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <LanceLogo size={30}/>
             <div>
@@ -237,9 +240,9 @@ export default function App() {
               className="teach-toggle"
               onClick={() => { setTeachMode(t => !t); if (teachMode) stopSpeaking(); }}
               style={{
-                background: teachMode ? "rgba(41,121,255,0.25)" : "rgba(255,255,255,0.1)",
-                borderColor: teachMode ? "rgba(41,121,255,0.6)" : "rgba(255,255,255,0.2)",
-                color: teachMode ? "#82b1ff" : "rgba(255,255,255,0.65)",
+                background: teachMode ? "rgba(201,168,76,0.2)" : "rgba(255,255,255,0.1)",
+                borderColor: teachMode ? "rgba(201,168,76,0.5)" : "rgba(255,255,255,0.2)",
+                color: teachMode ? "#C9A84C" : "rgba(255,255,255,0.65)",
               }}
             >
               {teachMode ? "🔊 Teaching" : "🔇 Silent"}
@@ -278,14 +281,7 @@ export default function App() {
                 <div style={{ fontSize: "17px", color: "rgba(255,255,255,0.68)", fontWeight: 300, lineHeight: 1.55, marginBottom: "24px" }}>
                   Type anything, drop a file, or just talk.
                 </div>
-                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center" }}>
-                  {["Sermon outline", "Research topic", "Draft email", "Read this file"].map(q => (
-                    <button key={q} onClick={() => send(q)} style={{ padding: "8px 14px", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.22)", borderRadius: "20px", color: "#fff", fontSize: "15px", cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s", fontWeight: 400 }}
-                      onMouseEnter={e => e.target.style.background = "rgba(255,255,255,0.22)"}
-                      onMouseLeave={e => e.target.style.background = "rgba(255,255,255,0.12)"}
-                    >{q}</button>
-                  ))}
-                </div>
+
               </div>
             </div>
           )}
@@ -302,7 +298,7 @@ export default function App() {
                 <div style={{
                   padding: "11px 15px",
                   borderRadius: m.role === "user" ? "18px 18px 5px 18px" : "5px 18px 18px 18px",
-                  background: m.role === "user" ? "linear-gradient(135deg,#2979ff,#1565c0)" : "rgba(255,255,255,0.95)",
+                  background: m.role === "user" ? "linear-gradient(135deg,#C9A84C,#a07830)" : "rgba(255,255,255,0.95)",
                   color: m.role === "user" ? "#fff" : "var(--text)",
                   fontSize: "16px", lineHeight: "1.65", whiteSpace: "pre-wrap",
                   fontWeight: 300,
@@ -320,7 +316,7 @@ export default function App() {
                     <button
                       className={`speak-btn${speakingIdx === i ? " active" : ""}`}
                       onClick={() => speakingIdx === i ? stopSpeaking() : speakMessage(m.content, i)}
-                      style={{ color: speakingIdx === i ? "#82b1ff" : "rgba(255,255,255,0.6)" }}
+                      style={{ color: speakingIdx === i ? "#C9A84C" : "rgba(255,255,255,0.6)" }}
                       title={speakingIdx === i ? "Stop" : "Hear Lance"}
                     >
                       <SpeakerIcon active={speakingIdx === i} spinning={loadingIdx === i}/>
@@ -347,7 +343,7 @@ export default function App() {
               <div style={{ flexShrink: 0 }}><LanceLogo size={24}/></div>
               <div style={{ padding: "11px 16px", borderRadius: "5px 18px 18px 18px", background: "rgba(255,255,255,0.95)", boxShadow: "0 4px 20px rgba(0,0,0,0.15)", display: "flex", gap: "5px", alignItems: "center" }}>
                 {[0, 1, 2].map(i => (
-                  <div key={i} style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#2979ff", animation: `dot 1.2s ease-in-out ${i * 0.2}s infinite` }}/>
+                  <div key={i} style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#C9A84C", animation: `dot 1.2s ease-in-out ${i * 0.2}s infinite` }}/>
                 ))}
               </div>
             </div>
@@ -406,13 +402,13 @@ export default function App() {
               disabled={!input.trim() && pendingFiles.length === 0 || loading}
               style={{
                 width: "33px", height: "33px", borderRadius: "50%",
-                background: (input.trim() || pendingFiles.length > 0) && !loading ? "linear-gradient(135deg,#2979ff,#1565c0)" : "rgba(0,0,0,0.08)",
+                background: (input.trim() || pendingFiles.length > 0) && !loading ? "linear-gradient(135deg,#C9A84C,#a07830)" : "rgba(0,0,0,0.08)",
                 border: "none",
                 cursor: (input.trim() || pendingFiles.length > 0) && !loading ? "pointer" : "default",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 flexShrink: 0,
                 color: (input.trim() || pendingFiles.length > 0) && !loading ? "#fff" : "#aaa",
-                boxShadow: (input.trim() || pendingFiles.length > 0) && !loading ? "0 3px 10px rgba(41,121,255,0.45)" : "none",
+                boxShadow: (input.trim() || pendingFiles.length > 0) && !loading ? "0 3px 10px rgba(201,168,76,0.4)" : "none",
                 transition: "all 0.14s ease",
               }}
             >
