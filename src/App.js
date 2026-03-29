@@ -225,8 +225,9 @@ export default function App() {
           </div>
         )}
 
-        {/* Header */}
-        <div style={{ paddingTop: "env(safe-area-inset-top,44px)", padding: "0 18px 0 18px", minHeight: "54px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(0,0,0,0.18)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.10)", flexShrink: 0 }}>
+        {/* Header — safe area wrapper pushes below iPhone status bar */}
+        <div style={{ paddingTop: "env(safe-area-inset-top, 0px)", background: "rgba(0,0,0,0.18)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.10)", flexShrink: 0 }}>
+        <div style={{ height: "54px", padding: "0 18px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <LanceLogo size={30}/>
             <div>
@@ -263,6 +264,7 @@ export default function App() {
               <button onClick={clearChat} style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "8px", cursor: "pointer", fontSize: "14px", color: "rgba(255,255,255,0.7)", fontFamily: "inherit", padding: "4px 10px" }}>Clear</button>
             )}
           </div>
+        </div>
         </div>
 
         {/* Chat body */}
@@ -353,7 +355,7 @@ export default function App() {
         </div>
 
         {/* Input area */}
-        <div style={{ padding: "10px 20px 18px", background: "rgba(0,0,0,0.18)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
+        <div style={{ paddingTop: "10px", paddingLeft: "20px", paddingRight: "20px", paddingBottom: "max(18px, env(safe-area-inset-bottom, 18px))", background: "rgba(0,0,0,0.18)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
 
           {/* Pending files */}
           {pendingFiles.length > 0 && (
