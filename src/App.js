@@ -359,7 +359,7 @@ export default function App(){
       </div>
       <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
         {/* Save status toast */}
-        {saveStatus&&(<div style={{fontSize:"12px",color:saveStatus==="saved"?"#C9A84C":saveStatus==="maxpin"?"#ff8080":"#ff8080",fontWeight:600}}>{saveStatus==="saved"?"Saved!"":saveStatus==="max"?"Max 5":"Max 2 pins"}</div>)}
+        {saveStatus&&(<div style={{fontSize:"12px",color:saveStatus==="saved"?"#C9A84C":saveStatus==="maxpin"?"#ff8080":"#ff8080",fontWeight:600}}>{saveStatus==="saved"?"Saved!":saveStatus==="max"?"Max 5":"Max 2 pins"}</div>)}
         {/* Pinned quick access */}
         {pinnedConvos.map((c,i)=>(<button key={c.id} onClick={()=>handleLoadConvo(c)} style={{background:activeConvoId===c.id?"rgba(201,168,76,0.25)":"rgba(255,255,255,0.08)",border:`1px solid ${activeConvoId===c.id?"rgba(201,168,76,0.5)":"rgba(255,255,255,0.15)"}`,borderRadius:"8px",padding:"3px 8px",cursor:"pointer",fontSize:"11px",color:activeConvoId===c.id?"#C9A84C":"rgba(255,255,255,0.6)",fontFamily:"inherit",maxWidth:"70px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={c.title}>📌 {c.title.slice(0,12)}</button>))}
         <button onClick={()=>setShowSaved(s=>!s)} style={{background:showSaved?"rgba(201,168,76,0.2)":"rgba(255,255,255,0.08)",border:`1px solid ${showSaved?"rgba(201,168,76,0.4)":"rgba(255,255,255,0.15)"}`,borderRadius:"8px",padding:"4px 9px",cursor:"pointer",color:showSaved?"#C9A84C":"rgba(255,255,255,0.6)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px"}}><SaveIcon/><span style={{fontSize:"12px",fontWeight:600}}>{allSaved.length}</span></button>
