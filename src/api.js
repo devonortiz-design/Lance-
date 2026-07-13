@@ -77,12 +77,44 @@ export function formatSearchResults(data) {
 }
 
 export async function readFile(file) {
+  const isImage = file.type.startsWith("image/") || file.name.toLowerCase().match(/\.(heic|heif)$/);
+  const isPDF = file.type === "application/pdf";
+
+  if (isImage) {
+    // Compress image to stay under 10MB Anthropic limit
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const canvas = document.createElement("canvas");
+        const MAX = 1600;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = canvas.toDataURL("image/jpeg", 0.75).split(",")[1];
+        resolve({ name: file.name, type: "image", mediaType: "image/jpeg", data });
+      };
+      img.onerror = () => {
+        // Fallback: read as-is
+        URL.revokeObjectURL(url);
+        const reader = new FileReader();
+        reader.onload = () => resolve({ name: file.name, type: "image", mediaType: "image/jpeg", data: reader.result.split(",")[1] });
+        reader.readAsDataURL(file);
+      };
+      img.src = url;
+    });
+  }
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    const isImage = file.type.startsWith("image/");
-    const isPDF = file.type === "application/pdf";
-    if (isImage || isPDF) {
-      reader.onload = () => resolve({ name: file.name, type: isPDF ? "document" : "image", mediaType: file.type, data: reader.result.split(",")[1] });
+    if (isPDF) {
+      reader.onload = () => resolve({ name: file.name, type: "document", mediaType: file.type, data: reader.result.split(",")[1] });
       reader.readAsDataURL(file);
     } else {
       reader.onload = () => resolve({ name: file.name, type: "text", text: reader.result });
