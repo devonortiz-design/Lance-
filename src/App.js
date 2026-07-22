@@ -36,6 +36,61 @@ async function deleteConversation(id){
 }
 
 function MicIcon(){return(<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="5" y="1" width="5" height="8" rx="2.5" stroke="currentColor" strokeWidth="1.4"/><path d="M3 7.5a4.5 4.5 0 009 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="7.5" y1="12" x2="7.5" y2="14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>)}
+
+function WordDocCard({text, filename, onDownload, downloading}){
+  return(
+    <div onClick={onDownload} style={{
+      display:"flex",alignItems:"center",gap:"10px",
+      padding:"10px 14px",marginTop:"6px",
+      background:"rgba(255,255,255,0.97)",
+      border:"1px solid rgba(26,35,64,0.15)",
+      borderRadius:"12px",cursor:"pointer",
+      boxShadow:"0 2px 12px rgba(0,0,0,0.1)",
+      transition:"all 0.15s",maxWidth:"220px",
+      opacity:downloading?0.7:1,
+    }}
+    onMouseEnter={e=>e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,0.18)"}
+    onMouseLeave={e=>e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,0.1)"}
+    >
+      {/* Word doc icon */}
+      <div style={{
+        width:"36px",height:"44px",borderRadius:"4px",flexShrink:0,
+        background:"linear-gradient(160deg,#2B579A 0%,#1E3A6E 100%)",
+        display:"flex",flexDirection:"column",alignItems:"center",
+        justifyContent:"center",position:"relative",
+        boxShadow:"0 2px 6px rgba(43,87,154,0.35)"
+      }}>
+        <div style={{
+          position:"absolute",top:0,right:0,
+          width:"10px",height:"10px",
+          background:"rgba(255,255,255,0.25)",
+          borderBottomLeftRadius:"4px"
+        }}/>
+        <span style={{color:"#fff",fontSize:"11px",fontWeight:700,letterSpacing:"0.02em",marginTop:"4px"}}>W</span>
+        <div style={{width:"18px",height:"1.5px",background:"rgba(255,255,255,0.5)",marginTop:"2px",borderRadius:"1px"}}/>
+        <div style={{width:"14px",height:"1.5px",background:"rgba(255,255,255,0.3)",marginTop:"2px",borderRadius:"1px"}}/>
+        <div style={{width:"16px",height:"1.5px",background:"rgba(255,255,255,0.3)",marginTop:"2px",borderRadius:"1px"}}/>
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:"13px",fontWeight:600,color:"#1a2340",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+          {downloading?"Preparing…":"Lance Document"}
+        </div>
+        <div style={{fontSize:"11px",color:"#6B7280",marginTop:"1px"}}>
+          {downloading?"Building your .docx":"Tap to download .docx"}
+        </div>
+      </div>
+      {!downloading&&(
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,color:"#C9A84C"}}>
+          <path d="M8 1v9M4.5 6.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M2 13h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+        </svg>
+      )}
+      {downloading&&(
+        <div style={{width:"16px",height:"16px",border:"2px solid #C9A84C",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite",flexShrink:0}}/>
+      )}
+    </div>
+  );
+}
 function PinIcon({active}){return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8.5 1.5L11.5 4.5L9 7L9.5 10.5L6.5 8L3.5 10.5L4 7L1.5 4.5L4.5 1.5L6.5 3.5L8.5 1.5Z" stroke="currentColor" strokeWidth="1.3" fill={active?"currentColor":"none"} strokeLinejoin="round"/></svg>)}
 function SaveIcon(){return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 2h9v9l-4.5-2L2 11V2Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg>)}
 function TrashIcon(){return(<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 3h9M4 3V2h4v1M5 5.5v4M7 5.5v4M2 3l.8 7.2A1 1 0 003.8 11h4.4a1 1 0 001-.8L10 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>)}
@@ -66,7 +121,7 @@ textarea:focus,button:focus{outline:none}
 .copy-btn.copied{opacity:1;color:#C9A84C}
 .mic-btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:33px;height:33px;border-radius:50%;transition:all 0.14s;flex-shrink:0}
 .mic-btn.idle{background:rgba(0,0,0,0.08);color:#aaa}
-.mic-btn.listening{background:linear-gradient(135deg,#C9A84C,#a07830);color:#fff;animation:micPulse 1s ease-in-out infinite}
+.mic-btn.listening{background:linear-gradient(135deg,#C9A84C,#a07830);color:#fff;animation:micPulse 1s ease-in-out infinite}@keyframes spin{to{transform:rotate(360deg)}}
 .saved-panel{position:fixed;right:0;top:0;bottom:0;width:280px;background:rgba(13,19,33,0.97);border-left:1px solid rgba(201,168,76,0.2);backdrop-filter:blur(20px);z-index:400;display:flex;flex-direction:column;animation:slideIn 0.22s ease}
 .saved-item{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.07);cursor:pointer;transition:background 0.12s}
 .saved-item:hover{background:rgba(255,255,255,0.05)}
@@ -87,6 +142,7 @@ export default function App(){
   const[docxIdx,setDocxIdx]=useState(null);
   const[copiedIdx,setCopiedIdx]=useState(null);
   const[listening,setListening]=useState(false);
+  const[downloadingIdx,setDownloadingIdx]=useState(null);
   const[showSaved,setShowSaved]=useState(false);
   const[savedConvos,setSavedConvos]=useState([]);
   const[activeConvoId,setActiveConvoId]=useState(null);
@@ -210,13 +266,14 @@ export default function App(){
 
   const handleDownload=async(text,idx)=>{
     try{
-      setDocxIdx(idx);
+      setDocxIdx(idx);setDownloadingIdx(idx);
       const res=await fetch(DOCX_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,filename:"lance-document"})});
       if(!res.ok)throw new Error("Docx failed: "+res.status);
       const blob=await res.blob();const url=URL.createObjectURL(blob);
       const a=document.createElement("a");a.href=url;a.download="lance-document.docx";
       document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-    }catch(e){alert("Download failed: "+e.message)}
+      setDownloadingIdx(null);
+    }catch(e){setDownloadingIdx(null);alert("Download failed: "+e.message)}
   };
 
   const handleCopy=async(text,idx)=>{
@@ -388,10 +445,13 @@ export default function App(){
             {m.imagePreview&&(<img src={m.imagePreview} alt="screenshot" style={{maxWidth:"100%",borderRadius:"8px",marginBottom:"8px",display:"block"}}/>)}
             {renderText(m.content)}
           </div>
-          {m.role==="assistant"&&(<div style={{display:"flex",alignItems:"center",gap:"2px",paddingLeft:"4px"}}>
-            <button className={`speak-btn${speakingIdx===i?" active":""}`} onClick={()=>speakingIdx===i?stopSpeaking():speakText(m.content,i)} style={{color:speakingIdx===i?"#C9A84C":"rgba(255,255,255,0.6)"}} title={speakingIdx===i?"Stop":"Hear Lance"}><SpeakerIcon active={speakingIdx===i} spinning={loadingIdx===i}/></button>
-            <button className="speak-btn" onClick={()=>handleDownload(m.content,i)} style={{color:"rgba(255,255,255,0.6)"}} title="Download Word doc"><DownloadIcon/></button>
-            <button className={`copy-btn${copiedIdx===i?" copied":""}`} onClick={()=>handleCopy(m.content,i)}>{copiedIdx===i?"✓ Copied":"Copy"}</button>
+          {m.role==="assistant"&&(<div style={{paddingLeft:"4px"}}>
+            <div style={{display:"flex",alignItems:"center",gap:"2px",marginBottom:m.isDoc?"4px":"0"}}>
+              <button className={`speak-btn${speakingIdx===i?" active":""}`} onClick={()=>speakingIdx===i?stopSpeaking():speakText(m.content,i)} style={{color:speakingIdx===i?"#C9A84C":"rgba(255,255,255,0.6)"}} title={speakingIdx===i?"Stop":"Hear Lance"}><SpeakerIcon active={speakingIdx===i} spinning={loadingIdx===i}/></button>
+              <button className="speak-btn" onClick={()=>handleDownload(m.content,i)} style={{color:"rgba(255,255,255,0.6)"}} title="Download Word doc"><DownloadIcon/></button>
+              <button className={`copy-btn${copiedIdx===i?" copied":""}`} onClick={()=>handleCopy(m.content,i)}>{copiedIdx===i?"✓ Copied":"Copy"}</button>
+            </div>
+            {m.isDoc&&(<WordDocCard text={m.content} filename="lance-document" onDownload={()=>handleDownload(m.content,i)} downloading={downloadingIdx===i}/>)}
           </div>)}
         </div>
       </div>))}
