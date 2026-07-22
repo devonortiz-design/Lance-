@@ -19,13 +19,12 @@ export async function callClaude(messages, facts, sessions, fileContents = [], p
     }
   }
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  // Route through Supabase proxy to avoid CORS/browser security issues on iPhone
+  const CLAUDE_URL = "https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-claude";
+  const res = await fetch(CLAUDE_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": process.env.REACT_APP_ANTHROPIC_KEY,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
     },
     body: JSON.stringify({
       model: MODEL,
