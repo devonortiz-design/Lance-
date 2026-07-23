@@ -4,7 +4,7 @@ import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,save
 import{SESSION_ID,SUPABASE_URL,SB_HEADERS}from"./config";
 import{LanceLogo,SendIcon,SpeakerIcon,StopIcon,DownloadIcon,AttachIcon,CloseIcon}from"./icons";
 
-const DOCX_URL=`${SUPABASE_URL}/functions/v1/lance-docx`;
+const DOCX_URL="/api/docx";
 const TTS_URL=`${SUPABASE_URL}/functions/v1/lance-tts`;
 const SERMON_URL=`${SUPABASE_URL}/functions/v1/lance-sermon-prep`;
 const EXAM_URL=`${SUPABASE_URL}/functions/v1/lance-exam-gen`;
