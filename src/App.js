@@ -127,7 +127,6 @@ textarea:focus,button:focus{outline:none}
 .saved-item:hover{background:rgba(255,255,255,0.05)}
 .saved-item.active{background:rgba(201,168,76,0.1)}`;
 
-class ErrorBoundary extends React.Component{constructor(p){super(p);this.state={error:null}}static getDerivedStateFromError(e){return{error:e}}componentDidCatch(e,i){console.error('Lance:',e)}render(){if(this.state.error){return React.createElement('div',{style:{height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"linear-gradient(160deg,#0d1321 0%,#1a2340 45%,#0f1b2d 100%)",padding:"40px",textAlign:"center"}},React.createElement('div',{style:{color:"#C9A84C",fontSize:"32px",marginBottom:"16px"}},"⚠"),React.createElement('div',{style:{color:"#fff",fontSize:"18px",fontWeight:600,marginBottom:"8px"}},"Lance hit an error"),React.createElement('div',{style:{color:"rgba(255,255,255,0.5)",fontSize:"14px",marginBottom:"24px"}},this.state.error.message),React.createElement('button',{onClick:()=>window.location.reload(),style:{background:"linear-gradient(135deg,#C9A84C,#a07830)",border:"none",borderRadius:"12px",color:"#fff",padding:"12px 24px",fontSize:"15px",fontWeight:600,cursor:"pointer"}},"Reload Lance"))}return this.props.children}}
 export default function App(){
   const[messages,setMessages]=useState([]);
   const[input,setInput]=useState("");
@@ -351,7 +350,7 @@ export default function App(){
   const allSaved=savedConvos.filter(c=>c.active!==false);
   const isEmpty=messages.length===0;
 
-  return(<ErrorBoundary><><style>{CSS}</style>
+  return(<><style>{CSS}</style>
   <div style={{height:"100%",display:"flex",flexDirection:"column",background:"linear-gradient(160deg,#0d1321 0%,#1a2340 45%,#0f1b2d 100%)"}} onDragOver={e=>{e.preventDefault();setDragOver(true)}} onDragLeave={()=>setDragOver(false)} onDrop={onDrop}>
 
     {/* Drag overlay */}
