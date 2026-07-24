@@ -267,10 +267,10 @@ export default function App(){
   const handleDownload=async(text,idx)=>{
     try{
       setDocxIdx(idx);setDownloadingIdx(idx);
-      const res=await fetch(DOCX_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,filename:"lance-document"})});
+      const res=await fetch(DOCX_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,filename:generateFilename(m.content)})});
       if(!res.ok)throw new Error("Docx failed: "+res.status);
       const blob=await res.blob();const url=URL.createObjectURL(blob);
-      const a=document.createElement("a");a.href=url;a.download="lance-document.docx";
+      const a=document.createElement("a");a.href=url;a.download=(text.split("\n").find(l=>l.startsWith("#"))?.replace(/^#+\s*/,"").replace(/[*_`#>]/g,"").replace(/[^a-zA-Z0-9 ']/g," ").trim().slice(0,60)||"Lance Document")+".docx";
       document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
       setDownloadingIdx(null);
     }catch(e){setDownloadingIdx(null);alert("Download failed: "+e.message)}
@@ -451,7 +451,7 @@ export default function App(){
               <button className="speak-btn" onClick={()=>handleDownload(m.content,i)} style={{color:"rgba(255,255,255,0.6)"}} title="Download Word doc"><DownloadIcon/></button>
               <button className={`copy-btn${copiedIdx===i?" copied":""}`} onClick={()=>handleCopy(m.content,i)}>{copiedIdx===i?"✓ Copied":"Copy"}</button>
             </div>
-            {m.isDoc&&(<WordDocCard text={m.content} filename="lance-document" onDownload={()=>handleDownload(m.content,i)} downloading={downloadingIdx===i}/>)}
+            {m.isDoc&&(<WordDocCard text={m.content} filename={generateFilename(m.content)} onDownload={()=>handleDownload(m.content,i)} downloading={downloadingIdx===i}/> )})
           </div>)}
         </div>
       </div>))}
