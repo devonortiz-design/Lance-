@@ -1,20 +1,5 @@
 {
-  "buildCommand": "npm run clean && npm run build",
+  "buildCommand": "npm run build",
   "outputDirectory": "build",
-  "framework": "create-react-app",
-  "installCommand": "npm install --legacy-peer-deps",
-  "build": {
-    "env": {
-      "NODE_ENV": "production",
-      "DISABLE_ESLINT_PLUGIN": "true",
-      "GENERATE_SOURCEMAP": "false"
-    }
-  },
-  "github": {
-    "silent": false,
-    "autoJobCancelation": false
-  },
-  "env": {
-    "NODE_ENV": "production"
-  }
+  "framework": null
 }
