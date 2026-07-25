@@ -1,6 +1,6 @@
 {
   "name": "lance",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "private": true,
   "type": "module",
   "dependencies": {
@@ -12,6 +12,7 @@
     "vite": "^5.2.0"
   },
   "scripts": {
+    "clean": "echo ok",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
