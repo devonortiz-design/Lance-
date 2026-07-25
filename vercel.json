@@ -1,5 +1,4 @@
-{
-  "buildCommand": "npm run build",
+ "buildCommand": "npm run build",
   "outputDirectory": "build",
   "framework": "create-react-app",
   "installCommand": "npm install --legacy-peer-deps",
