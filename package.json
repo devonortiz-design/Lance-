@@ -9,8 +9,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "npm run clean && react-scripts build",
-    "clean": "rm -rf build"
+    "build": "react-scripts build"
   },
   "browserslist": {
     "production": [
@@ -23,5 +22,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
