@@ -12,24 +12,24 @@ const DEVOTION_URL=`${SUPABASE_URL}/functions/v1/lance-devotion`;
 
 // Pinned conversations DB
 async function loadPinned(){
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned?active=eq.true&order=pin_order.asc,saved_order.asc`,{headers:SB_HEADERS});
-  return r.ok?r.json():[];
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned active=eq.true&order=pin_order.asc,saved_order.asc`,{headers:SB_HEADERS});
+  return r.ok r.json():[];
 }
 async function saveConversation(title,summary,messages,pinned=false,pinOrder=0,savedOrder=0){
   const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned`,{
     method:"POST",headers:{...SB_HEADERS,"Prefer":"return=representation"},
     body:JSON.stringify({title,summary,messages,pinned,pin_order:pinOrder,saved_order:savedOrder,active:true})
   });
-  return r.ok?r.json():null;
+  return r.ok r.json():null;
 }
 async function togglePin(id,pinned,pinOrder){
-  await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned?id=eq.${id}`,{
+  await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned id=eq.${id}`,{
     method:"PATCH",headers:SB_HEADERS,
     body:JSON.stringify({pinned,pin_order:pinOrder,updated_at:new Date().toISOString()})
   });
 }
 async function deleteConversation(id){
-  await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned?id=eq.${id}`,{
+  await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned id=eq.${id}`,{
     method:"PATCH",headers:SB_HEADERS,
     body:JSON.stringify({active:false,updated_at:new Date().toISOString()})
   });
@@ -47,7 +47,7 @@ function WordDocCard({text, filename, onDownload, downloading}){
       borderRadius:"12px",cursor:"pointer",
       boxShadow:"0 2px 12px rgba(0,0,0,0.1)",
       transition:"all 0.15s",maxWidth:"220px",
-      opacity:downloading?0.7:1,
+      opacity:downloading 0.7:1,
     }}
     onMouseEnter={e=>e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,0.18)"}
     onMouseLeave={e=>e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,0.1)"}
@@ -73,10 +73,10 @@ function WordDocCard({text, filename, onDownload, downloading}){
       </div>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontSize:"13px",fontWeight:600,color:"#1a2340",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-          {downloading?"Preparing&#195;&#162;&#194;&#128;&#194;&#166;":"Lance Document"}
+          {downloading "Preparing&#195;&#162;&#194;&#128;&#194;&#166;":"Lance Document"}
         </div>
         <div style={{fontSize:"11px",color:"#6B7280",marginTop:"1px"}}>
-          {downloading?"Building your .docx":"Tap to download .docx"}
+          {downloading "Building your .docx":"Tap to download .docx"}
         </div>
       </div>
       {!downloading&&(
@@ -91,13 +91,13 @@ function WordDocCard({text, filename, onDownload, downloading}){
     </div>
   );
 }
-function PinIcon({active}){return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8.5 1.5L11.5 4.5L9 7L9.5 10.5L6.5 8L3.5 10.5L4 7L1.5 4.5L4.5 1.5L6.5 3.5L8.5 1.5Z" stroke="currentColor" strokeWidth="1.3" fill={active?"currentColor":"none"} strokeLinejoin="round"/></svg>)}
+function PinIcon({active}){return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8.5 1.5L11.5 4.5L9 7L9.5 10.5L6.5 8L3.5 10.5L4 7L1.5 4.5L4.5 1.5L6.5 3.5L8.5 1.5Z" stroke="currentColor" strokeWidth="1.3" fill={active "currentColor":"none"} strokeLinejoin="round"/></svg>)}
 function SaveIcon(){return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 2h9v9l-4.5-2L2 11V2Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg>)}
 function TrashIcon(){return(<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 3h9M4 3V2h4v1M5 5.5v4M7 5.5v4M2 3l.8 7.2A1 1 0 003.8 11h4.4a1 1 0 001-.8L10 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>)}
 
-function renderText(t){try{if(!t)return "";return t.replace(/#{1,6} /g,"").replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1").replace(/__(.*?)__/g,"$1").replace(/`(.*?)`/g,"$1").replace(/^[-*] /gm,"\u2022 ").replace(/^---+$/gm,"").replace(/\n{3,}/g,"\n\n").trim()}catch(e){return String(t||"")}}
+function renderText(t){try{if(!t)return "";return t.replace(/#{1,6} /g,"").replace(/\*\*(.* )\*\*/g,"$1").replace(/\*(.* )\*/g,"$1").replace(/__(.* )__/g,"$1").replace(/`(.* )`/g,"$1").replace(/^[-*] /gm,"\u2022 ").replace(/^---+$/gm,"").replace(/\n{3,}/g,"\n\n").trim()}catch(e){return String(t||"")}}
 
-const CSS=`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+const CSS=`@import url('https://fonts.googleapis.com/css2 family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 :root{--accent:#C9A84C;--text:#1a2340;--navy:#0d1321}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body,#root{height:100%;-webkit-text-size-adjust:100%}
@@ -163,14 +163,14 @@ export default function App(){
         loadRecentSessions().catch(()=>[]),
         loadPinned().catch(()=>[]),
       ]);
-      setMemoryFacts(Array.isArray(f)?f:[]);
-      setProfile(Array.isArray(p)?p:[]);
-      setRecentSessions(Array.isArray(s)?s:[]);
-      setSavedConvos(Array.isArray(c)?c:[]);
+      setMemoryFacts(Array.isArray(f) f:[]);
+      setProfile(Array.isArray(p) p:[]);
+      setRecentSessions(Array.isArray(s) s:[]);
+      setSavedConvos(Array.isArray(c) c:[]);
     })();
   },[]);
 
-  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"})},[messages,loading]);
+  useEffect(()=>{bottomRef.current .scrollIntoView({behavior:"smooth"})},[messages,loading]);
 
   const stopSpeaking=useCallback(()=>{
     if(audioRef.current){audioRef.current.pause();audioRef.current=null}
@@ -181,7 +181,7 @@ export default function App(){
     stopSpeaking();setLoadingIdx(idx);
     try{
       const res=await fetch(TTS_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
-      if(res.ok&&res.headers.get("content-type")?.includes("audio")){
+      if(res.ok&&res.headers.get("content-type") .includes("audio")){
         const blob=await res.blob();const url=URL.createObjectURL(blob);
         const audio=new Audio(url);
         audio.onplay=()=>{setLoadingIdx(null);setSpeakingIdx(idx)};
@@ -199,7 +199,7 @@ export default function App(){
   },[stopSpeaking]);
 
   const toggleMic=useCallback(()=>{
-    if(listening){recognitionRef.current?.stop();setListening...false);return}
+    if(listening){recognitionRef.current .stop();setListening...false);return}
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!SR){alert("Try Safari on iPhone for voice input.");return}
     const rec=new SR();rec.lang="en-US";rec.continuous=false;rec.interimResults=false;
@@ -214,15 +214,15 @@ export default function App(){
     if(messages.length===0)return;
     const saved=savedConvos.filter(c=>c.active!==false);
     if(saved.length>=5&&!activeConvoId){setSaveStatus("max");setTimeout(()=>setSaveStatus(null),2000);return}
-    const firstUser=messages.find(m=>m.role==="user")?.content||"Conversation";
-    const title=firstUser.slice(0,50)+(firstUser.length>50?"&#195;&#162;&#194;&#128;&#194;&#166;":"");
+    const firstUser=messages.find(m=>m.role==="user") .content||"Conversation";
+    const title=firstUser.slice(0,50)+(firstUser.length>50 "&#195;&#162;&#194;&#128;&#194;&#166;":"");
     const summary=messages.slice(-2).map(m=>m.content.slice(0,100)).join(" | ");
     const cleanMessages=messages.map(({role,content})=>({role,content}));
     const result=await saveConversation(title,summary,cleanMessages,false,0,saved.length);
     if(result){
       const updated=await loadPinned().catch(()=>[]);
-      setSavedConvos(Array.isArray(updated)?updated:[]);
-      setActiveConvoId(result[0]?.id||null);
+      setSavedConvos(Array.isArray(updated) updated:[]);
+      setActiveConvoId(result[0] .id||null);
       setSaveStatus("saved");setTimeout(()=>setSaveStatus(null),2000);
     }
   },[messages,savedConvos,activeConvoId]);
@@ -232,26 +232,26 @@ export default function App(){
     const pinned=savedConvos.filter(c=>c.pinned&&c.active!==false);
     if(!convo.pinned&&pinned.length>=2){setSaveStatus("maxpin");setTimeout(()=>setSaveStatus(null),2000);return}
     const newPinned=!convo.pinned;
-    const pinOrder=newPinned?pinned.length:0;
+    const pinOrder=newPinned pinned.length:0;
     await togglePin(convo.id,newPinned,pinOrder);
     const updated=await loadPinned().catch(()=>[]);
-    setSavedConvos(Array.isArray(updated)?updated:[]);
+    setSavedConvos(Array.isArray(updated) updated:[]);
   },[savedConvos]);
 
   // Load a saved conversation
   const handleLoadConvo=useCallback((convo)=>{
     stopSpeaking();
-    setMessages(Array.isArray(convo.messages)?convo.messages:[]);
+    setMessages(Array.isArray(convo.messages) convo.messages:[]);
     setActiveConvoId(convo.id);
     setShowSaved(false);
-    msgCount.current=convo.messages?.length||0;
+    msgCount.current=convo.messages .length||0;
   },[stopSpeaking]);
 
   // Delete a saved conversation
   const handleDeleteConvo=useCallback(async(id)=>{
     await deleteConversation(id);
     const updated=await loadPinned().catch(()=>[]);
-    setSavedConvos(Array.isArray(updated)?updated:[]);
+    setSavedConvos(Array.isArray(updated) updated:[]);
     if(activeConvoId===id){setActiveConvoId(null)}
   },[activeConvoId]);
 
@@ -270,7 +270,7 @@ export default function App(){
       const res=await fetch(DOCX_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,filename:generateFilename(m.content)})});
       if(!res.ok)throw new Error("Docx failed: "+res.status);
       const blob=await res.blob();const url=URL.createObjectURL(blob);
-      const a=document.createElement("a");a.href=url;a.download=(text.split("\n").find(l=>l.startsWith("#"))?.replace(/^#+\s*/,"").replace(/[*_`#>]/g,"").replace(/[^a-zA-Z0-9 ']/g," ").trim().slice(0,60)||"Lance Document")+".docx";
+      const a=document.createElement("a");a.href=url;a.download=(text.split("\n").find(l=>l.startsWith("#")) .replace(/^#+\s*/,"").replace(/[*_`#>]/g,"").replace(/[^a-zA-Z0-9 ']/g," ").trim().slice(0,60)||"Lance Document")+".docx";
       document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
       setDownloadingIdx(null);
     }catch(e){setDownloadingIdx(null);alert("Download failed: "+e.message)}
@@ -281,7 +281,7 @@ export default function App(){
   };
 
   const detectIntent=(t)=>{
-    if(/\b(sermon prep|preach on|sermon on|exegete|exposition of|[1-3]?\s?[A-Z][a-z]+ \d+:\d+)\b/.test(t))return"sermon";
+    if(/\b(sermon prep|preach on|sermon on|exegete|exposition of|[1-3] \s [A-Z][a-z]+ \d+:\d+)\b/.test(t))return"sermon";
     if(/\b(exam|quiz|test|fill.in|questions for)\b/i.test(t))return"exam";
     if(/\b(devotion|devos|daily word|morning word)\b/i.test(t))return"devotion";
     return null;
@@ -301,9 +301,9 @@ export default function App(){
       else{
         let searchContext="";
         const needsSearch=/\b(latest|current|recent|today|news|2024|2025|2026|price|weather|who is|what is|how much|when did|search|look up|find out|research)\b/i.test(t);
-        if(needsSearch&&t.length>10){try{const sd=await webSearch(t,5);if(sd.results?.length>0){searchContext="\n\n[WEB SEARCH RESULTS for: "+t+"]\n"+formatSearchResults(sd)+"\n[END SEARCH RESULTS]"}}catch(e){}}
+        if(needsSearch&&t.length>10){try{const sd=await webSearch(t,5);if(sd.results .length>0){searchContext="\n\n[WEB SEARCH RESULTS for: "+t+"]\n"+formatSearchResults(sd)+"\n[END SEARCH RESULTS]"}}catch(e){}}
         let apiMessages=next;
-        if(searchContext){const last=next[next.length-1];const lc=typeof last.content==="string"?last.content:t;apiMessages=[...next.slice(0,-1),{role:"user",content:lc+searchContext}];}
+        if(searchContext){const last=next[next.length-1];const lc=typeof last.content==="string" last.content:t;apiMessages=[...next.slice(0,-1),{role:"user",content:lc+searchContext}];}
         const cleanMessages=apiMessages.map(({role,content})=>({role,content}));
         raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile);
       }
@@ -315,7 +315,7 @@ export default function App(){
         else if(tag.type==="profile"){saveProfileFact(tag.domain,tag.key,tag.value,tag.confidence).catch(()=>{});setProfile(prev=>[...prev.filter(p=>!(p.domain===tag.domain&&p.key===tag.key)),{domain:tag.domain,key:tag.key,value:tag.value,confidence:tag.confidence,active:true}]);}
       }
       if(tags.some(t=>t.type==="memory")){loadMemory().then(f=>{if(Array.isArray(f))setMemoryFacts(f)}).catch(()=>{});}
-      if(msgCount.current%4===0){saveSession("general",`${t.slice(0,90)}${t.length>90?"&#195;&#162;&#194;&#128;&#194;&#166;":""}`,msgCount.current).catch(()=>{});}
+      if(msgCount.current%4===0){saveSession("general",`${t.slice(0,90)}${t.length>90 "&#195;&#162;&#194;&#128;&#194;&#166;":""}`,msgCount.current).catch(()=>{});}
       if(teachMode)speakText(clean,idx);if(isDoc)setDocxIdx(idx);
     }catch(e){setMessages([...next,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);}
     setLoading(false);
@@ -327,7 +327,7 @@ export default function App(){
     setInput("");if(inputRef.current)inputRef.current.style.height="auto";
     if(pendingFiles.length>0){
       const filesToSend=[...pendingFiles];setPendingFiles([]);
-      const displayText=t||(filesToSend.length>0?`[${filesToSend.map(f=>f.name).join(", ")}]`:"");
+      const displayText=t||(filesToSend.length>0 `[${filesToSend.map(f=>f.name).join(", ")}]`:"");
       const next=[...messages,{role:"user",content:displayText}];
       setMessages(next);setLoading(true);
       if(t)saveMessage("user",t).catch(()=>{});
@@ -369,11 +369,11 @@ export default function App(){
       {/* Pinned section */}
       {pinnedConvos.length>0&&(<>
         <div style={{padding:"8px 14px 4px",fontSize:"11px",fontWeight:700,color:"rgba(201,168,76,0.6)",letterSpacing:"0.08em",textTransform:"uppercase"}}>Pinned ({pinnedConvos.length}/2)</div>
-        {pinnedConvos.map(c=>(<div key={c.id} className={`saved-item${activeConvoId===c.id?" active":""}`} onClick={()=>handleLoadConvo(c)}>
+        {pinnedConvos.map(c=>(<div key={c.id} className={`saved-item${activeConvoId===c.id " active":""}`} onClick={()=>handleLoadConvo(c)}>
           <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:"6px"}}>
             <div style={{flex:1,minWidth:0}}>
               <div style={{color:"#C9A84C",fontSize:"13px",fontWeight:500,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.title}</div>
-              <div style={{color:"rgba(255,255,255,0.4)",fontSize:"11px",marginTop:"2px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.summary?.slice(0,60)}&#195;&#162;&#194;&#128;&#194;&#166;</div>
+              <div style={{color:"rgba(255,255,255,0.4)",fontSize:"11px",marginTop:"2px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.summary .slice(0,60)}&#195;&#162;&#194;&#128;&#194;&#166;</div>
             </div>
             <div style={{display:"flex",gap:"4px",flexShrink:0}} onClick={e=>e.stopPropagation()}>
               <button className="speak-btn" style={{color:"#C9A84C",opacity:1}} onClick={()=>handlePin(c)} title="Unpin"><PinIcon active={true}/></button>
@@ -387,14 +387,14 @@ export default function App(){
       <div style={{padding:"8px 14px 4px",fontSize:"11px",fontWeight:700,color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em",textTransform:"uppercase"}}>All Saved</div>
       <div style={{flex:1,overflowY:"auto"}}>
         {allSaved.length===0&&(<div style={{padding:"20px 14px",color:"rgba(255,255,255,0.3)",fontSize:"13px",textAlign:"center"}}>No saved conversations yet</div>)}
-        {allSaved.map(c=>(<div key={c.id} className={`saved-item${activeConvoId===c.id?" active":""}`} onClick={()=>handleLoadConvo(c)}>
+        {allSaved.map(c=>(<div key={c.id} className={`saved-item${activeConvoId===c.id " active":""}`} onClick={()=>handleLoadConvo(c)}>
           <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:"6px"}}>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{color:"#fff",fontSize:"13px",fontWeight:c.pinned?500:400,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.title}</div>
-              <div style={{color:"rgba(255,255,255,0.35)",fontSize:"11px",marginTop:"2px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.summary?.slice(0,60)}</div>
+              <div style={{color:"#fff",fontSize:"13px",fontWeight:c.pinned 500:400,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.title}</div>
+              <div style={{color:"rgba(255,255,255,0.35)",fontSize:"11px",marginTop:"2px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.summary .slice(0,60)}</div>
             </div>
             <div style={{display:"flex",gap:"4px",flexShrink:0}} onClick={e=>e.stopPropagation()}>
-              <button className="speak-btn" style={{color:c.pinned?"#C9A84C":"rgba(255,255,255,0.4)"}} onClick={()=>handlePin(c)} title={c.pinned?"Unpin":"Pin (max 2)"}><PinIcon active={c.pinned}/></button>
+              <button className="speak-btn" style={{color:c.pinned "#C9A84C":"rgba(255,255,255,0.4)"}} onClick={()=>handlePin(c)} title={c.pinned "Unpin":"Pin (max 2)"}><PinIcon active={c.pinned}/></button>
               <button className="speak-btn" onClick={()=>handleDeleteConvo(c.id)} title="Delete"><TrashIcon/></button>
             </div>
           </div>
@@ -416,12 +416,12 @@ export default function App(){
       </div>
       <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
         {/* Save status toast */}
-        {saveStatus&&(<div style={{fontSize:"12px",color:saveStatus==="saved"?"#C9A84C":saveStatus==="maxpin"?"#ff8080":"#ff8080",fontWeight:600}}>{saveStatus==="saved"?"Saved!":saveStatus==="max"?"Max 5":"Max 2 pins"}</div>)}
+        {saveStatus&&(<div style={{fontSize:"12px",color:saveStatus==="saved" "#C9A84C":saveStatus==="maxpin" "#ff8080":"#ff8080",fontWeight:600}}>{saveStatus==="saved" "Saved!":saveStatus==="max" "Max 5":"Max 2 pins"}</div>)}
         {/* Pinned quick access */}
-        {pinnedConvos.map((c,i)=>(<button key={c.id} onClick={()=>handleLoadConvo(c)} style={{background:activeConvoId===c.id?"rgba(201,168,76,0.25)":"rgba(255,255,255,0.08)",border:`1px solid ${activeConvoId===c.id?"rgba(201,168,76,0.5)":"rgba(255,255,255,0.15)"}`,borderRadius:"8px",padding:"3px 8px",cursor:"pointer",fontSize:"11px",color:activeConvoId===c.id?"#C9A84C":"rgba(255,255,255,0.6)",fontFamily:"inherit",maxWidth:"70px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={c.title}>&#195;&#176;&#194;&#159;&#194;&#147;&#194;&#140; {c.title.slice(0,12)}</button>))}
-        <button onClick={()=>setShowSaved(s=>!s)} style={{background:showSaved?"rgba(201,168,76,0.2)":"rgba(255,255,255,0.08)",border:`1px solid ${showSaved?"rgba(201,168,76,0.4)":"rgba(255,255,255,0.15)"}`,borderRadius:"8px",padding:"4px 9px",cursor:"pointer",color:showSaved?"#C9A84C":"rgba(255,255,255,0.6)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px"}}><SaveIcon/><span style={{fontSize:"12px",fontWeight:600}}>{allSaved.length}</span></button>
+        {pinnedConvos.map((c,i)=>(<button key={c.id} onClick={()=>handleLoadConvo(c)} style={{background:activeConvoId===c.id "rgba(201,168,76,0.25)":"rgba(255,255,255,0.08)",border:`1px solid ${activeConvoId===c.id "rgba(201,168,76,0.5)":"rgba(255,255,255,0.15)"}`,borderRadius:"8px",padding:"3px 8px",cursor:"pointer",fontSize:"11px",color:activeConvoId===c.id "#C9A84C":"rgba(255,255,255,0.6)",fontFamily:"inherit",maxWidth:"70px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={c.title}>&#195;&#176;&#194;&#159;&#194;&#147;&#194;&#140; {c.title.slice(0,12)}</button>))}
+        <button onClick={()=>setShowSaved(s=>!s)} style={{background:showSaved "rgba(201,168,76,0.2)":"rgba(255,255,255,0.08)",border:`1px solid ${showSaved "rgba(201,168,76,0.4)":"rgba(255,255,255,0.15)"}`,borderRadius:"8px",padding:"4px 9px",cursor:"pointer",color:showSaved "#C9A84C":"rgba(255,255,255,0.6)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px"}}><SaveIcon/><span style={{fontSize:"12px",fontWeight:600}}>{allSaved.length}</span></button>
         {messages.length>0&&(<button onClick={handleSave} style={{background:"rgba(201,168,76,0.12)",border:"1px solid rgba(201,168,76,0.3)",borderRadius:"8px",padding:"4px 9px",cursor:"pointer",color:"#C9A84C",fontSize:"12px",fontWeight:600,fontFamily:"inherit"}}>Save</button>)}
-        <button className="teach-toggle" onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} style={{background:teachMode?"rgba(201,168,76,0.2)":"rgba(255,255,255,0.08)",borderColor:teachMode?"rgba(201,168,76,0.5)":"rgba(255,255,255,0.15)",color:teachMode?"#C9A84C":"rgba(255,255,255,0.55)",padding:"4px 9px"}}>{teachMode?"Voice ON":"Voice OFF"}</button>
+        <button className="teach-toggle" onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} style={{background:teachMode "rgba(201,168,76,0.2)":"rgba(255,255,255,0.08)",borderColor:teachMode "rgba(201,168,76,0.5)":"rgba(255,255,255,0.15)",color:teachMode "#C9A84C":"rgba(255,255,255,0.55)",padding:"4px 9px"}}>{teachMode "Voice ON":"Voice OFF"}</button>
         {speakingIdx!==null&&(<button onClick={stopSpeaking} style={{background:"rgba(255,80,80,0.2)",border:"1px solid rgba(255,80,80,0.4)",borderRadius:"8px",padding:"4px 8px",cursor:"pointer",color:"rgba(255,160,160,0.9)",fontSize:"12px",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px"}}><StopIcon/></button>)}
         {messages.length>0&&(<button onClick={clearChat} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"8px",cursor:"pointer",fontSize:"12px",color:"rgba(255,255,255,0.5)",fontFamily:"inherit",padding:"4px 8px"}}>Clear</button>)}
       </div>
@@ -437,19 +437,19 @@ export default function App(){
         </div>
       </div>)}
 
-      {messages.map((m,i)=>(<div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",animation:"fadeUp 0.2s ease both",marginBottom:"4px"}}>
+      {messages.map((m,i)=>(<div key={i} style={{display:"flex",justifyContent:m.role==="user" "flex-end":"flex-start",animation:"fadeUp 0.2s ease both",marginBottom:"4px"}}>
         {m.role==="assistant"&&(<div style={{flexShrink:0,marginRight:"8px",alignSelf:"flex-end"}}><LanceLogo size={22}/></div>)}
-        <div style={{maxWidth:"76%",display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start",gap:"4px"}}>
-          <div style={{padding:"11px 14px",borderRadius:m.role==="user"?"18px 18px 5px 18px":"5px 18px 18px 18px",background:m.role==="user"?"linear-gradient(135deg,#C9A84C,#a07830)":"rgba(255,255,255,0.95)",color:m.role==="user"?"#fff":"var(--text)",fontSize:"16px",lineHeight:"1.65",whiteSpace:"pre-wrap",fontWeight:300,boxShadow:m.role==="user"?"0 4px 16px rgba(0,0,0,0.25)":"0 4px 20px rgba(0,0,0,0.15)",border:m.role==="user"?"none":"1px solid rgba(255,255,255,0.5)"}}>
+        <div style={{maxWidth:"76%",display:"flex",flexDirection:"column",alignItems:m.role==="user" "flex-end":"flex-start",gap:"4px"}}>
+          <div style={{padding:"11px 14px",borderRadius:m.role==="user" "18px 18px 5px 18px":"5px 18px 18px 18px",background:m.role==="user" "linear-gradient(135deg,#C9A84C,#a07830)":"rgba(255,255,255,0.95)",color:m.role==="user" "#fff":"var(--text)",fontSize:"16px",lineHeight:"1.65",whiteSpace:"pre-wrap",fontWeight:300,boxShadow:m.role==="user" "0 4px 16px rgba(0,0,0,0.25)":"0 4px 20px rgba(0,0,0,0.15)",border:m.role==="user" "none":"1px solid rgba(255,255,255,0.5)"}}>
             {/* Show image preview if message contains image */}
             {m.imagePreview&&(<img src={m.imagePreview} alt="screenshot" style={{maxWidth:"100%",borderRadius:"8px",marginBottom:"8px",display:"block"}}/>)}
             {renderText(m.content)}
           </div>
           {m.role==="assistant"&&(<div style={{paddingLeft:"4px"}}>
-            <div style={{display:"flex",alignItems:"center",gap:"2px",marginBottom:m.isDoc?"4px":"0"}}>
-              <button className={`speak-btn${speakingIdx===i?" active":""}`} onClick={()=>speakingIdx===i?stopSpeaking():speakText(m.content,i)} style={{color:speakingIdx===i?"#C9A84C":"rgba(255,255,255,0.6)"}} title={speakingIdx===i?"Stop":"Hear Lance"}><SpeakerIcon active={speakingIdx===i} spinning={loadingIdx===i}/></button>
+            <div style={{display:"flex",alignItems:"center",gap:"2px",marginBottom:m.isDoc "4px":"0"}}>
+              <button className={`speak-btn${speakingIdx===i " active":""}`} onClick={()=>speakingIdx===i stopSpeaking():speakText(m.content,i)} style={{color:speakingIdx===i "#C9A84C":"rgba(255,255,255,0.6)"}} title={speakingIdx===i "Stop":"Hear Lance"}><SpeakerIcon active={speakingIdx===i} spinning={loadingIdx===i}/></button>
               <button className="speak-btn" onClick={()=>handleDownload(m.content,i)} style={{color:"rgba(255,255,255,0.6)"}} title="Download Word doc"><DownloadIcon/></button>
-              <button className={`copy-btn${copiedIdx===i?" copied":""}`} onClick={()=>handleCopy(m.content,i)}>{copiedIdx===i?"&#195;&#162;&#194;&#156;&#194;&#147; Copied":"Copy"}</button>
+              <button className={`copy-btn${copiedIdx===i " copied":""}`} onClick={()=>handleCopy(m.content,i)}>{copiedIdx===i "&#195;&#162;&#194;&#156;&#194;&#147; Copied":"Copy"}</button>
             </div>
             {m.isDoc&&(<WordDocCard text={m.content} filename={generateFilename(m.content)} onDownload={()=>handleDownload(m.content,i)} downloading={downloadingIdx===i}/> )})
           </div>)}
@@ -470,19 +470,19 @@ export default function App(){
       {pendingFiles.length>0&&(<div style={{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"8px"}}>
         {pendingFiles.map((f,i)=>(<div key={i} className="file-chip">
           {f.type==="image"&&<span>&#195;&#176;&#194;&#159;&#194;&#147;&#194;&#183;</span>}
-          <span>{f.name.length>20?f.name.slice(0,17)+"&#195;&#162;&#194;&#128;&#194;&#166;":f.name}</span>
+          <span>{f.name.length>20 f.name.slice(0,17)+"&#195;&#162;&#194;&#128;&#194;&#166;":f.name}</span>
           <button onClick={()=>removeFile(i)} title="Remove"><CloseIcon/></button>
         </div>))}
       </div>)}
       <div style={{display:"flex",alignItems:"flex-end",gap:"8px",background:"rgba(255,255,255,0.95)",borderRadius:"16px",border:"1px solid rgba(255,255,255,0.5)",padding:"9px 10px 9px 14px",boxShadow:"0 4px 24px rgba(0,0,0,0.2)"}}>
-        <button onClick={()=>fileRef.current?.click()} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(74,74,106,0.6)",display:"flex",alignItems:"center",padding:"4px",borderRadius:"6px",transition:"color 0.14s",flexShrink:0}} title="Attach file or screenshot" onMouseEnter={e=>e.currentTarget.style.color="var(--accent)"} onMouseLeave={e=>e.currentTarget.style.color="rgba(74,74,106,0.6)"}><AttachIcon/></button>
+        <button onClick={()=>fileRef.current .click()} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(74,74,106,0.6)",display:"flex",alignItems:"center",padding:"4px",borderRadius:"6px",transition:"color 0.14s",flexShrink:0}} title="Attach file or screenshot" onMouseEnter={e=>e.currentTarget.style.color="var(--accent)"} onMouseLeave={e=>e.currentTarget.style.color="rgba(74,74,106,0.6)"}><AttachIcon/></button>
         {/* Accept all image types including HEIC, screenshots */}
         <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg,.webp,.heic,.heif,.gif,.bmp,image/*" style={{display:"none"}} onChange={e=>{handleFiles(e.target.files);e.target.value=""}}/>
-        <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData?.items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder="Message Lance... (paste screenshots here)" rows={1} style={{flex:1,border:"none",background:"transparent",fontSize:"17px",color:"var(--text)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:300,letterSpacing:"-0.01em",fontFamily:"inherit"}}/>
-        <button className={`mic-btn${listening?" listening":" idle"}`} onClick={toggleMic} title={listening?"Stop":"Talk to Lance"}>
+        <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData .items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder="Message Lance... (paste screenshots here)" rows={1} style={{flex:1,border:"none",background:"transparent",fontSize:"17px",color:"var(--text)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:300,letterSpacing:"-0.01em",fontFamily:"inherit"}}/>
+        <button className={`mic-btn${listening " listening":" idle"}`} onClick={toggleMic} title={listening "Stop":"Talk to Lance"}>
           <MicIcon/>
         </button>
-        <button onClick={()=>send()} disabled={(!input.trim()&&pendingFiles.length===0)||loading} style={{width:"33px",height:"33px",borderRadius:"50%",background:(input.trim()||pendingFiles.length>0)&&!loading?"linear-gradient(135deg,#C9A84C,#a07830)":"rgba(0,0,0,0.08)",border:"none",cursor:(input.trim()||pendingFiles.length>0)&&!loading?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:(input.trim()||pendingFiles.length>0)&&!loading?"#fff":"#aaa",boxShadow:(input.trim()||pendingFiles.length>0)&&!loading?"0 3px 10px rgba(201,168,76,0.4)":"none",transition:"all 0.14s"}}><SendIcon/></button>
+        <button onClick={()=>send()} disabled={(!input.trim()&&pendingFiles.length===0)||loading} style={{width:"33px",height:"33px",borderRadius:"50%",background:(input.trim()||pendingFiles.length>0)&&!loading "linear-gradient(135deg,#C9A84C,#a07830)":"rgba(0,0,0,0.08)",border:"none",cursor:(input.trim()||pendingFiles.length>0)&&!loading "pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:(input.trim()||pendingFiles.length>0)&&!loading "#fff":"#aaa",boxShadow:(input.trim()||pendingFiles.length>0)&&!loading "0 3px 10px rgba(201,168,76,0.4)":"none",transition:"all 0.14s"}}><SendIcon/></button>
       </div>
     </div>
   </div></>);
