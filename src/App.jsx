@@ -141,7 +141,7 @@ export default function App(){
   const[dragOver,setDragOver]=useState(false);
   const[docxIdx,setDocxIdx]=useState(null);
   const[copiedIdx,setCopiedIdx]=useState(null);
-  const[listening,setListening]=useState(false);
+  const[listening,setListening...=useState(false);
   const[downloadingIdx,setDownloadingIdx]=useState(null);
   const[showSaved,setShowSaved]=useState(false);
   const[savedConvos,setSavedConvos]=useState([]);
@@ -199,13 +199,13 @@ export default function App(){
   },[stopSpeaking]);
 
   const toggleMic=useCallback(()=>{
-    if(listening){recognitionRef.current?.stop();setListening(false);return}
+    if(listening){recognitionRef.current?.stop();setListening...false);return}
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!SR){alert("Try Safari on iPhone for voice input.");return}
     const rec=new SR();rec.lang="en-US";rec.continuous=false;rec.interimResults=false;
-    rec.onstart=()=>setListening(true);
-    rec.onresult=(e)=>{const t=e.results[0][0].transcript;setListening(false);if(t.trim())setTimeout(()=>sendText(t.trim()),100)};
-    rec.onerror=()=>setListening(false);rec.onend=()=>setListening(false);
+    rec.onstart=()=>setListening...true);
+    rec.onresult=(e)=>{const t=e.results[0][0].transcript;setListening...false);if(t.trim())setTimeout(()=>sendText(t.trim()),100)};
+    rec.onerror=()=>setListening...false);rec.onend=()=>setListening...false);
     recognitionRef.current=rec;rec.start();
   },[listening]);
 
@@ -356,8 +356,8 @@ export default function App(){
     {/* Drag overlay */}
     {dragOver&&(<div style={{position:"fixed",inset:0,background:"rgba(41,121,255,0.18)",border:"2px dashed rgba(130,177,255,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><div style={{color:"#fff",fontSize:"18px",fontWeight:600}}>Drop file or screenshot</div></div>)}
 
-    {/* Listening overlay */}
-    {listening&&(<div style={{position:"fixed",inset:0,background:"rgba(13,19,33,0.85)",zIndex:300,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}} onClick={toggleMic}><div style={{width:"80px",height:"80px",borderRadius:"50%",background:"linear-gradient(135deg,#C9A84C,#a07830)",display:"flex",alignItems:"center",justifyContent:"center",animation:"micPulse 1s ease-in-out infinite",marginBottom:"20px"}}><MicIcon/></div><div style={{color:"#fff",fontSize:"18px",fontWeight:600,marginBottom:"8px"}}>Listening&#195;&#162;&#194;&#128;&#194;&#166;</div><div style={{color:"rgba(255,255,255,0.5)",fontSize:"14px"}}>Tap anywhere to cancel</div></div>)}
+    {/* Listening...overlay */}
+    {listening&&(<div style={{position:"fixed",inset:0,background:"rgba(13,19,33,0.85)",zIndex:300,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}} onClick={toggleMic}><div style={{width:"80px",height:"80px",borderRadius:"50%",background:"linear-gradient(135deg,#C9A84C,#a07830)",display:"flex",alignItems:"center",justifyContent:"center",animation:"micPulse 1s ease-in-out infinite",marginBottom:"20px"}}><MicIcon/></div><div style={{color:"#fff",fontSize:"18px",fontWeight:600,marginBottom:"8px"}}>Listening...#195;&#162;&#194;&#128;&#194;&#166;</div><div style={{color:"rgba(255,255,255,0.5)",fontSize:"14px"}}>Tap anywhere to cancel</div></div>)}
 
     {/* Saved conversations panel */}
     {showSaved&&(<div className="saved-panel">
@@ -421,7 +421,7 @@ export default function App(){
         {pinnedConvos.map((c,i)=>(<button key={c.id} onClick={()=>handleLoadConvo(c)} style={{background:activeConvoId===c.id?"rgba(201,168,76,0.25)":"rgba(255,255,255,0.08)",border:`1px solid ${activeConvoId===c.id?"rgba(201,168,76,0.5)":"rgba(255,255,255,0.15)"}`,borderRadius:"8px",padding:"3px 8px",cursor:"pointer",fontSize:"11px",color:activeConvoId===c.id?"#C9A84C":"rgba(255,255,255,0.6)",fontFamily:"inherit",maxWidth:"70px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={c.title}>&#195;&#176;&#194;&#159;&#194;&#147;&#194;&#140; {c.title.slice(0,12)}</button>))}
         <button onClick={()=>setShowSaved(s=>!s)} style={{background:showSaved?"rgba(201,168,76,0.2)":"rgba(255,255,255,0.08)",border:`1px solid ${showSaved?"rgba(201,168,76,0.4)":"rgba(255,255,255,0.15)"}`,borderRadius:"8px",padding:"4px 9px",cursor:"pointer",color:showSaved?"#C9A84C":"rgba(255,255,255,0.6)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px"}}><SaveIcon/><span style={{fontSize:"12px",fontWeight:600}}>{allSaved.length}</span></button>
         {messages.length>0&&(<button onClick={handleSave} style={{background:"rgba(201,168,76,0.12)",border:"1px solid rgba(201,168,76,0.3)",borderRadius:"8px",padding:"4px 9px",cursor:"pointer",color:"#C9A84C",fontSize:"12px",fontWeight:600,fontFamily:"inherit"}}>Save</button>)}
-        <button className="teach-toggle" onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} style={{background:teachMode?"rgba(201,168,76,0.2)":"rgba(255,255,255,0.08)",borderColor:teachMode?"rgba(201,168,76,0.5)":"rgba(255,255,255,0.15)",color:teachMode?"#C9A84C":"rgba(255,255,255,0.55)",padding:"4px 9px"}}>{teachMode?"&#195;&#176;&#194;&#159;&#194;&#148;&#194;&#138;":"&#195;&#176;&#194;&#159;&#194;&#148;&#194;&#135;"}</button>
+        <button className="teach-toggle" onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} style={{background:teachMode?"rgba(201,168,76,0.2)":"rgba(255,255,255,0.08)",borderColor:teachMode?"rgba(201,168,76,0.5)":"rgba(255,255,255,0.15)",color:teachMode?"#C9A84C":"rgba(255,255,255,0.55)",padding:"4px 9px"}}>{teachMode?"Voice ON":"Voice OFF"}</button>
         {speakingIdx!==null&&(<button onClick={stopSpeaking} style={{background:"rgba(255,80,80,0.2)",border:"1px solid rgba(255,80,80,0.4)",borderRadius:"8px",padding:"4px 8px",cursor:"pointer",color:"rgba(255,160,160,0.9)",fontSize:"12px",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px"}}><StopIcon/></button>)}
         {messages.length>0&&(<button onClick={clearChat} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"8px",cursor:"pointer",fontSize:"12px",color:"rgba(255,255,255,0.5)",fontFamily:"inherit",padding:"4px 8px"}}>Clear</button>)}
       </div>
@@ -478,7 +478,7 @@ export default function App(){
         <button onClick={()=>fileRef.current?.click()} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(74,74,106,0.6)",display:"flex",alignItems:"center",padding:"4px",borderRadius:"6px",transition:"color 0.14s",flexShrink:0}} title="Attach file or screenshot" onMouseEnter={e=>e.currentTarget.style.color="var(--accent)"} onMouseLeave={e=>e.currentTarget.style.color="rgba(74,74,106,0.6)"}><AttachIcon/></button>
         {/* Accept all image types including HEIC, screenshots */}
         <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg,.webp,.heic,.heif,.gif,.bmp,image/*" style={{display:"none"}} onChange={e=>{handleFiles(e.target.files);e.target.value=""}}/>
-        <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData?.items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder="Message Lance&#195;&#162;&#194;&#128;&#194;&#166; (paste screenshots here)" rows={1} style={{flex:1,border:"none",background:"transparent",fontSize:"17px",color:"var(--text)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:300,letterSpacing:"-0.01em",fontFamily:"inherit"}}/>
+        <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData?.items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder="Message Lance... (paste screenshots here)" rows={1} style={{flex:1,border:"none",background:"transparent",fontSize:"17px",color:"var(--text)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:300,letterSpacing:"-0.01em",fontFamily:"inherit"}}/>
         <button className={`mic-btn${listening?" listening":" idle"}`} onClick={toggleMic} title={listening?"Stop":"Talk to Lance"}>
           <MicIcon/>
         </button>
