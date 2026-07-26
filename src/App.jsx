@@ -12,15 +12,15 @@ const DEVOTION_URL=`${SUPABASE_URL}/functions/v1/lance-devotion`;
 
 // Pinned conversations DB
 async function loadPinned(){
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned active=eq.true&order=pin_order.asc,saved_order.asc`,{headers:SB_HEADERS});
-  return r.ok r.json():[];
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned?active=eq.true&order=pin_order.asc,saved_order.asc`,{headers:SB_HEADERS});
+  return r.ok?r.json():[];
 }
 async function saveConversation(title,summary,messages,pinned=false,pinOrder=0,savedOrder=0){
   const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned`,{
     method:"POST",headers:{...SB_HEADERS,"Prefer":"return=representation"},
     body:JSON.stringify({title,summary,messages,pinned,pin_order:pinOrder,saved_order:savedOrder,active:true})
   });
-  return r.ok r.json():null;
+  return r.ok?r.json():null;
 }
 async function togglePin(id,pinned,pinOrder){
   await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned id=eq.${id}`,{
