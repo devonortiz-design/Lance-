@@ -35,6 +35,16 @@ async function deleteConversation(id){
   });
 }
 
+function generateFilename(text){
+  try{
+    if(!text||typeof text!=='string')return 'Lance Document';
+    var lines=text.split('\n');
+    var heading=lines.find(function(l){return l.trim().startsWith('#');});
+    var raw=heading?heading.replace(/^#+\s*/,''):lines.find(function(l){return l.trim();})||'Lance Document';
+    return raw.replace(/[*_`#>]/g,'').replace(/[^a-zA-Z0-9 ']/g,' ').replace(/\s+/g,' ').trim().slice(0,60)||'Lance Document';
+  }catch(e){return 'Lance Document';}
+}
+
 function MicIcon(){return(<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="5" y="1" width="5" height="8" rx="2.5" stroke="currentColor" strokeWidth="1.4"/><path d="M3 7.5a4.5 4.5 0 009 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="7.5" y1="12" x2="7.5" y2="14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>)}
 
 function WordDocCard({text, filename, onDownload, downloading}){
