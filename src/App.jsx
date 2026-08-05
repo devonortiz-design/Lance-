@@ -267,10 +267,10 @@ export default function App(){
   const handleDownload=async(text,idx)=>{
     try{
       setDocxIdx(idx);setDownloadingIdx(idx);
-      const res=await fetch(DOCX_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,filename:generateFilename(m.content)})});
+      const res=await fetch(DOCX_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,filename:generateFilename(text)})});
       if(!res.ok)throw new Error("Docx failed: "+res.status);
       const blob=await res.blob();const url=URL.createObjectURL(blob);
-      const a=document.createElement("a");a.href=url;a.download=(text.split("\n").find(l=>l.startsWith("#"))?.replace(/^#+\s*/,"").replace(/[*_`#>]/g,"").replace(/[^a-zA-Z0-9 ']/g," ").trim().slice(0,60)||"Lance Document")+".docx";
+      const a=document.createElement("a");a.href=url;a.download=(generateFilename(text)||"Lance Document")+".docx";
       document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
       setDownloadingIdx(null);
     }catch(e){setDownloadingIdx(null);alert("Download failed: "+e.message)}
