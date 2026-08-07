@@ -124,5 +124,16 @@ export async function readFile(file) {
 }
 
 export function detectDocumentContent(text) {
-  return [/^#\s/m, /^##\s/m, /sermon outline/i, /exam\s*key/i, /study guide/i, /chapter \d+/i, /outline:/i].some(p => p.test(text));
+  if (!text || typeof text !== "string") return false;
+  // Any response with markdown headings is a document
+  if (/^#{1,4}\s/m.test(text)) return true;
+  // Substantial structured content (long + has lists or multiple sections)
+  const isLong = text.length > 600;
+  const hasStructure = /^[-*]\s/m.test(text) || /^\d+\.\s/m.test(text) || /^>\s/m.test(text);
+  if (isLong && hasStructure) return true;
+  // Explicit document types
+  const docSignals = [/sermon/i, /exam\s*key/i, /study guide/i, /chapter \d+/i, /outline/i,
+    /lesson plan/i, /curriculum/i, /syllabus/i, /proposal/i, /business plan/i, /report/i,
+    /letter/i, /memo/i, /agenda/i, /meeting notes/i, /devotion/i, /essay/i, /manuscript/i];
+  return docSignals.some(p => p.test(text)) && text.length > 400;
 }
