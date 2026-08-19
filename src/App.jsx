@@ -132,6 +132,8 @@ textarea:focus,button:focus{outline:none}
 .mic-btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:33px;height:33px;border-radius:50%;transition:all 0.14s;flex-shrink:0}
 .mic-btn.idle{background:rgba(0,0,0,0.08);color:#aaa}
 .mic-btn.listening{background:linear-gradient(135deg,#C9A84C,#a07830);color:#fff;animation:micPulse 1s ease-in-out infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.saved-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:390;animation:fadeIn 0.2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .saved-panel{position:fixed;right:0;top:0;bottom:0;width:280px;background:rgba(13,19,33,0.97);border-left:1px solid rgba(201,168,76,0.2);backdrop-filter:blur(20px);z-index:400;display:flex;flex-direction:column;animation:slideIn 0.22s ease}
 .saved-item{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.07);cursor:pointer;transition:background 0.12s}
 .saved-item:hover{background:rgba(255,255,255,0.05)}
@@ -370,6 +372,7 @@ export default function App(){
     {listening&&(<div style={{position:"fixed",inset:0,background:"rgba(13,19,33,0.85)",zIndex:300,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}} onClick={toggleMic}><div style={{width:"80px",height:"80px",borderRadius:"50%",background:"linear-gradient(135deg,#C9A84C,#a07830)",display:"flex",alignItems:"center",justifyContent:"center",animation:"micPulse 1s ease-in-out infinite",marginBottom:"20px"}}><MicIcon/></div><div style={{color:"#fff",fontSize:"18px",fontWeight:600,marginBottom:"8px"}}>Listening......</div><div style={{color:"rgba(255,255,255,0.5)",fontSize:"14px"}}>Tap anywhere to cancel</div></div>)}
 
     {/* Saved conversations panel */}
+    {showSaved&&(<div className="saved-backdrop" onClick={()=>setShowSaved(false)}/>)}
     {showSaved&&(<div className="saved-panel">
       <div style={{padding:"16px 14px",borderBottom:"1px solid rgba(201,168,76,0.2)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div style={{color:"#C9A84C",fontSize:"14px",fontWeight:600}}>Saved ({allSaved.length}/5)</div>
