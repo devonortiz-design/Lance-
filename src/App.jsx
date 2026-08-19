@@ -223,7 +223,7 @@ export default function App(){
   const handleSave=useCallback(async()=>{
     if(messages.length===0)return;
     const saved=savedConvos.filter(c=>c.active!==false);
-    if(saved.length>=5&&!activeConvoId){setSaveStatus("max");setTimeout(()=>setSaveStatus(null),2000);return}
+    if(saved.length>=10&&!activeConvoId){setSaveStatus("max");setTimeout(()=>setSaveStatus(null),2000);return}
     const firstUser=messages.find(m=>m.role==="user")?.content||"Conversation";
     const title=firstUser.slice(0,50)+(firstUser.length>50?"......":"");
     const summary=messages.slice(-2).map(m=>m.content.slice(0,100)).join(" | ");
@@ -411,7 +411,7 @@ export default function App(){
         </div>))}
       </div>
 
-      <div style={{padding:"12px 14px",borderTop:"1px solid rgba(255,255,255,0.08)",fontSize:"11px",color:"rgba(255,255,255,0.3)",textAlign:"center"}}>Save up to 5 conversations ...... Pin 2</div>
+      <div style={{padding:"12px 14px",borderTop:"1px solid rgba(255,255,255,0.08)",fontSize:"11px",color:"rgba(255,255,255,0.3)",textAlign:"center"}}>Save up to 10 conversations ...... Pin 2</div>
     </div>)}
 
     {/* Header */}
