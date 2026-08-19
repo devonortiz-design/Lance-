@@ -374,8 +374,8 @@ export default function App(){
     {/* Saved conversations panel */}
     {showSaved&&(<div className="saved-backdrop" onClick={()=>setShowSaved(false)}/>)}
     {showSaved&&(<div className="saved-panel">
-      <div style={{padding:"16px 14px",borderBottom:"1px solid rgba(201,168,76,0.2)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <div style={{color:"#C9A84C",fontSize:"14px",fontWeight:600}}>Saved ({allSaved.length}/5)</div>
+      <div style={{padding:"calc(16px + env(safe-area-inset-top)) 14px 16px",borderBottom:"1px solid rgba(201,168,76,0.2)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{color:"#C9A84C",fontSize:"14px",fontWeight:600}}>Saved ({allSaved.length}/10)</div>
         <button onClick={()=>setShowSaved(false)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:"50%",cursor:"pointer",color:"rgba(255,255,255,0.85)",fontSize:"20px",lineHeight:1,width:"36px",height:"36px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>×</button>
       </div>
 
