@@ -592,7 +592,7 @@ export default function App(){
       {messages.map((m,i)=>(<div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",animation:"fadeUp 0.2s ease both",marginBottom:"4px"}}>
         {m.role==="assistant"&&(<div style={{flexShrink:0,marginRight:"8px",alignSelf:"flex-end"}}><LanceLogo size={22}/></div>)}
         <div style={{maxWidth:"76%",display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start",gap:"4px"}}>
-          <div style={{padding:"11px 14px",borderRadius:m.role==="user"?"18px 18px 5px 18px":"5px 18px 18px 18px",background:m.role==="user"?"linear-gradient(135deg,#C9A84C,#a07830)":"rgba(255,255,255,0.95)",color:m.role==="user"?"#fff":"var(--text)",fontSize:"16px",lineHeight:"1.65",whiteSpace:"pre-wrap",fontWeight:300,boxShadow:m.role==="user"?"0 4px 16px rgba(0,0,0,0.25)":"0 4px 20px rgba(0,0,0,0.15)",border:m.role==="user"?"none":"1px solid rgba(255,255,255,0.5)"}}>
+          <div style={{padding:"11px 14px",borderRadius:m.role==="user"?"18px 18px 5px 18px":"5px 18px 18px 18px",background:m.role==="user"?"linear-gradient(135deg,#C9A84C,#a07830)":"rgba(255,255,255,0.95)",color:m.role==="user"?"#fff":"var(--text)",fontSize:"17px",lineHeight:"1.6",whiteSpace:"pre-wrap",fontWeight:400,boxShadow:m.role==="user"?"0 4px 16px rgba(0,0,0,0.25)":"0 4px 20px rgba(0,0,0,0.15)",border:m.role==="user"?"none":"1px solid rgba(255,255,255,0.5)"}}>
             {/* Show image preview if message contains image */}
             {m.imagePreview&&(<img src={m.imagePreview} alt="screenshot" style={{maxWidth:"100%",borderRadius:"8px",marginBottom:"8px",display:"block"}}/>)}
             {renderText(m.content)}
