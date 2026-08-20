@@ -1,10 +1,12 @@
 import React,{useState,useRef,useEffect,useCallback}from"react";
 import{callClaude,speak,readFile,detectDocumentContent,webSearch,formatSearchResults}from"./api";
-import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags}from"./memory";
+import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag}from"./memory";
 import{SESSION_ID,SUPABASE_URL,SB_HEADERS}from"./config";
 import{LanceLogo,SendIcon,SpeakerIcon,StopIcon,DownloadIcon,AttachIcon,CloseIcon}from"./icons";
 
 const DOCX_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-docx";
+const PPTX_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-pptx";
+const FLYER_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-flyer";
 const TTS_URL=`${SUPABASE_URL}/functions/v1/lance-tts`;
 const SERMON_URL=`${SUPABASE_URL}/functions/v1/lance-sermon-prep`;
 const EXAM_URL=`${SUPABASE_URL}/functions/v1/lance-exam-gen`;
@@ -102,6 +104,101 @@ function WordDocCard({text, filename, onDownload, downloading}){
         </svg>
       )}
       {downloading&&(
+        <div style={{width:"16px",height:"16px",border:"2px solid #C9A84C",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite",flexShrink:0}}/>
+      )}
+    </div>
+  );
+}
+
+function PptxDocCard({text, filename, onDownload, downloading}){
+  return(
+    <div onClick={onDownload} style={{
+      display:"flex",alignItems:"center",gap:"10px",
+      padding:"10px 14px",marginTop:"6px",
+      background:"rgba(255,255,255,0.97)",
+      border:"1px solid rgba(26,35,64,0.15)",
+      borderRadius:"12px",cursor:"pointer",
+      boxShadow:"0 2px 12px rgba(0,0,0,0.1)",
+      transition:"all 0.15s",maxWidth:"220px",
+      opacity:downloading?0.7:1,
+    }}
+    onMouseEnter={e=>e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,0.18)"}
+    onMouseLeave={e=>e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,0.1)"}
+    >
+      <div style={{
+        width:"36px",height:"44px",borderRadius:"4px",flexShrink:0,
+        background:"linear-gradient(160deg,#D24726 0%,#A6350F 100%)",
+        display:"flex",flexDirection:"column",alignItems:"center",
+        justifyContent:"center",position:"relative",
+        boxShadow:"0 2px 6px rgba(210,71,38,0.35)"
+      }}>
+        <div style={{
+          position:"absolute",top:0,right:0,
+          width:"10px",height:"10px",
+          background:"rgba(255,255,255,0.25)",
+          borderBottomLeftRadius:"4px"
+        }}/>
+        <span style={{color:"#fff",fontSize:"11px",fontWeight:700,letterSpacing:"0.02em",marginTop:"4px"}}>P</span>
+        <div style={{width:"18px",height:"14px",border:"1.5px solid rgba(255,255,255,0.5)",marginTop:"3px",borderRadius:"1px"}}/>
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:"13px",fontWeight:600,color:"#1a2340",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+          {downloading?"Preparing...":"Lance Slides"}
+        </div>
+        <div style={{fontSize:"11px",color:"#6B7280",marginTop:"1px"}}>
+          {downloading?"Building your .pptx":"Tap to download .pptx"}
+        </div>
+      </div>
+      {!downloading&&(
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,color:"#C9A84C"}}>
+          <path d="M8 1v9M4.5 6.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M2 13h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+        </svg>
+      )}
+      {downloading&&(
+        <div style={{width:"16px",height:"16px",border:"2px solid #C9A84C",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite",flexShrink:0}}/>
+      )}
+    </div>
+  );
+}
+
+function FlyerCard({onGenerate, generating}){
+  return(
+    <div onClick={onGenerate} style={{
+      display:"flex",alignItems:"center",gap:"10px",
+      padding:"10px 14px",marginTop:"6px",
+      background:"rgba(255,255,255,0.97)",
+      border:"1px solid rgba(26,35,64,0.15)",
+      borderRadius:"12px",cursor:"pointer",
+      boxShadow:"0 2px 12px rgba(0,0,0,0.1)",
+      transition:"all 0.15s",maxWidth:"220px",
+      opacity:generating?0.7:1,
+    }}
+    onMouseEnter={e=>e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,0.18)"}
+    onMouseLeave={e=>e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,0.1)"}
+    >
+      <div style={{
+        width:"36px",height:"44px",borderRadius:"4px",flexShrink:0,
+        background:"linear-gradient(160deg,#C9A84C 0%,#8a6e2a 100%)",
+        display:"flex",alignItems:"center",justifyContent:"center",
+        boxShadow:"0 2px 6px rgba(201,168,76,0.35)"
+      }}>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="#fff" strokeWidth="1.4"/><circle cx="6.5" cy="6.5" r="1.5" fill="#fff"/><path d="M2 12l4-4 3 3 3-4 4 5" stroke="#fff" strokeWidth="1.4" strokeLinejoin="round" fill="none"/></svg>
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:"13px",fontWeight:600,color:"#1a2340"}}>
+          {generating?"Designing...":"Lance Flyer"}
+        </div>
+        <div style={{fontSize:"11px",color:"#6B7280",marginTop:"1px"}}>
+          {generating?"Building your graphic":"Tap to create a flyer"}
+        </div>
+      </div>
+      {!generating&&(
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,color:"#C9A84C"}}>
+          <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      )}
+      {generating&&(
         <div style={{width:"16px",height:"16px",border:"2px solid #C9A84C",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite",flexShrink:0}}/>
       )}
     </div>
@@ -305,6 +402,30 @@ export default function App(){
       setDownloadingIdx(null);
     }catch(e){setDownloadingIdx(null);alert("Download failed: "+e.message)}
   };
+  const handleDownloadPptx=async(text,idx)=>{
+    try{
+      setDownloadingIdx(idx);
+      const titleLine=text.split("\n").find(l=>l.trim().startsWith("#"));
+      const pptxTitle=titleLine?titleLine.replace(/^#+\s*/,"").trim():"Lance Presentation";
+      const res=await fetch(PPTX_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,filename:generateFilename(text),title:pptxTitle})});
+      if(!res.ok)throw new Error("Pptx failed: "+res.status);
+      const blob=await res.blob();const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");a.href=url;a.download=(generateFilename(text)||"Lance Presentation")+".pptx";
+      document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+      setDownloadingIdx(null);
+    }catch(e){setDownloadingIdx(null);alert("Download failed: "+e.message)}
+  };
+  const handleGenerateFlyer=async(flyerData,idx)=>{
+    try{
+      setDownloadingIdx(idx);
+      const res=await fetch(FLYER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...flyerData,filename:flyerData.title||"lance-flyer"})});
+      if(!res.ok)throw new Error("Flyer failed: "+res.status);
+      const blob=await res.blob();const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");a.href=url;a.download=(flyerData.title||"Lance Flyer").replace(/[^a-zA-Z0-9 ]/g," ").trim()+".svg";
+      document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+      setDownloadingIdx(null);
+    }catch(e){setDownloadingIdx(null);alert("Flyer failed: "+e.message)}
+  };
 
   const handleCopy=async(text,idx)=>{
     try{await navigator.clipboard.writeText(text);setCopiedIdx(idx);setTimeout(()=>setCopiedIdx(null),2000)}catch(e){}
@@ -338,7 +459,7 @@ export default function App(){
         raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile);
       }
       const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean);
-      setMessages([...next,{role:"assistant",content:clean,isDoc}]);msgCount.current+=2;
+      setMessages([...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw)}]);msgCount.current+=2;
       saveMessage("assistant",clean).catch(()=>{});
       for(const tag of tags){
         if(tag.type==="memory"){saveMemoryFact(tag.category,tag.fact,tag.confidence,SESSION_ID).catch(()=>{});}
@@ -365,7 +486,7 @@ export default function App(){
         const cleanMessages=next.map(({role,content})=>({role,content}));
         const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile);
         const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean);
-        setMessages([...next,{role:"assistant",content:clean,isDoc}]);msgCount.current+=2;
+        setMessages([...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw)}]);msgCount.current+=2;
         saveMessage("assistant",clean).catch(()=>{});
         if(teachMode)speakText(clean,idx);
       }catch(e){setMessages(prev=>[...prev,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);}
@@ -482,7 +603,12 @@ export default function App(){
               <button className="speak-btn" onClick={()=>handleDownload(m.content,i)} style={{color:"rgba(255,255,255,0.6)"}} title="Download Word doc"><DownloadIcon/></button>
               <button className={`copy-btn${copiedIdx===i?" copied":""}`} onClick={()=>handleCopy(m.content,i)}>{copiedIdx===i?"...... Copied":"Copy"}</button>
             </div>
-            {m.isDoc&&(<WordDocCard text={m.content} filename={generateFilename(m.content)} onDownload={()=>handleDownload(m.content,i)} downloading={downloadingIdx===i}/> )})
+            {m.flyerData?(
+              <FlyerCard onGenerate={()=>handleGenerateFlyer(m.flyerData,i)} generating={downloadingIdx===i}/>
+            ):(m.isDoc&&(<div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
+              <WordDocCard text={m.content} filename={generateFilename(m.content)} onDownload={()=>handleDownload(m.content,i)} downloading={downloadingIdx===i}/>
+              <PptxDocCard text={m.content} filename={generateFilename(m.content)} onDownload={()=>handleDownloadPptx(m.content,i)} downloading={downloadingIdx===i}/>
+            </div>))}
           </div>)}
         </div>
       </div>))}
