@@ -68,5 +68,29 @@ export function parseMemoryTags(text) {
 }
 
 export function stripMemoryTags(t) {
-  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").trim();
+  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").trim();
+}
+
+export function parseFlyerTag(text) {
+  const re = /\[FLYER:\s*([^\]]+)\]/i;
+  const m = re.exec(text);
+  if (!m) return null;
+  const fields = {};
+  m[1].split("|").forEach(pair => {
+    const eq = pair.indexOf("=");
+    if (eq === -1) return;
+    const key = pair.slice(0, eq).trim().toLowerCase();
+    const val = pair.slice(eq + 1).trim();
+    fields[key] = val;
+  });
+  return {
+    title: fields.title || "Event",
+    subtitle: fields.subtitle || "",
+    date: fields.date || "",
+    time: fields.time || "",
+    location: fields.location || "",
+    verse: fields.verse || "",
+    verseRef: fields.verseref || fields.verse_ref || "",
+    template: fields.template || "event",
+  };
 }
