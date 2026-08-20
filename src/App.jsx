@@ -251,6 +251,8 @@ export default function App(){
   const[profile,setProfile]=useState([]);
   const[recentSessions,setRecentSessions]=useState([]);
   const[teachMode,setTeachMode]=useState(false);
+  const voiceModeRef=useRef(false);
+  useEffect(()=>{voiceModeRef.current=teachMode},[teachMode]);
   const[speakingIdx,setSpeakingIdx]=useState(null);
   const[loadingIdx,setLoadingIdx]=useState(null);
   const[pendingFiles,setPendingFiles]=useState([]);
@@ -303,29 +305,34 @@ export default function App(){
         const blob=await res.blob();const url=URL.createObjectURL(blob);
         const audio=new Audio(url);
         audio.onplay=()=>{setLoadingIdx(null);setSpeakingIdx(idx)};
-        audio.onended=()=>{setSpeakingIdx(null);audioRef.current=null;URL.revokeObjectURL(url)};
+        audio.onended=()=>{setSpeakingIdx(null);audioRef.current=null;URL.revokeObjectURL(url);if(voiceModeRef.current){setTimeout(()=>startListening(),700)}};
         audio.onerror=()=>{setSpeakingIdx(null);audioRef.current=null};
         audioRef.current=audio;audio.play();
       }else{
         setLoadingIdx(null);setSpeakingIdx(idx);
         const utt=new SpeechSynthesisUtterance(text.slice(0,2000));
-        utt.rate=0.95;utt.onend=()=>setSpeakingIdx(null);
+        utt.rate=0.95;utt.onend=()=>{setSpeakingIdx(null);if(voiceModeRef.current){setTimeout(()=>startListening(),700)}};
         window.speechSynthesis.speak(utt);
         audioRef.current={pause:()=>window.speechSynthesis.cancel()};
       }
     }catch(e){setLoadingIdx(null);setSpeakingIdx(null)}
   },[stopSpeaking]);
 
-  const toggleMic=useCallback(()=>{
-    if(listening){recognitionRef.current?.stop();setListening(false);return}
+  const startListening=useCallback(()=>{
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    if(!SR){alert("Try Safari on iPhone for voice input.");return}
+    if(!SR)return;
     const rec=new SR();rec.lang="en-US";rec.continuous=false;rec.interimResults=false;
     rec.onstart=()=>setListening(true);
     rec.onresult=(e)=>{const t=e.results[0][0].transcript;setListening(false);if(t.trim())setTimeout(()=>sendText(t.trim()),100)};
     rec.onerror=()=>setListening(false);rec.onend=()=>setListening(false);
     recognitionRef.current=rec;rec.start();
-  },[listening]);
+  },[sendText]);
+  const toggleMic=useCallback(()=>{
+    if(listening){recognitionRef.current?.stop();setListening(false);return}
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){alert("Try Safari on iPhone for voice input.");return}
+    startListening();
+  },[listening,startListening]);
 
   // Save current conversation
   const handleSave=useCallback(async()=>{
