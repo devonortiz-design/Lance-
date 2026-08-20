@@ -458,7 +458,7 @@ export default function App(){
         const cleanMessages=apiMessages.map(({role,content})=>({role,content}));
         raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile);
       }
-      const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean);
+      const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,t);
       setMessages([...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw)}]);msgCount.current+=2;
       saveMessage("assistant",clean).catch(()=>{});
       for(const tag of tags){
@@ -485,7 +485,7 @@ export default function App(){
       try{
         const cleanMessages=next.map(({role,content})=>({role,content}));
         const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile);
-        const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean);
+        const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,t);
         setMessages([...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw)}]);msgCount.current+=2;
         saveMessage("assistant",clean).catch(()=>{});
         if(teachMode)speakText(clean,idx);
