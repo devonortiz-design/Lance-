@@ -54,6 +54,7 @@ function generateFilename(text){
 }
 
 function MicIcon(){return(<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="5" y="1" width="5" height="8" rx="2.5" stroke="currentColor" strokeWidth="1.4"/><path d="M3 7.5a4.5 4.5 0 009 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="7.5" y1="12" x2="7.5" y2="14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>)}
+function VoiceChatIcon(){return(<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 9V7M4.5 11V5M7 13V3M9.5 11V5M12 9V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>)}
 
 function WordDocCard({text, filename, onDownload, downloading}){
   return(
@@ -333,6 +334,16 @@ export default function App(){
     if(!SR){alert("Try Safari on iPhone for voice input.");return}
     startListening();
   },[listening,startListening]);
+  const toggleVoiceConversation=useCallback(()=>{
+    if(teachMode){
+      setTeachMode(false);stopSpeaking();
+      if(listening){recognitionRef.current?.stop();setListening(false)}
+      return;
+    }
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){alert("Try Safari on iPhone for voice conversation.");return}
+    setTeachMode(true);startListening();
+  },[teachMode,listening,startListening,stopSpeaking]);
 
   // Save current conversation
   const handleSave=useCallback(async()=>{
@@ -643,6 +654,9 @@ export default function App(){
         {/* Accept all image types including HEIC, screenshots */}
         <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg,.webp,.heic,.heif,.gif,.bmp,image/*" style={{display:"none"}} onChange={e=>{handleFiles(e.target.files);e.target.value=""}}/>
         <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData?.items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder="Message Lance...... (paste screenshots here)" rows={1} style={{flex:1,border:"none",background:"transparent",fontSize:"17px",color:"var(--text)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:300,letterSpacing:"-0.01em",fontFamily:"inherit"}}/>
+        <button className={`mic-btn${teachMode?" listening":" idle"}`} onClick={toggleVoiceConversation} title={teachMode?"End voice conversation":"Start voice conversation"} style={{marginRight:"2px"}}>
+          <VoiceChatIcon/>
+        </button>
         <button className={`mic-btn${listening?" listening":" idle"}`} onClick={toggleMic} title={listening?"Stop":"Talk to Lance"}>
           <MicIcon/>
         </button>
