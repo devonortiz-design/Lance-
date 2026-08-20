@@ -92,5 +92,6 @@ export function parseFlyerTag(text) {
     verse: fields.verse || "",
     verseRef: fields.verseref || fields.verse_ref || "",
     template: fields.template || "event",
+    brand: fields.brand || "church",
   };
 }
