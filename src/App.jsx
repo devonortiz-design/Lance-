@@ -326,7 +326,7 @@ export default function App(){
     rec.onresult=(e)=>{const t=e.results[0][0].transcript;setListening(false);if(t.trim())setTimeout(()=>sendText(t.trim()),100)};
     rec.onerror=()=>setListening(false);rec.onend=()=>setListening(false);
     recognitionRef.current=rec;rec.start();
-  },[sendText]);
+  },[]);
   const toggleMic=useCallback(()=>{
     if(listening){recognitionRef.current?.stop();setListening(false);return}
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
