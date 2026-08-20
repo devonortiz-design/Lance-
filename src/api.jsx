@@ -123,17 +123,19 @@ export async function readFile(file) {
   });
 }
 
-export function detectDocumentContent(text) {
+export function detectDocumentContent(text, userRequest) {
   if (!text || typeof text !== "string") return false;
-  // Any response with markdown headings is a document
-  if (/^#{1,4}\s/m.test(text)) return true;
-  // Substantial structured content (long + has lists or multiple sections)
-  const isLong = text.length > 600;
-  const hasStructure = /^[-*]\s/m.test(text) || /^\d+\.\s/m.test(text) || /^>\s/m.test(text);
-  if (isLong && hasStructure) return true;
-  // Explicit document types
-  const docSignals = [/sermon/i, /exam\s*key/i, /study guide/i, /chapter \d+/i, /outline/i,
-    /lesson plan/i, /curriculum/i, /syllabus/i, /proposal/i, /business plan/i, /report/i,
-    /letter/i, /memo/i, /agenda/i, /meeting notes/i, /devotion/i, /essay/i, /manuscript/i];
-  return docSignals.some(p => p.test(text)) && text.length > 400;
+  // Only trigger when the PERSON explicitly asked for a document, study, or sermon --
+  // never based on the response merely looking structured.
+  const req = (userRequest || "").toLowerCase();
+  const explicitAsk = [
+    /\bsermon\b/, /\bstudy guide\b/, /\bbible study\b/, /\bexam\b/, /\bquiz\b/,
+    /\blesson plan\b/, /\bcurriculum\b/, /\bsyllabus\b/, /\bdevotion(al)?\b/,
+    /\bwrite (me |us )?a (letter|report|proposal|memo|essay|outline|document|doc)\b/,
+    /\bdraft (me |us )?a (letter|report|proposal|memo|email)\b/,
+    /\bcreate (a |an )?(document|doc|report|proposal|outline|study|handout)\b/,
+    /\bbusiness plan\b/, /\bmeeting notes\b/, /\bmeeting agenda\b/,
+    /\boutline (for|on)\b/, /\bstudy (on|guide)\b/, /\bchapter \d+\b/,
+  ].some(p => p.test(req));
+  return explicitAsk;
 }
