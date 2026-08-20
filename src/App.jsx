@@ -34,6 +34,12 @@ async function deleteConversation(id){
     body:JSON.stringify({active:false,updated_at:new Date().toISOString()})
   });
 }
+async function renameConversation(id,title){
+  await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned?id=eq.${id}`,{
+    method:"PATCH",headers:SB_HEADERS,
+    body:JSON.stringify({title,updated_at:new Date().toISOString()})
+  });
+}
 
 function generateFilename(text){
   try{
@@ -104,6 +110,7 @@ function WordDocCard({text, filename, onDownload, downloading}){
 function PinIcon({active}){return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8.5 1.5L11.5 4.5L9 7L9.5 10.5L6.5 8L3.5 10.5L4 7L1.5 4.5L4.5 1.5L6.5 3.5L8.5 1.5Z" stroke="currentColor" strokeWidth="1.3" fill={active?"currentColor":"none"} strokeLinejoin="round"/></svg>)}
 function SaveIcon(){return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 2h9v9l-4.5-2L2 11V2Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg>)}
 function TrashIcon(){return(<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 3h9M4 3V2h4v1M5 5.5v4M7 5.5v4M2 3l.8 7.2A1 1 0 003.8 11h4.4a1 1 0 001-.8L10 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>)}
+function PencilIcon(){return(<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg>)}
 
 function renderText(t){try{if(!t)return "";return t.replace(/#{1,6} /g,"").replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1").replace(/__(.*?)__/g,"$1").replace(/`(.*?)`/g,"$1").replace(/^[-*] /gm,"\u2022 ").replace(/^---+$/gm,"").replace(/\n\n\n+/g,"\n\n").trim()}catch(e){return String(t||"")}}
 
@@ -156,6 +163,8 @@ export default function App(){
   const[listening,setListening]=useState(false);
   const[downloadingIdx,setDownloadingIdx]=useState(null);
   const[showSaved,setShowSaved]=useState(false);
+  const[editingId,setEditingId]=useState(null);
+  const[editTitle,setEditTitle]=useState("");
   const[savedConvos,setSavedConvos]=useState([]);
   const[activeConvoId,setActiveConvoId]=useState(null);
   const[saveStatus,setSaveStatus]=useState(null);
@@ -266,6 +275,15 @@ export default function App(){
     setSavedConvos(Array.isArray(updated)?updated:[]);
     if(activeConvoId===id){setActiveConvoId(null)}
   },[activeConvoId]);
+  const startRename=useCallback((c)=>{setEditingId(c.id);setEditTitle(c.title||"")},[]);
+  const commitRename=useCallback(async()=>{
+    if(editingId&&editTitle.trim()){
+      await renameConversation(editingId,editTitle.trim());
+      const updated=await loadPinned().catch(()=>[]);
+      setSavedConvos(Array.isArray(updated)?updated:[]);
+    }
+    setEditingId(null);setEditTitle("");
+  },[editingId,editTitle]);
 
   const handleFiles=useCallback(async(fileList)=>{
     const files=Array.from(fileList);
@@ -385,12 +403,12 @@ export default function App(){
         {pinnedConvos.map(c=>(<div key={c.id} className={`saved-item${activeConvoId===c.id?" active":""}`} onClick={()=>handleLoadConvo(c)}>
           <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:"6px"}}>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{color:"#C9A84C",fontSize:"13px",fontWeight:500,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.title}</div>
+              {editingId===c.id?(<input autoFocus value={editTitle} onChange={e=>setEditTitle(e.target.value)} onClick={e=>e.stopPropagation()} onBlur={commitRename} onKeyDown={e=>{if(e.key==="Enter"){e.target.blur()}if(e.key==="Escape"){setEditingId(null);setEditTitle("")}}} style={{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(201,168,76,0.4)",borderRadius:"4px",color:"#fff",fontSize:"13px",fontWeight:500,padding:"2px 6px",width:"100%",outline:"none"}}/>):(<div style={{color:"#C9A84C",fontSize:"13px",fontWeight:500,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.title}</div>)}
               <div style={{color:"rgba(255,255,255,0.4)",fontSize:"11px",marginTop:"2px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.summary?.slice(0,60)}......</div>
             </div>
             <div style={{display:"flex",gap:"4px",flexShrink:0}} onClick={e=>e.stopPropagation()}>
               <button className="speak-btn" style={{color:"#C9A84C",opacity:1}} onClick={()=>handlePin(c)} title="Unpin"><PinIcon active={true}/></button>
-              <button className="speak-btn" onClick={()=>handleDeleteConvo(c.id)} title="Delete"><TrashIcon/></button>
+              <button className="speak-btn" onClick={()=>startRename(c)} title="Rename"><PencilIcon/></button><button className="speak-btn" onClick={()=>handleDeleteConvo(c.id)} title="Delete"><TrashIcon/></button>
             </div>
           </div>
         </div>))}
@@ -403,12 +421,12 @@ export default function App(){
         {allSaved.map(c=>(<div key={c.id} className={`saved-item${activeConvoId===c.id?" active":""}`} onClick={()=>handleLoadConvo(c)}>
           <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:"6px"}}>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{color:"#fff",fontSize:"13px",fontWeight:c.pinned?500:400,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.title}</div>
+              {editingId===c.id?(<input autoFocus value={editTitle} onChange={e=>setEditTitle(e.target.value)} onClick={e=>e.stopPropagation()} onBlur={commitRename} onKeyDown={e=>{if(e.key==="Enter"){e.target.blur()}if(e.key==="Escape"){setEditingId(null);setEditTitle("")}}} style={{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(201,168,76,0.4)",borderRadius:"4px",color:"#fff",fontSize:"13px",fontWeight:500,padding:"2px 6px",width:"100%",outline:"none"}}/>):(<div style={{color:"#fff",fontSize:"13px",fontWeight:c.pinned?500:400,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.title}</div>)}
               <div style={{color:"rgba(255,255,255,0.35)",fontSize:"11px",marginTop:"2px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.summary?.slice(0,60)}</div>
             </div>
             <div style={{display:"flex",gap:"4px",flexShrink:0}} onClick={e=>e.stopPropagation()}>
               <button className="speak-btn" style={{color:c.pinned?"#C9A84C":"rgba(255,255,255,0.4)"}} onClick={()=>handlePin(c)} title={c.pinned?"Unpin":"Pin (max 2)"}><PinIcon active={c.pinned}/></button>
-              <button className="speak-btn" onClick={()=>handleDeleteConvo(c.id)} title="Delete"><TrashIcon/></button>
+              <button className="speak-btn" onClick={()=>startRename(c)} title="Rename"><PencilIcon/></button><button className="speak-btn" onClick={()=>handleDeleteConvo(c.id)} title="Delete"><TrashIcon/></button>
             </div>
           </div>
         </div>))}
