@@ -249,25 +249,25 @@ function renderDocBlock(text){
     const t=raw.trim();
     if(t.startsWith("```")){
       if(!inCode){inCode=true;codeLines=[];return}
-      blocks.push(<pre key={i} style={{background:"#F3F4F6",padding:"10px 14px",borderRadius:"6px",fontSize:"13px",fontFamily:"monospace",color:"#374151",overflowX:"auto",margin:"8px 0"}}>{codeLines.join("\n")}</pre>);
+      blocks.push(<pre key={i} style={{background:"#F6F6F7",padding:"12px 14px",borderRadius:"8px",fontSize:"13px",fontFamily:"ui-monospace,Menlo,monospace",color:"#374151",overflowX:"auto",margin:"10px 0"}}>{codeLines.join("\n")}</pre>);
       inCode=false;return;
     }
     if(inCode){codeLines.push(raw);return}
-    if(!t){blocks.push(<div key={i} style={{height:"10px"}}/>);return}
+    if(!t){blocks.push(<div key={i} style={{height:"12px"}}/>);return}
     const inline=(s)=>s.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).map((p,j)=>{
-      if(p.startsWith("**")&&p.endsWith("**"))return <b key={j}>{p.slice(2,-2)}</b>;
+      if(p.startsWith("**")&&p.endsWith("**"))return <b key={j} style={{fontWeight:600}}>{p.slice(2,-2)}</b>;
       if(p.startsWith("*")&&p.endsWith("*"))return <i key={j}>{p.slice(1,-1)}</i>;
       return p;
     });
-    if(t.startsWith("# ")){blocks.push(<h1 key={i} style={{fontSize:"26px",fontWeight:700,color:"#1a2340",margin:"18px 0 8px",paddingBottom:"8px",borderBottom:"2px solid #1a2340",fontFamily:"Georgia,serif"}}>{inline(t.slice(2))}</h1>);return}
-    if(t.startsWith("## ")){blocks.push(<h2 key={i} style={{fontSize:"20px",fontWeight:700,color:"#1E3A5F",margin:"16px 0 6px",fontFamily:"Georgia,serif"}}>{inline(t.slice(3))}</h2>);return}
-    if(t.startsWith("### ")){blocks.push(<h3 key={i} style={{fontSize:"16px",fontWeight:700,fontStyle:"italic",color:"#8B6914",margin:"12px 0 4px",fontFamily:"Georgia,serif"}}>{inline(t.slice(4))}</h3>);return}
-    if(t.startsWith("#### ")){blocks.push(<h4 key={i} style={{fontSize:"14px",fontWeight:700,color:"#374151",margin:"10px 0 3px"}}>{inline(t.slice(5))}</h4>);return}
-    if(/^[-*_]{3,}$/.test(t)){blocks.push(<hr key={i} style={{border:"none",borderTop:"1px solid #C9A84C",margin:"14px 0"}}/>);return}
-    if(t.startsWith("> ")){blocks.push(<div key={i} style={{borderLeft:"3px solid #C9A84C",paddingLeft:"14px",margin:"8px 0",fontStyle:"italic",color:"#1E3A5F",fontFamily:"Georgia,serif"}}>{inline(t.slice(2))}</div>);return}
-    if(/^[*\-] /.test(t)){blocks.push(<div key={i} style={{display:"flex",gap:"8px",margin:"3px 0",paddingLeft:"4px"}}><span style={{color:"#C9A84C"}}>&#9679;</span><span>{inline(t.slice(2))}</span></div>);return}
-    if(/^\d+\.\s/.test(t)){const num=t.match(/^\d+/)[0];blocks.push(<div key={i} style={{display:"flex",gap:"8px",margin:"3px 0",paddingLeft:"4px"}}><span style={{color:"#1a2340",fontWeight:700}}>{num}.</span><span>{inline(t.replace(/^\d+\.\s/,""))}</span></div>);return}
-    blocks.push(<p key={i} style={{margin:"6px 0",lineHeight:1.6,color:"#1F2937"}}>{inline(t)}</p>);
+    if(t.startsWith("# ")){blocks.push(<h1 key={i} style={{fontSize:"23px",fontWeight:700,color:"#111827",margin:"22px 0 10px",fontFamily:"-apple-system,BlinkMacSystemFont,sans-serif",lineHeight:1.3}}>{inline(t.slice(2))}</h1>);return}
+    if(t.startsWith("## ")){blocks.push(<h2 key={i} style={{fontSize:"19px",fontWeight:600,color:"#111827",margin:"18px 0 8px",fontFamily:"-apple-system,BlinkMacSystemFont,sans-serif",lineHeight:1.3}}>{inline(t.slice(3))}</h2>);return}
+    if(t.startsWith("### ")){blocks.push(<h3 key={i} style={{fontSize:"16px",fontWeight:600,color:"#1F2937",margin:"14px 0 6px",fontFamily:"-apple-system,BlinkMacSystemFont,sans-serif"}}>{inline(t.slice(4))}</h3>);return}
+    if(t.startsWith("#### ")){blocks.push(<h4 key={i} style={{fontSize:"14px",fontWeight:600,color:"#374151",margin:"12px 0 4px"}}>{inline(t.slice(5))}</h4>);return}
+    if(/^[-*_]{3,}$/.test(t)){blocks.push(<hr key={i} style={{border:"none",borderTop:"1px solid #E5E7EB",margin:"18px 0"}}/>);return}
+    if(t.startsWith("> ")){blocks.push(<div key={i} style={{borderLeft:"3px solid #D1D5DB",paddingLeft:"14px",margin:"10px 0",color:"#4B5563",fontStyle:"italic"}}>{inline(t.slice(2))}</div>);return}
+    if(/^[*\-] /.test(t)){blocks.push(<div key={i} style={{display:"flex",gap:"10px",margin:"4px 0",paddingLeft:"2px",lineHeight:1.6,color:"#1F2937"}}><span style={{color:"#9CA3AF",flexShrink:0}}>&#8211;</span><span>{inline(t.slice(2))}</span></div>);return}
+    if(/^\d+\.\s/.test(t)){const num=t.match(/^\d+/)[0];blocks.push(<div key={i} style={{display:"flex",gap:"10px",margin:"4px 0",paddingLeft:"2px",lineHeight:1.6,color:"#1F2937"}}><span style={{color:"#6B7280",fontWeight:500,flexShrink:0}}>{num}.</span><span>{inline(t.replace(/^\d+\.\s/,""))}</span></div>);return}
+    blocks.push(<p key={i} style={{margin:"8px 0",lineHeight:1.65,color:"#1F2937",fontSize:"15.5px"}}>{inline(t)}</p>);
   });
   return blocks;
 }
