@@ -125,17 +125,22 @@ export async function readFile(file) {
 
 export function detectDocumentContent(text, userRequest) {
   if (!text || typeof text !== "string") return false;
-  // Only trigger when the PERSON explicitly asked for a document, study, or sermon --
+  // Only trigger when the PERSON explicitly asked for something worth keeping --
   // never based on the response merely looking structured.
   const req = (userRequest || "").toLowerCase();
-  const explicitAsk = [
+
+  // Named document/study types
+  const namedTypes = [
     /\bsermon\b/, /\bstudy guide\b/, /\bbible study\b/, /\bexam\b/, /\bquiz\b/,
     /\blesson plan\b/, /\bcurriculum\b/, /\bsyllabus\b/, /\bdevotion(al)?\b/,
-    /\bwrite (me |us )?a (letter|report|proposal|memo|essay|outline|document|doc)\b/,
-    /\bdraft (me |us )?a (letter|report|proposal|memo|email)\b/,
-    /\bcreate (a |an )?(document|doc|report|proposal|outline|study|handout)\b/,
-    /\bbusiness plan\b/, /\bmeeting notes\b/, /\bmeeting agenda\b/,
-    /\boutline (for|on)\b/, /\bstudy (on|guide)\b/, /\bchapter \d+\b/,
+    /\bbusiness plan\b/, /\bmeeting notes\b/, /\bmeeting agenda\b/, /\bchapter \d+\b/,
   ].some(p => p.test(req));
-  return explicitAsk;
+
+  // General pattern: [give/make/build/create/write/draft] me a [something worth keeping]
+  // Catches workout routines, meal plans, travel itineraries, checklists, templates, programs,
+  // protocols, schedules, outlines, guides, reports, proposals, letters, and similar --
+  // without firing on ordinary conversational replies that merely happen to use these words.
+  const requestedNoun = /\b(give|make|build|create|write|draft|put together|design)\s+(me\s+|us\s+)?(a|an|the)\s+[a-z\s]{0,25}?(plan|routine|program|schedule|protocol|regimen|itinerary|checklist|recipe|outline|template|guide|worksheet|handout|report|proposal|letter|memo|essay|document|doc|workout)\b/.test(req);
+
+  return namedTypes || requestedNoun;
 }
