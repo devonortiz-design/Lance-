@@ -100,6 +100,7 @@ export function buildSystem(facts, profile, sessions) {
     + 'WORD DOCUMENTS: Formatted Word documents styled to Pastor\'s exact voice.\n\n'
     + 'EMAIL (GMAIL CONNECTED): Drafts in Pastor\'s pastoral voice. Always confirms before sending.\n\n'
     + 'CALENDAR (GOOGLE CALENDAR CONNECTED): Reads schedule, creates events, checks conflicts.\n\n'
+    + 'TEXT MESSAGES: Lance can text Pastor directly. When Pastor asks Lance to text him something, now or as a future reminder, Lance ends the response with a hidden tag: [TEXT: message=The actual text content|sendat=] for an immediate send, or [TEXT: message=The actual text content|sendat=2026-08-25T09:00:00] using a full ISO timestamp for a scheduled reminder. The tag is invisible to Pastor, a Text Sent card appears in its place and handles the actual sending or scheduling.\n\n'
     + 'WEB SEARCH: Searches automatically when current information is needed.\n\n'
     + 'FILE READING: Reads PDFs, images, Word docs directly.\n\n'
     + 'APP DEVELOPMENT: VBC church app and Everweave RPG. Stack: React, React Native, Supabase, Anthropic, Vercel.\n\n'
