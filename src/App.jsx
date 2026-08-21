@@ -1,12 +1,13 @@
 import React,{useState,useRef,useEffect,useCallback}from"react";
 import{callClaude,speak,readFile,detectDocumentContent,webSearch,formatSearchResults}from"./api";
-import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag}from"./memory";
+import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag}from"./memory";
 import{SESSION_ID,SUPABASE_URL,SB_HEADERS}from"./config";
 import{LanceLogo,SendIcon,SpeakerIcon,StopIcon,DownloadIcon,AttachIcon,CloseIcon}from"./icons";
 
 const DOCX_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-docx";
 const PPTX_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-pptx";
 const FLYER_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-flyer";
+const SMS_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-sms";
 const TTS_URL=`${SUPABASE_URL}/functions/v1/lance-tts`;
 const SERMON_URL=`${SUPABASE_URL}/functions/v1/lance-sermon-prep`;
 const EXAM_URL=`${SUPABASE_URL}/functions/v1/lance-exam-gen`;
@@ -205,6 +206,40 @@ function FlyerCard({onGenerate, generating}){
     </div>
   );
 }
+
+function TextSentCard({status,onSend,scheduled}){
+  return(
+    <div onClick={status==="idle"?onSend:undefined} style={{
+      display:"flex",alignItems:"center",gap:"10px",
+      padding:"10px 14px",marginTop:"6px",
+      background:"rgba(255,255,255,0.97)",
+      border:"1px solid rgba(26,35,64,0.15)",
+      borderRadius:"12px",cursor:status==="idle"?"pointer":"default",
+      boxShadow:"0 2px 12px rgba(0,0,0,0.1)",maxWidth:"220px",
+      opacity:status==="sending"?0.7:1,
+    }}>
+      <div style={{
+        width:"36px",height:"36px",borderRadius:"50%",flexShrink:0,
+        background:status==="sent"?"linear-gradient(160deg,#2E9E5B,#1F7A44)":"linear-gradient(160deg,#1F4E96,#0F2A52)",
+        display:"flex",alignItems:"center",justifyContent:"center",
+      }}>
+        {status==="sent"?(
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 4.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        ):(
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 3h11a1 1 0 011 1v6a1 1 0 01-1 1H6l-3 2.5V11H2a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="#fff" strokeWidth="1.3" fill="none" strokeLinejoin="round"/></svg>
+        )}
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:"13px",fontWeight:600,color:"#1a2340"}}>
+          {status==="sent"?"Text sent":status==="sending"?"Sending...":status==="error"?"Failed to send":scheduled?"Scheduled text":"Text ready"}
+        </div>
+        <div style={{fontSize:"11px",color:"#6B7280",marginTop:"1px"}}>
+          {status==="idle"?"Tap to send now":status==="sent"?"Delivered to your phone":status==="error"?"Tap to retry":"Sending to your phone"}
+        </div>
+      </div>
+    </div>
+  );
+}
 function PinIcon({active}){return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8.5 1.5L11.5 4.5L9 7L9.5 10.5L6.5 8L3.5 10.5L4 7L1.5 4.5L4.5 1.5L6.5 3.5L8.5 1.5Z" stroke="currentColor" strokeWidth="1.3" fill={active?"currentColor":"none"} strokeLinejoin="round"/></svg>)}
 function SaveIcon(){return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 2h9v9l-4.5-2L2 11V2Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg>)}
 function TrashIcon(){return(<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 3h9M4 3V2h4v1M5 5.5v4M7 5.5v4M2 3l.8 7.2A1 1 0 003.8 11h4.4a1 1 0 001-.8L10 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>)}
@@ -264,6 +299,7 @@ export default function App(){
   const[downloadingIdx,setDownloadingIdx]=useState(null);
   const[showSaved,setShowSaved]=useState(false);
   const[editingId,setEditingId]=useState(null);
+  const[smsStatusByIdx,setSmsStatusByIdx]=useState({});
   const[editTitle,setEditTitle]=useState("");
   const[savedConvos,setSavedConvos]=useState([]);
   const[activeConvoId,setActiveConvoId]=useState(null);
@@ -444,6 +480,25 @@ export default function App(){
       setDownloadingIdx(null);
     }catch(e){setDownloadingIdx(null);alert("Flyer failed: "+e.message)}
   };
+  const handleSendSms=useCallback(async(smsData,idx)=>{
+    if(!smsData?.message)return;
+    setSmsStatusByIdx(p=>({...p,[idx]:"sending"}));
+    try{
+      if(smsData.sendAt){
+        const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_notifications`,{
+          method:"POST",headers:SB_HEADERS,
+          body:JSON.stringify({channel:"sms",message:smsData.message,send_at:smsData.sendAt})
+        });
+        if(!r.ok)throw new Error("Schedule failed");
+        setSmsStatusByIdx(p=>({...p,[idx]:"sent"}));
+      }else{
+        const res=await fetch(SMS_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:smsData.message})});
+        const data=await res.json();
+        if(data.success){setSmsStatusByIdx(p=>({...p,[idx]:"sent"}))}
+        else{setSmsStatusByIdx(p=>({...p,[idx]:"error"}));console.error("SMS error:",data.error)}
+      }
+    }catch(e){setSmsStatusByIdx(p=>({...p,[idx]:"error"}));console.error(e)}
+  },[]);
 
   const handleCopy=async(text,idx)=>{
     try{await navigator.clipboard.writeText(text);setCopiedIdx(idx);setTimeout(()=>setCopiedIdx(null),2000)}catch(e){}
@@ -477,7 +532,7 @@ export default function App(){
         raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile);
       }
       const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,t);
-      setMessages([...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw)}]);msgCount.current+=2;
+      setMessages([...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw)}]);msgCount.current+=2;
       saveMessage("assistant",clean).catch(()=>{});
       for(const tag of tags){
         if(tag.type==="memory"){saveMemoryFact(tag.category,tag.fact,tag.confidence,SESSION_ID).catch(()=>{});}
@@ -504,7 +559,7 @@ export default function App(){
         const cleanMessages=next.map(({role,content})=>({role,content}));
         const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile);
         const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,t);
-        setMessages([...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw)}]);msgCount.current+=2;
+        setMessages([...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw)}]);msgCount.current+=2;
         saveMessage("assistant",clean).catch(()=>{});
         if(teachMode)speakText(clean,idx);
       }catch(e){setMessages(prev=>[...prev,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);}
@@ -621,7 +676,9 @@ export default function App(){
               <button className="speak-btn" onClick={()=>handleDownload(m.content,i)} style={{color:"rgba(255,255,255,0.6)"}} title="Download Word doc"><DownloadIcon/></button>
               <button className={`copy-btn${copiedIdx===i?" copied":""}`} onClick={()=>handleCopy(m.content,i)}>{copiedIdx===i?"...... Copied":"Copy"}</button>
             </div>
-            {m.flyerData?(
+            {m.smsData?(
+              <TextSentCard status={smsStatusByIdx[i]||"idle"} scheduled={!!m.smsData.sendAt} onSend={()=>handleSendSms(m.smsData,i)}/>
+            ):m.flyerData?(
               <FlyerCard onGenerate={()=>handleGenerateFlyer(m.flyerData,i)} generating={downloadingIdx===i}/>
             ):(m.isDoc&&(<div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
               <WordDocCard text={m.content} filename={generateFilename(m.content)} onDownload={()=>handleDownload(m.content,i)} downloading={downloadingIdx===i}/>
