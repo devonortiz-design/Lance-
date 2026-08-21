@@ -240,6 +240,61 @@ function TextSentCard({status,onSend,scheduled}){
     </div>
   );
 }
+
+function renderDocBlock(text){
+  const lines=text.split("\n");
+  const blocks=[];
+  let inCode=false,codeLines=[];
+  lines.forEach((raw,i)=>{
+    const t=raw.trim();
+    if(t.startsWith("```")){
+      if(!inCode){inCode=true;codeLines=[];return}
+      blocks.push(<pre key={i} style={{background:"#F3F4F6",padding:"10px 14px",borderRadius:"6px",fontSize:"13px",fontFamily:"monospace",color:"#374151",overflowX:"auto",margin:"8px 0"}}>{codeLines.join("\n")}</pre>);
+      inCode=false;return;
+    }
+    if(inCode){codeLines.push(raw);return}
+    if(!t){blocks.push(<div key={i} style={{height:"10px"}}/>);return}
+    const inline=(s)=>s.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).map((p,j)=>{
+      if(p.startsWith("**")&&p.endsWith("**"))return <b key={j}>{p.slice(2,-2)}</b>;
+      if(p.startsWith("*")&&p.endsWith("*"))return <i key={j}>{p.slice(1,-1)}</i>;
+      return p;
+    });
+    if(t.startsWith("# ")){blocks.push(<h1 key={i} style={{fontSize:"26px",fontWeight:700,color:"#1a2340",margin:"18px 0 8px",paddingBottom:"8px",borderBottom:"2px solid #1a2340",fontFamily:"Georgia,serif"}}>{inline(t.slice(2))}</h1>);return}
+    if(t.startsWith("## ")){blocks.push(<h2 key={i} style={{fontSize:"20px",fontWeight:700,color:"#1E3A5F",margin:"16px 0 6px",fontFamily:"Georgia,serif"}}>{inline(t.slice(3))}</h2>);return}
+    if(t.startsWith("### ")){blocks.push(<h3 key={i} style={{fontSize:"16px",fontWeight:700,fontStyle:"italic",color:"#8B6914",margin:"12px 0 4px",fontFamily:"Georgia,serif"}}>{inline(t.slice(4))}</h3>);return}
+    if(t.startsWith("#### ")){blocks.push(<h4 key={i} style={{fontSize:"14px",fontWeight:700,color:"#374151",margin:"10px 0 3px"}}>{inline(t.slice(5))}</h4>);return}
+    if(/^[-*_]{3,}$/.test(t)){blocks.push(<hr key={i} style={{border:"none",borderTop:"1px solid #C9A84C",margin:"14px 0"}}/>);return}
+    if(t.startsWith("> ")){blocks.push(<div key={i} style={{borderLeft:"3px solid #C9A84C",paddingLeft:"14px",margin:"8px 0",fontStyle:"italic",color:"#1E3A5F",fontFamily:"Georgia,serif"}}>{inline(t.slice(2))}</div>);return}
+    if(/^[*\-] /.test(t)){blocks.push(<div key={i} style={{display:"flex",gap:"8px",margin:"3px 0",paddingLeft:"4px"}}><span style={{color:"#C9A84C"}}>&#9679;</span><span>{inline(t.slice(2))}</span></div>);return}
+    if(/^\d+\.\s/.test(t)){const num=t.match(/^\d+/)[0];blocks.push(<div key={i} style={{display:"flex",gap:"8px",margin:"3px 0",paddingLeft:"4px"}}><span style={{color:"#1a2340",fontWeight:700}}>{num}.</span><span>{inline(t.replace(/^\d+\.\s/,""))}</span></div>);return}
+    blocks.push(<p key={i} style={{margin:"6px 0",lineHeight:1.6,color:"#1F2937"}}>{inline(t)}</p>);
+  });
+  return blocks;
+}
+
+function DocPreviewModal({text,filename,onClose,onDownloadWord,onDownloadPptx,downloading}){
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:500,background:"rgba(13,19,33,0.75)",display:"flex",flexDirection:"column",animation:"fadeIn 0.2s ease"}} onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={{
+        background:"#fff",margin:"env(safe-area-inset-top,20px) 12px 12px",flex:1,
+        borderRadius:"16px",display:"flex",flexDirection:"column",overflow:"hidden",
+        boxShadow:"0 20px 60px rgba(0,0,0,0.4)"
+      }}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",borderBottom:"1px solid rgba(26,35,64,0.1)",flexShrink:0}}>
+          <div style={{fontSize:"14px",fontWeight:600,color:"#1a2340",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",flex:1}}>{filename}</div>
+          <button onClick={onClose} style={{background:"rgba(26,35,64,0.08)",border:"none",borderRadius:"50%",width:"32px",height:"32px",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#1a2340",fontSize:"18px",flexShrink:0,marginLeft:"10px"}}>&#215;</button>
+        </div>
+        <div style={{flex:1,overflowY:"auto",padding:"20px 22px",WebkitOverflowScrolling:"touch"}}>
+          {renderDocBlock(text)}
+        </div>
+        <div style={{display:"flex",gap:"8px",padding:"12px 16px",borderTop:"1px solid rgba(26,35,64,0.1)",flexShrink:0}}>
+          <button onClick={onDownloadWord} disabled={downloading} style={{flex:1,background:"linear-gradient(135deg,#2B579A,#1E3A6E)",color:"#fff",border:"none",borderRadius:"10px",padding:"12px",fontSize:"14px",fontWeight:600,cursor:"pointer",fontFamily:"inherit",opacity:downloading?0.6:1}}>Save as Word</button>
+          <button onClick={onDownloadPptx} disabled={downloading} style={{flex:1,background:"linear-gradient(135deg,#D24726,#A6350F)",color:"#fff",border:"none",borderRadius:"10px",padding:"12px",fontSize:"14px",fontWeight:600,cursor:"pointer",fontFamily:"inherit",opacity:downloading?0.6:1}}>Save as Slides</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 function PinIcon({active}){return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8.5 1.5L11.5 4.5L9 7L9.5 10.5L6.5 8L3.5 10.5L4 7L1.5 4.5L4.5 1.5L6.5 3.5L8.5 1.5Z" stroke="currentColor" strokeWidth="1.3" fill={active?"currentColor":"none"} strokeLinejoin="round"/></svg>)}
 function SaveIcon(){return(<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 2h9v9l-4.5-2L2 11V2Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg>)}
 function TrashIcon(){return(<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 3h9M4 3V2h4v1M5 5.5v4M7 5.5v4M2 3l.8 7.2A1 1 0 003.8 11h4.4a1 1 0 001-.8L10 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>)}
@@ -300,6 +355,7 @@ export default function App(){
   const[showSaved,setShowSaved]=useState(false);
   const[editingId,setEditingId]=useState(null);
   const[smsStatusByIdx,setSmsStatusByIdx]=useState({});
+  const[previewDoc,setPreviewDoc]=useState(null);
   const[editTitle,setEditTitle]=useState("");
   const[savedConvos,setSavedConvos]=useState([]);
   const[activeConvoId,setActiveConvoId]=useState(null);
@@ -580,6 +636,16 @@ export default function App(){
     {/* Drag overlay */}
     {dragOver&&(<div style={{position:"fixed",inset:0,background:"rgba(41,121,255,0.18)",border:"2px dashed rgba(130,177,255,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><div style={{color:"#fff",fontSize:"18px",fontWeight:600}}>Drop file or screenshot</div></div>)}
 
+    {/* Document preview overlay */}
+    {previewDoc&&(<DocPreviewModal
+      text={previewDoc.text}
+      filename={previewDoc.filename}
+      downloading={downloadingIdx===previewDoc.idx}
+      onClose={()=>setPreviewDoc(null)}
+      onDownloadWord={()=>handleDownload(previewDoc.text,previewDoc.idx)}
+      onDownloadPptx={()=>handleDownloadPptx(previewDoc.text,previewDoc.idx)}
+    />)}
+
     {/* Listening overlay */}
     {listening&&(<div style={{position:"fixed",inset:0,background:"rgba(13,19,33,0.85)",zIndex:300,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}} onClick={toggleMic}><div style={{width:"80px",height:"80px",borderRadius:"50%",background:"linear-gradient(135deg,#C9A84C,#a07830)",display:"flex",alignItems:"center",justifyContent:"center",animation:"micPulse 1s ease-in-out infinite",marginBottom:"20px"}}><MicIcon/></div><div style={{color:"#fff",fontSize:"18px",fontWeight:600,marginBottom:"8px"}}>Listening......</div><div style={{color:"rgba(255,255,255,0.5)",fontSize:"14px"}}>Tap anywhere to cancel</div></div>)}
 
@@ -681,8 +747,8 @@ export default function App(){
             ):m.flyerData?(
               <FlyerCard onGenerate={()=>handleGenerateFlyer(m.flyerData,i)} generating={downloadingIdx===i}/>
             ):(m.isDoc&&(<div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
-              <WordDocCard text={m.content} filename={generateFilename(m.content)} onDownload={()=>handleDownload(m.content,i)} downloading={downloadingIdx===i}/>
-              <PptxDocCard text={m.content} filename={generateFilename(m.content)} onDownload={()=>handleDownloadPptx(m.content,i)} downloading={downloadingIdx===i}/>
+              <WordDocCard text={m.content} filename={generateFilename(m.content)} onDownload={()=>setPreviewDoc({text:m.content,filename:generateFilename(m.content),idx:i})} downloading={downloadingIdx===i}/>
+              <PptxDocCard text={m.content} filename={generateFilename(m.content)} onDownload={()=>setPreviewDoc({text:m.content,filename:generateFilename(m.content),idx:i})} downloading={downloadingIdx===i}/>
             </div>))}
           </div>)}
         </div>
