@@ -22,7 +22,7 @@ async function sbUpsert(table, data) {
 }
 
 export async function loadMemory() {
-  return sbGet("lance_memory", "active=eq.true&order=confidence.desc,updated_at.desc&limit=40");
+  return sbGet("lance_memory", "active=eq.true&order=confidence.desc,updated_at.desc&limit=250");
 }
 
 export async function loadProfile() {
@@ -30,7 +30,7 @@ export async function loadProfile() {
 }
 
 export async function loadRecentSessions() {
-  return sbGet("lance_sessions", "summary=not.is.null&order=created_at.desc&limit=5");
+  return sbGet("lance_sessions", "summary=not.is.null&order=created_at.desc&limit=25");
 }
 
 export async function saveMessage(role, content, lane = "general") {
