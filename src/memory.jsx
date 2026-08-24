@@ -68,7 +68,22 @@ export function parseMemoryTags(text) {
 }
 
 export function stripMemoryTags(t) {
-  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").trim();
+  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[EMAIL:[^\]]+\]/gi, "").trim();
+}
+
+export function parseEmailTag(text) {
+  const re = /\[EMAIL:\s*([^\]]+)\]/i;
+  const m = re.exec(text);
+  if (!m) return null;
+  const fields = {};
+  m[1].split("|").forEach(pair => {
+    const eq = pair.indexOf("=");
+    if (eq === -1) return;
+    const key = pair.slice(0, eq).trim().toLowerCase();
+    const val = pair.slice(eq + 1).trim();
+    fields[key] = val;
+  });
+  return { to: fields.to || "", subject: fields.subject || "", body: fields.body || "" };
 }
 
 export function parseSmsTag(text) {
