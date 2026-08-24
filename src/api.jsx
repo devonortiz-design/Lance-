@@ -1,7 +1,7 @@
 import { MODEL, VOICE_URL, DOCX_URL, SEARCH_URL } from "./config";
 import { buildSystem } from "./system";
 
-export async function callClaude(messages, facts, sessions, fileContents = [], profile = []) {
+export async function callClaude(messages, facts, sessions, fileContents = [], profile = [], project = null) {
   const apiMessages = [...messages];
 
   if (fileContents.length > 0) {
@@ -29,7 +29,7 @@ export async function callClaude(messages, facts, sessions, fileContents = [], p
     body: JSON.stringify({
       model: MODEL,
       max_tokens: 4096,
-      system: buildSystem(facts, profile, sessions),
+      system: buildSystem(facts, profile, sessions, project),
       messages: apiMessages,
     }),
   });

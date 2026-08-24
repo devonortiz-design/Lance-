@@ -17,42 +17,63 @@ const SERMON_URL=`${SUPABASE_URL}/functions/v1/lance-sermon-prep`;
 const EXAM_URL=`${SUPABASE_URL}/functions/v1/lance-exam-gen`;
 const DEVOTION_URL=`${SUPABASE_URL}/functions/v1/lance-devotion`;
 
-// Pinned conversations DB
+// Chat + Project DB (lance_chats / lance_projects)
 async function loadPinned(){
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned?active=eq.true&order=pin_order.asc,saved_order.asc`,{headers:SB_HEADERS});
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_chats?active=eq.true&order=updated_at.desc&limit=300`,{headers:SB_HEADERS});
   return r.ok?r.json():[];
 }
-async function saveConversation(title,summary,messages,pinned=false,pinOrder=0,savedOrder=0){
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned`,{
+async function saveConversation(title,summary,messages,projectId){
+  const body={title,summary,messages,active:true};
+  if(projectId)body.project_id=projectId;
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_chats`,{
     method:"POST",headers:{...SB_HEADERS,"Prefer":"return=representation"},
-    body:JSON.stringify({title,summary,messages,pinned,pin_order:pinOrder,saved_order:savedOrder,active:true})
+    body:JSON.stringify(body)
   });
   return r.ok?r.json():null;
 }
-async function togglePin(id,pinned,pinOrder){
-  await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned?id=eq.${id}`,{
+async function updateChatRow(id,patch){
+  await fetch(`${SUPABASE_URL}/rest/v1/lance_chats?id=eq.${id}`,{
     method:"PATCH",headers:SB_HEADERS,
-    body:JSON.stringify({pinned,pin_order:pinOrder,updated_at:new Date().toISOString()})
+    body:JSON.stringify({...patch,updated_at:new Date().toISOString()})
   });
+}
+async function togglePin(id,pinned){
+  await updateChatRow(id,{pinned});
 }
 async function deleteConversation(id){
-  await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned?id=eq.${id}`,{
-    method:"PATCH",headers:SB_HEADERS,
-    body:JSON.stringify({active:false,updated_at:new Date().toISOString()})
-  });
+  await updateChatRow(id,{active:false});
 }
 async function renameConversation(id,title){
-  await fetch(`${SUPABASE_URL}/rest/v1/lance_pinned?id=eq.${id}`,{
+  await updateChatRow(id,{title});
+}
+async function loadProjectsDb(){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_projects?active=eq.true&order=created_at.asc`,{headers:SB_HEADERS});
+  return r.ok?r.json():[];
+}
+async function createProjectRow(name,description){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_projects`,{
+    method:"POST",headers:{...SB_HEADERS,"Prefer":"return=representation"},
+    body:JSON.stringify({name,description,active:true})
+  });
+  return r.ok?r.json():null;
+}
+async function updateProjectRow(id,patch){
+  await fetch(`${SUPABASE_URL}/rest/v1/lance_projects?id=eq.${id}`,{
     method:"PATCH",headers:SB_HEADERS,
-    body:JSON.stringify({title,updated_at:new Date().toISOString()})
+    body:JSON.stringify({...patch,updated_at:new Date().toISOString()})
   });
 }
-
-function recentUserIntent(msgs){
-  try{
-    const userTexts=msgs.filter(m=>m.role==="user").slice(-3).map(m=>typeof m.content==="string"?m.content:"");
-    return userTexts.join(" . ");
-  }catch(e){return ""}
+async function deleteProjectRow(id){
+  await updateProjectRow(id,{active:false});
+}
+function chatGroupLabel(d){
+  const t=new Date(d);const now=new Date();
+  const startToday=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const day=86400000;
+  if(t>=startToday)return "Today";
+  if(t>=new Date(startToday.getTime()-day))return "Yesterday";
+  if(t>=new Date(startToday.getTime()-7*day))return "Previous 7 days";
+  return "Earlier";
 }
 
 function generateFilename(text){
@@ -68,161 +89,141 @@ function generateFilename(text){
 function MicIcon(){return(<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="5" y="1" width="5" height="8" rx="2.5" stroke="currentColor" strokeWidth="1.4"/><path d="M3 7.5a4.5 4.5 0 009 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="7.5" y1="12" x2="7.5" y2="14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>)}
 function VoiceChatIcon(){return(<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 9V7M4.5 11V5M7 13V3M9.5 11V5M12 9V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>)}
 
-function WordDocCard({text, filename, onDownload, downloading}){
-  return(
-    <div onClick={onDownload} style={{
-      display:"flex",alignItems:"center",gap:"10px",
-      padding:"10px 14px",marginTop:"6px",
-      background:"var(--glass-hi)",
-      border:"1px solid var(--line)",
-      borderRadius:"14px",cursor:"pointer",
-      backdropFilter:"blur(24px) saturate(1.5)",
-      WebkitBackdropFilter:"blur(24px) saturate(1.5)",
-      boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)",
-      transition:"all 200ms cubic-bezier(0.22,1,0.36,1)",
-      maxWidth:"220px",
-      opacity:downloading?0.7:1,
-    }}
-    onMouseEnter={e=>e.currentTarget.style.boxShadow="inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 20px rgba(0,0,0,0.3)"}
-    onMouseLeave={e=>e.currentTarget.style.boxShadow="inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)"}
+function WordDocCard({ text, filename, onDownload, downloading }) {
+  return (
+    <button
+      className="file-tile"
+      onClick={onDownload}
+      disabled={downloading}
+      style={{ marginTop: 6, maxWidth: 230 }}
     >
-      <div style={{
-        width:"36px",height:"44px",borderRadius:"10px",flexShrink:0,
-        background:"linear-gradient(160deg,#2B579A 0%,#1E3A6E 100%)",
-        display:"flex",flexDirection:"column",alignItems:"center",
-        justifyContent:"center",position:"relative",
-        boxShadow:"0 2px 6px rgba(43,87,154,0.35)"
-      }}>
-        <div style={{
-          position:"absolute",top:0,right:0,
-          width:"10px",height:"10px",
-          background:"rgba(255,255,255,0.25)",
-          borderBottomLeftRadius:"4px"
-        }}/>
-        <span style={{color:"#fff",fontSize:"11px",fontWeight:700,letterSpacing:"0.02em",marginTop:"4px"}}>W</span>
-        <div style={{width:"18px",height:"1.5px",background:"rgba(255,255,255,0.5)",marginTop:"2px",borderRadius:"1px"}}/>
-        <div style={{width:"14px",height:"1.5px",background:"rgba(255,255,255,0.3)",marginTop:"2px",borderRadius:"1px"}}/>
-        <div style={{width:"16px",height:"1.5px",background:"rgba(255,255,255,0.3)",marginTop:"2px",borderRadius:"1px"}}/>
+      <div
+        className="doc-glyph"
+        style={{ background: 'linear-gradient(160deg, #2B579A, #1E3A6E)' }}
+      >
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>W</span>
       </div>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:"14px",fontWeight:600,color:"var(--text-hi)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-          {downloading?"Preparing…":"Lance Document"}
+      <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: 'var(--text-hi)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: 150,
+          }}
+        >
+          {filename}
         </div>
-        <div style={{fontSize:"12px",color:"var(--text-lo)",marginTop:"1px"}}>
-          {downloading?"Building your .docx":"Tap to download .docx"}
+        <div style={{ fontSize: 12, color: 'var(--text-lo)', marginTop: 2 }}>
+          {downloading ? 'Preparing…' : 'Word Document'}
         </div>
       </div>
-      {!downloading&&(
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,color:"#C9A84C"}}>
-          <path d="M8 1v9M4.5 6.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M2 13h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-        </svg>
-      )}
-      {downloading&&(
-        <div style={{width:"16px",height:"16px",border:"2px solid #C9A84C",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite",flexShrink:0}}/>
-      )}
-    </div>
+      <div style={{ fontSize: 16, color: 'var(--text-lo)' }}>›</div>
+    </button>
   );
 }
 
-function PptxDocCard({text, filename, onDownload, downloading}){
-  return(
-    <div onClick={onDownload} style={{
-      display:"flex",alignItems:"center",gap:"10px",
-      padding:"10px 14px",marginTop:"6px",
-      background:"var(--glass-hi)",
-      border:"1px solid var(--line)",
-      borderRadius:"14px",cursor:"pointer",
-      backdropFilter:"blur(24px) saturate(1.5)",
-      WebkitBackdropFilter:"blur(24px) saturate(1.5)",
-      boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)",
-      transition:"all 200ms cubic-bezier(0.22,1,0.36,1)",
-      maxWidth:"220px",
-      opacity:downloading?0.7:1,
-    }}
-    onMouseEnter={e=>e.currentTarget.style.boxShadow="inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 20px rgba(0,0,0,0.3)"}
-    onMouseLeave={e=>e.currentTarget.style.boxShadow="inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)"}
+function PptxDocCard({ text, filename, onDownload, downloading }) {
+  return (
+    <button
+      className="file-tile"
+      onClick={onDownload}
+      disabled={downloading}
+      style={{ marginTop: 6, maxWidth: 230 }}
     >
-      <div style={{
-        width:"36px",height:"44px",borderRadius:"10px",flexShrink:0,
-        background:"linear-gradient(160deg,#D24726 0%,#A6350F 100%)",
-        display:"flex",flexDirection:"column",alignItems:"center",
-        justifyContent:"center",position:"relative",
-        boxShadow:"0 2px 6px rgba(210,71,38,0.35)"
-      }}>
-        <div style={{
-          position:"absolute",top:0,right:0,
-          width:"10px",height:"10px",
-          background:"rgba(255,255,255,0.25)",
-          borderBottomLeftRadius:"4px"
-        }}/>
-        <span style={{color:"#fff",fontSize:"11px",fontWeight:700,letterSpacing:"0.02em",marginTop:"4px"}}>P</span>
-        <div style={{width:"18px",height:"14px",border:"1.5px solid rgba(255,255,255,0.5)",marginTop:"3px",borderRadius:"1px"}}/>
+      <div
+        className="doc-glyph"
+        style={{ background: 'linear-gradient(160deg, #D24726, #A6350F)' }}
+      >
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>P</span>
       </div>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:"14px",fontWeight:600,color:"var(--text-hi)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-          {downloading?"Preparing…":"Lance Slides"}
+      <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: 'var(--text-hi)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: 150,
+          }}
+        >
+          {filename}
         </div>
-        <div style={{fontSize:"12px",color:"var(--text-lo)",marginTop:"1px"}}>
-          {downloading?"Building your .pptx":"Tap to download .pptx"}
+        <div style={{ fontSize: 12, color: 'var(--text-lo)', marginTop: 2 }}>
+          {downloading ? 'Preparing…' : 'Presentation'}
         </div>
       </div>
-      {!downloading&&(
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,color:"#C9A84C"}}>
-          <path d="M8 1v9M4.5 6.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M2 13h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-        </svg>
-      )}
-      {downloading&&(
-        <div style={{width:"16px",height:"16px",border:"2px solid #C9A84C",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite",flexShrink:0}}/>
-      )}
-    </div>
+      <div style={{ fontSize: 16, color: 'var(--text-lo)' }}>›</div>
+    </button>
   );
 }
 
-function FlyerCard({onGenerate, generating}){
-  return(
-    <div onClick={onGenerate} style={{
-      display:"flex",alignItems:"center",gap:"10px",
-      padding:"10px 14px",marginTop:"6px",
-      background:"var(--glass-hi)",
-      border:"1px solid var(--line)",
-      borderRadius:"14px",cursor:"pointer",
-      backdropFilter:"blur(24px) saturate(1.5)",
-      WebkitBackdropFilter:"blur(24px) saturate(1.5)",
-      boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)",
-      transition:"all 200ms cubic-bezier(0.22,1,0.36,1)",
-      maxWidth:"220px",
-      opacity:generating?0.7:1,
-    }}
-    onMouseEnter={e=>e.currentTarget.style.boxShadow="inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 20px rgba(0,0,0,0.3)"}
-    onMouseLeave={e=>e.currentTarget.style.boxShadow="inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)"}
+function FlyerCard({ onGenerate, generating }) {
+  return (
+    <button
+      className="file-tile"
+      onClick={onGenerate}
+      disabled={generating}
+      style={{ marginTop: 6, maxWidth: 230 }}
     >
-      <div style={{
-        width:"36px",height:"44px",borderRadius:"10px",flexShrink:0,
-        background:"linear-gradient(160deg,#C9A84C 0%,#8a6e2a 100%)",
-        display:"flex",alignItems:"center",justifyContent:"center",
-        boxShadow:"0 2px 6px rgba(201,168,76,0.35)"
-      }}>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="#fff" strokeWidth="1.4"/><circle cx="6.5" cy="6.5" r="1.5" fill="#fff"/><path d="M2 12l4-4 3 3 3-4 4 5" stroke="#fff" strokeWidth="1.4" strokeLinejoin="round" fill="none"/></svg>
-      </div>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:"14px",fontWeight:600,color:"var(--text-hi)"}}>
-          {generating?"Designing…":"Lance Flyer"}
-        </div>
-        <div style={{fontSize:"12px",color:"var(--text-lo)",marginTop:"1px"}}>
-          {generating?"Building your graphic":"Tap to create a flyer"}
-        </div>
-      </div>
-      {!generating&&(
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,color:"#C9A84C"}}>
-          <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+      <div
+        className="doc-glyph"
+        style={{ background: 'linear-gradient(160deg, #C9A84C, #8A6E2A)' }}
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 14 14"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M7 0L7.854 6.146L14 7L7.854 7.854L7 14L6.146 7.854L0 7L6.146 6.146L7 0Z"
+            fill="white"
+          />
         </svg>
-      )}
-      {generating&&(
-        <div style={{width:"16px",height:"16px",border:"2px solid #C9A84C",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite",flexShrink:0}}/>
-      )}
-    </div>
+      </div>
+      <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: 'var(--text-hi)',
+          }}
+        >
+          Flyer
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-lo)', marginTop: 2 }}>
+          {generating ? 'Designing…' : 'Branded graphic'}
+        </div>
+      </div>
+      <div style={{ fontSize: 16, color: 'var(--text-lo)' }}>›</div>
+    </button>
+  );
+}
+
+function AppIcon({ label, gradient, onTap, children }) {
+  return (
+    <button className="app-icon" onClick={onTap}>
+      <div
+        style={{
+          width: 26,
+          height: 26,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: gradient || 'var(--gold-hi)',
+        }}
+      >
+        {children}
+      </div>
+      <div className="app-icon-label">{label}</div>
+    </button>
   );
 }
 
@@ -408,6 +409,183 @@ textarea::placeholder{color:var(--text-lo)}
 .saved-item:hover{background:rgba(255,255,255,0.04)}
 .saved-item:active{transform:scale(0.99)}
 .saved-item.active{background:rgba(201,168,76,0.08);color:var(--text-hi);border-left:2px solid var(--gold)}
+/* HUD Grid Overlay */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(0deg, transparent, transparent 55px, rgba(201,168,76,0.028) 55px, rgba(201,168,76,0.028) 56px),
+    repeating-linear-gradient(90deg, transparent, transparent 55px, rgba(201,168,76,0.028) 55px, rgba(201,168,76,0.028) 56px);
+  mask-image: radial-gradient(ellipse 100% 70% at 50% 0%, black, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse 100% 70% at 50% 0%, black, transparent 85%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* App Icon Tile */
+.app-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  background: var(--glass-hi);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 120ms cubic-bezier(0.22,1,0.36,1);
+}
+
+.app-icon:active {
+  transform: scale(0.94);
+}
+
+.app-icon svg,
+.app-icon .glyph {
+  width: 26px;
+  height: 26px;
+}
+
+.app-icon-label {
+  font-size: 12px;
+  color: var(--text-mid);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* File Tile */
+.file-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--glass-hi);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  cursor: pointer;
+  transition: all 200ms cubic-bezier(0.22,1,0.36,1);
+}
+
+.file-tile:active {
+  transform: scale(0.97);
+}
+
+.file-tile:hover {
+  box-shadow: 0 0 0 1px rgba(201,168,76,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* Document Glyph */
+.doc-glyph {
+  width: 34px;
+  height: 42px;
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.doc-glyph::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background: rgba(255,255,255,0.28);
+  border-bottom-left-radius: 6px;
+}
+
+/* History Item */
+.hist-item {
+  padding: 11px 14px;
+  border-radius: 12px;
+  margin: 2px 8px;
+  transition: background 160ms cubic-bezier(0.22,1,0.36,1);
+  cursor: pointer;
+  color: var(--text-mid);
+  font-size: 15px;
+}
+
+.hist-item:active {
+  background: rgba(255,255,255,0.06);
+}
+
+.hist-item.current {
+  background: rgba(201,168,76,0.10);
+  color: var(--text-hi);
+}
+
+/* Eyebrow Label */
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-lo);
+  padding: 14px 16px 6px;
+}
+
+/* Project Row */
+.proj-row {
+  padding: 11px 14px;
+  border-radius: 12px;
+  margin: 2px 8px;
+  border-left: 3px solid var(--gold);
+  transition: background 160ms cubic-bezier(0.22,1,0.36,1);
+  cursor: pointer;
+  color: var(--text-mid);
+  font-size: 15px;
+}
+
+.proj-row:active {
+  background: rgba(255,255,255,0.06);
+}
+
+/* Ghost Button */
+.ghost-btn {
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  color: var(--text-mid);
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 36px;
+  cursor: pointer;
+  transition: transform 120ms cubic-bezier(0.22,1,0.36,1);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+}
+
+.ghost-btn:active {
+  transform: scale(0.96);
+}
+
+/* Breathe Animation */
+@keyframes breathe {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+
+.doc-glyph{display:flex;align-items:center;justify-content:center}
+.file-tile{font-family:inherit;text-align:left;border:1px solid var(--line)}
+.file-tile:disabled{opacity:0.7}
+.app-icon{font-family:inherit}
+.ghost-btn{font-family:inherit}
+.proj-row.current{background:rgba(201,168,76,0.10);color:var(--text-hi)}
+
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}}`;
 
 export default function App(){
@@ -437,8 +615,13 @@ export default function App(){
   const[gmailEmail,setGmailEmail]=useState("");
   const[editTitle,setEditTitle]=useState("");
   const[savedConvos,setSavedConvos]=useState([]);
+  const[projects,setProjects]=useState([]);
+  const[activeProjectId,setActiveProjectId]=useState(null);
+  const[projFormMode,setProjFormMode]=useState(null);
+  const[projName,setProjName]=useState("");
+  const[projDesc,setProjDesc]=useState("");
+  const[projEditId,setProjEditId]=useState(null);
   const[activeConvoId,setActiveConvoId]=useState(null);
-  const[saveStatus,setSaveStatus]=useState(null);
 
   const bottomRef=useRef(null);
   const inputRef=useRef(null);
@@ -446,15 +629,22 @@ export default function App(){
   const fileRef=useRef(null);
   const recognitionRef=useRef(null);
   const msgCount=useRef(0);
+  const chatIdRef=useRef(null);
+  useEffect(()=>{chatIdRef.current=activeConvoId},[activeConvoId]);
+  const projRef=useRef(null);
+  useEffect(()=>{projRef.current=activeProjectId},[activeProjectId]);
+  const activeProject=projects.find(p=>p.id===activeProjectId)||null;
 
   useEffect(()=>{
     (async()=>{
-      const[f,p,s,c]=await Promise.all([
+      const[f,p,s,c,pr]=await Promise.all([
         loadMemory().catch(()=>[]),
         loadProfile().catch(()=>[]),
         loadRecentSessions().catch(()=>[]),
         loadPinned().catch(()=>[]),
+        loadProjectsDb().catch(()=>[]),
       ]);
+      setProjects(Array.isArray(pr)?pr:[]);
       setMemoryFacts(Array.isArray(f)?f:[]);
       setProfile(Array.isArray(p)?p:[]);
       setRecentSessions(Array.isArray(s)?s:[]);
@@ -530,40 +720,55 @@ export default function App(){
     setTeachMode(true);startListening();
   },[teachMode,listening,startListening,stopSpeaking]);
 
-  // Save current conversation
-  const handleSave=useCallback(async()=>{
-    if(messages.length===0)return;
-    const saved=savedConvos.filter(c=>c.active!==false);
-    if(saved.length>=10&&!activeConvoId){setSaveStatus("max");setTimeout(()=>setSaveStatus(null),2000);return}
-    const firstUser=messages.find(m=>m.role==="user")?.content||"Conversation";
-    const title=firstUser.slice(0,50)+(firstUser.length>50?"…":"");
-    const summary=messages.slice(-2).map(m=>m.content.slice(0,100)).join(" | ");
-    const cleanMessages=messages.map(({role,content})=>({role,content}));
-    const result=await saveConversation(title,summary,cleanMessages,false,0,saved.length);
-    if(result){
-      const updated=await loadPinned().catch(()=>[]);
-      setSavedConvos(Array.isArray(updated)?updated:[]);
-      setActiveConvoId(result[0]?.id||null);
-      setSaveStatus("saved");setTimeout(()=>setSaveStatus(null),2000);
-    }
-  },[messages,savedConvos,activeConvoId]);
+  // Autosave: every conversation persists without a save button
+  const autosaveChat=useCallback(async(msgs)=>{
+    try{
+      const clean=msgs.map(({role,content})=>({role,content}));
+      const firstUser=msgs.find(m=>m.role==="user")?.content||"New chat";
+      const title=firstUser.slice(0,44)+(firstUser.length>44?"\u2026":"");
+      const last=msgs[msgs.length-1]?.content||"";
+      const summary=last.slice(0,80);
+      if(chatIdRef.current){
+        await updateChatRow(chatIdRef.current,{messages:clean,summary});
+      }else{
+        const rows=await saveConversation(title,summary,clean,projRef.current);
+        if(rows&&rows[0]?.id){chatIdRef.current=rows[0].id;setActiveConvoId(rows[0].id);}
+      }
+      loadPinned().then(cc=>{if(Array.isArray(cc))setSavedConvos(cc)}).catch(()=>{});
+    }catch(e){}
+  },[]);
+
+  // Projects
+  const refreshProjects=useCallback(async()=>{
+    const pr=await loadProjectsDb().catch(()=>[]);
+    setProjects(Array.isArray(pr)?pr:[]);
+  },[]);
+  const handleProjSubmit=useCallback(async()=>{
+    const n=projName.trim();if(!n)return;
+    if(projFormMode==="edit"&&projEditId){await updateProjectRow(projEditId,{name:n,description:projDesc.trim()});}
+    else{const rows=await createProjectRow(n,projDesc.trim());if(rows&&rows[0]?.id)setActiveProjectId(rows[0].id);}
+    setProjFormMode(null);setProjName("");setProjDesc("");setProjEditId(null);
+    refreshProjects();
+  },[projName,projDesc,projFormMode,projEditId,refreshProjects]);
+  const handleProjDelete=useCallback(async(id)=>{
+    await deleteProjectRow(id);
+    if(activeProjectId===id)setActiveProjectId(null);
+    refreshProjects();
+  },[activeProjectId,refreshProjects]);
 
   // Pin/unpin a conversation
   const handlePin=useCallback(async(convo)=>{
-    const pinned=savedConvos.filter(c=>c.pinned&&c.active!==false);
-    if(!convo.pinned&&pinned.length>=2){setSaveStatus("maxpin");setTimeout(()=>setSaveStatus(null),2000);return}
-    const newPinned=!convo.pinned;
-    const pinOrder=newPinned?pinned.length:0;
-    await togglePin(convo.id,newPinned,pinOrder);
+    await togglePin(convo.id,!convo.pinned);
     const updated=await loadPinned().catch(()=>[]);
     setSavedConvos(Array.isArray(updated)?updated:[]);
-  },[savedConvos]);
+  },[]);
 
   // Load a saved conversation
   const handleLoadConvo=useCallback((convo)=>{
     stopSpeaking();
     setMessages(Array.isArray(convo.messages)?convo.messages:[]);
     setActiveConvoId(convo.id);
+    setActiveProjectId(convo.project_id||null);
     setShowSaved(false);
     msgCount.current=convo.messages?.length||0;
   },[stopSpeaking]);
@@ -693,10 +898,10 @@ export default function App(){
         let apiMessages=next;
         if(searchContext){const last=next[next.length-1];const lc=typeof last.content==="string"?last.content:t;apiMessages=[...next.slice(0,-1),{role:"user",content:lc+searchContext}];}
         const cleanMessages=apiMessages.map(({role,content})=>({role,content}));
-        raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile);
+        raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile,activeProject);
       }
       const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-      setMessages([...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw)}]);msgCount.current+=2;
+      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw)}];setMessages(finalMsgs);autosaveChat(finalMsgs);msgCount.current+=2;
       saveMessage("assistant",clean).catch(()=>{});
       for(const tag of tags){
         if(tag.type==="memory"){saveMemoryFact(tag.category,tag.fact,tag.confidence,SESSION_ID).catch(()=>{});}
@@ -707,7 +912,7 @@ export default function App(){
       if(teachMode)speakText(clean,idx);if(isDoc)setDocxIdx(idx);
     }catch(e){setMessages([...next,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);}
     setLoading(false);
-  },[loading,messages,memoryFacts,profile,recentSessions,teachMode,stopSpeaking,speakText]);
+  },[loading,messages,memoryFacts,profile,recentSessions,teachMode,stopSpeaking,speakText,activeProject,autosaveChat]);
 
   const send=useCallback(async(textOverride)=>{
     const t=(textOverride||input).trim();
@@ -721,21 +926,21 @@ export default function App(){
       if(t)saveMessage("user",t).catch(()=>{});
       try{
         const cleanMessages=next.map(({role,content})=>({role,content}));
-        const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile);
+        const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile,activeProject);
         const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-        setMessages([...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw)}]);msgCount.current+=2;
+        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw)}];setMessages(finalMsgs);autosaveChat(finalMsgs);msgCount.current+=2;
         saveMessage("assistant",clean).catch(()=>{});
         if(teachMode)speakText(clean,idx);
       }catch(e){setMessages(prev=>[...prev,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);}
       setLoading(false);
     }else{sendText(t);}
-  },[input,loading,messages,memoryFacts,profile,recentSessions,pendingFiles,teachMode,stopSpeaking,speakText,sendText]);
+  },[input,loading,messages,memoryFacts,profile,recentSessions,pendingFiles,teachMode,stopSpeaking,speakText,sendText,activeProject,autosaveChat]);
 
   const handleKeyDown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};
   const sendPreset=t=>{setInput(t);setTimeout(()=>send(t),0)};
-  const clearChat=()=>{stopSpeaking();setMessages([]);setPendingFiles([]);setDocxIdx(null);setActiveConvoId(null);msgCount.current=0};
+  const clearChat=()=>{stopSpeaking();setMessages([]);setPendingFiles([]);setDocxIdx(null);setActiveConvoId(null);chatIdRef.current=null;msgCount.current=0};
 
-  const pinnedConvos=savedConvos.filter(c=>c.pinned&&c.active!==false).sort((a,b)=>a.pin_order-b.pin_order);
+  const pinnedConvos=savedConvos.filter(c=>c.pinned&&c.active!==false);
   const allSaved=savedConvos.filter(c=>c.active!==false);
   const isEmpty=messages.length===0;
 
@@ -758,53 +963,81 @@ export default function App(){
     {/* Listening overlay */}
     {listening&&(<div style={{position:"fixed",inset:0,background:"rgba(6,8,15,0.8)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",zIndex:300,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",animation:"fadeIn 200ms cubic-bezier(0.22,1,0.36,1)"}} onClick={toggleMic}><div className="wave" style={{transform:"scale(2)",marginBottom:"32px"}}><span/><span/><span/><span/><span/></div><div style={{color:"var(--text-hi)",fontSize:"20px",fontWeight:600,marginBottom:"8px",letterSpacing:"-0.02em"}}>Listening</div><div style={{color:"var(--text-lo)",fontSize:"14px"}}>Tap anywhere to cancel</div></div>)}
 
-    {/* Saved conversations panel */}
+    {/* Library panel: projects + full chat history */}
     {showSaved&&(<div className="saved-backdrop" onClick={()=>setShowSaved(false)}/>)}
     {showSaved&&(<div className="saved-panel">
-      <div style={{padding:"calc(16px + env(safe-area-inset-top)) 14px 16px",borderBottom:"1px solid rgba(201,168,76,0.2)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <div style={{color:"#C9A84C",fontSize:"14px",fontWeight:600}}>Saved ({allSaved.length}/10)</div>
-        <button onClick={()=>setShowSaved(false)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:"50%",cursor:"pointer",color:"rgba(255,255,255,0.85)",fontSize:"20px",lineHeight:1,width:"36px",height:"36px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>×</button>
+      <div style={{padding:"calc(16px + env(safe-area-inset-top)) 16px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{color:"var(--text-hi)",fontSize:"17px",fontWeight:600,letterSpacing:"-0.02em"}}>Library</div>
+        <button onClick={()=>setShowSaved(false)} style={{background:"var(--glass)",border:"1px solid var(--line)",borderRadius:"50%",cursor:"pointer",color:"var(--text-mid)",fontSize:"18px",lineHeight:1,width:"36px",height:"36px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>&#215;</button>
       </div>
-
-      {/* Pinned section */}
-      {pinnedConvos.length>0&&(<>
-        <div style={{padding:"8px 14px 4px",fontSize:"11px",fontWeight:700,color:"rgba(201,168,76,0.6)",letterSpacing:"0.08em",textTransform:"uppercase"}}>Pinned ({pinnedConvos.length}/2)</div>
-        {pinnedConvos.map(c=>(<div key={c.id} className={`saved-item${activeConvoId===c.id?" active":""}`} onClick={()=>handleLoadConvo(c)}>
-          <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:"6px"}}>
+      <div style={{display:"flex",gap:"8px",padding:"0 16px 12px"}}>
+        <button className="ghost-btn" style={{flex:1}} onClick={()=>{clearChat();setShowSaved(false)}}>+ New chat</button>
+        <button className="ghost-btn" style={{flex:1}} onClick={()=>{setProjFormMode("new");setProjName("");setProjDesc("");setProjEditId(null)}}>+ New project</button>
+      </div>
+      {projFormMode&&(<div style={{margin:"0 12px 12px",padding:"12px",background:"var(--glass)",border:"1px solid var(--line)",borderRadius:"14px"}}>
+        <input autoFocus value={projName} onChange={e=>setProjName(e.target.value)} placeholder="Project name" style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid var(--line)",borderRadius:"10px",color:"var(--text-hi)",fontSize:"15px",padding:"9px 11px",marginBottom:"8px",outline:"none",fontFamily:"inherit"}}/>
+        <textarea value={projDesc} onChange={e=>setProjDesc(e.target.value)} placeholder="Describe this folder. Every chat inside follows these instructions." rows={3} style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid var(--line)",borderRadius:"10px",color:"var(--text-hi)",fontSize:"14px",padding:"9px 11px",marginBottom:"8px",outline:"none",resize:"vertical",fontFamily:"inherit",lineHeight:1.5}}/>
+        <div style={{display:"flex",gap:"8px"}}>
+          <button className="ghost-btn" style={{flex:1,background:"linear-gradient(135deg,#D4B45C,#A8863A)",color:"#0B0E16",border:"none"}} onClick={handleProjSubmit}>{projFormMode==="edit"?"Save project":"Create project"}</button>
+          <button className="ghost-btn" onClick={()=>{setProjFormMode(null);setProjEditId(null)}}>Cancel</button>
+        </div>
+      </div>)}
+      <div style={{flex:1,overflowY:"auto",paddingBottom:"12px"}}>
+        {projects.length>0&&(<div className="eyebrow">Projects</div>)}
+        {projects.map(p=>(<div key={p.id} className={`proj-row${activeProjectId===p.id?" current":""}`} onClick={()=>setActiveProjectId(activeProjectId===p.id?null:p.id)}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"6px"}}>
             <div style={{flex:1,minWidth:0}}>
-              {editingId===c.id?(<input autoFocus value={editTitle} onChange={e=>setEditTitle(e.target.value)} onClick={e=>e.stopPropagation()} onBlur={commitRename} onKeyDown={e=>{if(e.key==="Enter"){e.target.blur()}if(e.key==="Escape"){setEditingId(null);setEditTitle("")}}} style={{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(201,168,76,0.4)",borderRadius:"4px",color:"#fff",fontSize:"13px",fontWeight:500,padding:"2px 6px",width:"100%",outline:"none"}}/>):(<div style={{color:"#C9A84C",fontSize:"13px",fontWeight:500,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.title}</div>)}
-              <div style={{color:"rgba(255,255,255,0.4)",fontSize:"11px",marginTop:"2px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.summary?.slice(0,60)}</div>
+              <div style={{fontSize:"15px",fontWeight:600,color:activeProjectId===p.id?"var(--gold-hi)":"var(--text-hi)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</div>
+              <div style={{fontSize:"12px",color:"var(--text-lo)",marginTop:"2px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{savedConvos.filter(c=>c.project_id===p.id&&c.active!==false).length} chats{activeProjectId===p.id?" \u00b7 active":""}</div>
             </div>
-            <div style={{display:"flex",gap:"4px",flexShrink:0}} onClick={e=>e.stopPropagation()}>
-              <button className="speak-btn" style={{color:"#C9A84C",opacity:1}} onClick={()=>handlePin(c)} title="Unpin"><PinIcon active={true}/></button>
-              <button className="speak-btn" onClick={()=>startRename(c)} title="Rename"><PencilIcon/></button><button className="speak-btn" onClick={()=>handleDeleteConvo(c.id)} title="Delete"><TrashIcon/></button>
+            <div style={{display:"flex",gap:"2px",flexShrink:0}} onClick={e=>e.stopPropagation()}>
+              <button className="speak-btn" onClick={()=>{setProjFormMode("edit");setProjEditId(p.id);setProjName(p.name);setProjDesc(p.description||"")}} title="Edit"><PencilIcon/></button>
+              <button className="speak-btn" onClick={()=>handleProjDelete(p.id)} title="Delete"><TrashIcon/></button>
             </div>
           </div>
         </div>))}
-      </>)}
-
-      {/* All saved */}
-      <div style={{padding:"8px 14px 4px",fontSize:"11px",fontWeight:700,color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em",textTransform:"uppercase"}}>All Saved</div>
-      <div style={{flex:1,overflowY:"auto"}}>
-        {allSaved.length===0&&(<div style={{padding:"20px 14px",color:"rgba(255,255,255,0.3)",fontSize:"13px",textAlign:"center"}}>No saved conversations yet</div>)}
-        {allSaved.map(c=>(<div key={c.id} className={`saved-item${activeConvoId===c.id?" active":""}`} onClick={()=>handleLoadConvo(c)}>
-          <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:"6px"}}>
+        {pinnedConvos.length>0&&(<div className="eyebrow">Pinned</div>)}
+        {pinnedConvos.map(c=>(<div key={c.id} className={`hist-item${activeConvoId===c.id?" current":""}`} onClick={()=>handleLoadConvo(c)}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"6px"}}>
             <div style={{flex:1,minWidth:0}}>
-              {editingId===c.id?(<input autoFocus value={editTitle} onChange={e=>setEditTitle(e.target.value)} onClick={e=>e.stopPropagation()} onBlur={commitRename} onKeyDown={e=>{if(e.key==="Enter"){e.target.blur()}if(e.key==="Escape"){setEditingId(null);setEditTitle("")}}} style={{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(201,168,76,0.4)",borderRadius:"4px",color:"#fff",fontSize:"13px",fontWeight:500,padding:"2px 6px",width:"100%",outline:"none"}}/>):(<div style={{color:"#fff",fontSize:"13px",fontWeight:c.pinned?500:400,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.title}</div>)}
-              <div style={{color:"rgba(255,255,255,0.35)",fontSize:"11px",marginTop:"2px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.summary?.slice(0,60)}</div>
+              {editingId===c.id?(<input autoFocus value={editTitle} onChange={e=>setEditTitle(e.target.value)} onClick={e=>e.stopPropagation()} onBlur={commitRename} onKeyDown={e=>{if(e.key==="Enter"){e.target.blur()}if(e.key==="Escape"){setEditingId(null);setEditTitle("")}}} style={{background:"rgba(255,255,255,0.08)",border:"1px solid var(--gold)",borderRadius:"8px",color:"var(--text-hi)",fontSize:"14px",padding:"3px 7px",width:"100%",outline:"none",fontFamily:"inherit"}}/>):(<div style={{fontSize:"15px",color:"inherit",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.title}</div>)}
             </div>
-            <div style={{display:"flex",gap:"4px",flexShrink:0}} onClick={e=>e.stopPropagation()}>
-              <button className="speak-btn" style={{color:c.pinned?"#C9A84C":"rgba(255,255,255,0.4)"}} onClick={()=>handlePin(c)} title={c.pinned?"Unpin":"Pin (max 2)"}><PinIcon active={c.pinned}/></button>
-              <button className="speak-btn" onClick={()=>startRename(c)} title="Rename"><PencilIcon/></button><button className="speak-btn" onClick={()=>handleDeleteConvo(c.id)} title="Delete"><TrashIcon/></button>
+            <div style={{display:"flex",gap:"2px",flexShrink:0}} onClick={e=>e.stopPropagation()}>
+              <button className="speak-btn" style={{color:"var(--gold)",opacity:1}} onClick={()=>handlePin(c)} title="Unpin"><PinIcon active={true}/></button>
+              <button className="speak-btn" onClick={()=>startRename(c)} title="Rename"><PencilIcon/></button>
+              <button className="speak-btn" onClick={()=>handleDeleteConvo(c.id)} title="Delete"><TrashIcon/></button>
             </div>
           </div>
         </div>))}
+        {(()=>{const list=allSaved.filter(c=>!c.pinned&&(!activeProjectId||c.project_id===activeProjectId));let lastGroup=null;const out=[];
+          if(list.length===0){out.push(<div key="empty" style={{padding:"24px 16px",color:"var(--text-lo)",fontSize:"14px",textAlign:"center"}}>{activeProjectId?"No chats in this project yet":"No chats yet"}</div>);}
+          list.forEach(c=>{const g=chatGroupLabel(c.updated_at||c.created_at);
+            if(g!==lastGroup){out.push(<div key={"g"+g} className="eyebrow">{activeProjectId?`${g} \u00b7 in project`:g}</div>);lastGroup=g;}
+            out.push(<div key={c.id} className={`hist-item${activeConvoId===c.id?" current":""}`} onClick={()=>handleLoadConvo(c)}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"6px"}}>
+                <div style={{flex:1,minWidth:0,display:"flex",alignItems:"center",gap:"7px"}}>
+                  {c.project_id&&(<span style={{width:"6px",height:"6px",borderRadius:"50%",background:"var(--gold)",flexShrink:0}}/>)}
+                  {editingId===c.id?(<input autoFocus value={editTitle} onChange={e=>setEditTitle(e.target.value)} onClick={e=>e.stopPropagation()} onBlur={commitRename} onKeyDown={e=>{if(e.key==="Enter"){e.target.blur()}if(e.key==="Escape"){setEditingId(null);setEditTitle("")}}} style={{background:"rgba(255,255,255,0.08)",border:"1px solid var(--gold)",borderRadius:"8px",color:"var(--text-hi)",fontSize:"14px",padding:"3px 7px",width:"100%",outline:"none",fontFamily:"inherit"}}/>):(<div style={{fontSize:"15px",color:"inherit",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.title}</div>)}
+                </div>
+                <div style={{display:"flex",gap:"2px",flexShrink:0}} onClick={e=>e.stopPropagation()}>
+                  <button className="speak-btn" style={{color:"var(--text-lo)"}} onClick={()=>handlePin(c)} title="Pin"><PinIcon active={false}/></button>
+                  <button className="speak-btn" onClick={()=>startRename(c)} title="Rename"><PencilIcon/></button>
+                  <button className="speak-btn" onClick={()=>handleDeleteConvo(c.id)} title="Delete"><TrashIcon/></button>
+                </div>
+              </div>
+            </div>);});
+          return out;})()}
       </div>
-
-      <div style={{padding:"12px 14px",borderTop:"1px solid rgba(255,255,255,0.08)",fontSize:"11px",color:"rgba(255,255,255,0.3)",textAlign:"center"}}>Save up to 10 conversations. Pin 2.</div>
+      {activeProject&&(<div style={{padding:"12px 16px calc(12px + env(safe-area-inset-bottom,0px))",borderTop:"1px solid var(--line)",display:"flex",alignItems:"center",gap:"10px"}}>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:"12px",color:"var(--gold-hi)",fontWeight:600}}>Project active: {activeProject.name}</div>
+          <div style={{fontSize:"11px",color:"var(--text-lo)",marginTop:"1px"}}>New chats here follow its instructions</div>
+        </div>
+        <button className="ghost-btn" onClick={()=>setActiveProjectId(null)}>Leave</button>
+      </div>)}
     </div>)}
 
-{/* Header */}
+    {/* Header */}
 <div style={{paddingTop:"env(safe-area-inset-top,0px)",background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",borderBottom:"1px solid var(--line)",flexShrink:0}}>
 <div style={{height:"54px",padding:"0 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:"12px"}}>
   <div style={{display:"flex",alignItems:"center",gap:"10px",flexShrink:0}}>
@@ -814,21 +1047,19 @@ export default function App(){
     </div>
     <div>
       <div style={{fontSize:"17px",fontWeight:600,color:"var(--text-hi)",letterSpacing:"-0.02em",lineHeight:1.1}}>Lance</div>
-      <div style={{fontSize:"11px",color:"var(--text-lo)",fontWeight:600,letterSpacing:"0.08em",textTransform:"uppercase",lineHeight:1.2}}>Personal Agent</div>
+      <div style={{fontSize:"11px",color:"var(--text-lo)",fontWeight:600,letterSpacing:"0.08em",textTransform:"uppercase",lineHeight:1.2}}>{activeProject?activeProject.name:"Personal Agent"}</div>
     </div>
   </div>
   <div style={{display:"flex",alignItems:"center",gap:"8px",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none",msOverflowStyle:"none",flexShrink:1}}>
-        {saveStatus&&(<div style={{fontSize:"12px",color:saveStatus==="saved"?"var(--gold)":saveStatus==="maxpin"?"#ff8080":"#ff8080",fontWeight:600,whiteSpace:"nowrap"}}>{saveStatus==="saved"?"Saved!":saveStatus==="max"?"Max 5":"Max 2 pins"}</div>)}
-    {pinnedConvos.map((c,i)=>(<button key={c.id} onClick={()=>handleLoadConvo(c)} style={{background:activeConvoId===c.id?"rgba(201,168,76,0.18)":"var(--glass)",border:`1px solid ${activeConvoId===c.id?"var(--gold)":"var(--line)"}`,borderRadius:"10px",padding:"6px 10px",cursor:"pointer",fontSize:"13px",color:activeConvoId===c.id?"var(--gold-hi)":"var(--text-mid)",fontFamily:"inherit",maxWidth:"90px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minHeight:"36px",display:"flex",alignItems:"center",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}} title={c.title}>{c.title.slice(0,12)}</button>))}
+        {pinnedConvos.map((c,i)=>(<button key={c.id} onClick={()=>handleLoadConvo(c)} style={{background:activeConvoId===c.id?"rgba(201,168,76,0.18)":"var(--glass)",border:`1px solid ${activeConvoId===c.id?"var(--gold)":"var(--line)"}`,borderRadius:"10px",padding:"6px 10px",cursor:"pointer",fontSize:"13px",color:activeConvoId===c.id?"var(--gold-hi)":"var(--text-mid)",fontFamily:"inherit",maxWidth:"90px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minHeight:"36px",display:"flex",alignItems:"center",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}} title={c.title}>{c.title.slice(0,12)}</button>))}
     <button onClick={()=>setShowSaved(s=>!s)} style={{background:showSaved?"rgba(201,168,76,0.18)":"var(--glass)",border:`1px solid ${showSaved?"var(--gold)":"var(--line)"}`,borderRadius:"10px",padding:"6px 10px",cursor:"pointer",color:showSaved?"var(--gold-hi)":"var(--text-mid)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}><SaveIcon/><span style={{fontSize:"13px",fontWeight:600}}>{allSaved.length}</span></button>
-    {messages.length>0&&(<button onClick={handleSave} style={{background:"rgba(201,168,76,0.12)",border:"1px solid var(--gold)",borderRadius:"10px",padding:"6px 12px",cursor:"pointer",color:"var(--gold-hi)",fontSize:"13px",fontWeight:600,fontFamily:"inherit",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>Save</button>)}
     <button onClick={gmailConnected?undefined:connectGmail} title={gmailConnected?`Connected: ${gmailEmail}`:"Connect Gmail"} style={{background:gmailConnected?"rgba(46,158,91,0.15)":"var(--glass)",border:`1px solid ${gmailConnected?"rgba(46,158,91,0.4)":"var(--line)"}`,borderRadius:"10px",padding:"6px 11px",color:gmailConnected?"#3DB76D":"var(--text-mid)",fontSize:"12px",fontWeight:600,fontFamily:"inherit",cursor:gmailConnected?"default":"pointer",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 2.5h10v7a1 1 0 01-1 1H2a1 1 0 01-1-1v-7z" stroke="currentColor" strokeWidth="1.1" fill="none"/><path d="M1 2.5l5 3.5 5-3.5" stroke="currentColor" strokeWidth="1.1" fill="none"/></svg>
       {gmailConnected?"Gmail":"Connect"}
     </button>
     <button className="teach-toggle" onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} style={{background:teachMode?"rgba(201,168,76,0.18)":"var(--glass)",border:`1px solid ${teachMode?"var(--gold)":"var(--line)"}`,borderRadius:"10px",color:teachMode?"var(--gold-hi)":"var(--text-mid)",padding:"6px 11px",fontFamily:"inherit",fontSize:"13px",fontWeight:600,cursor:"pointer",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>{teachMode?"On":"Off"}</button>
     {speakingIdx!==null&&(<button onClick={stopSpeaking} style={{background:"rgba(255,80,80,0.15)",border:"1px solid rgba(255,80,80,0.4)",borderRadius:"10px",padding:"6px 10px",cursor:"pointer",color:"rgba(255,120,120,0.9)",fontSize:"13px",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}><StopIcon/></button>)}
-    {messages.length>0&&(<button onClick={clearChat} style={{background:"var(--glass)",border:"1px solid var(--line)",borderRadius:"10px",cursor:"pointer",fontSize:"13px",color:"var(--text-mid)",fontFamily:"inherit",padding:"6px 11px",fontWeight:600,minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>Clear</button>)}
+    {messages.length>0&&(<button onClick={clearChat} style={{background:"var(--glass)",border:"1px solid var(--line)",borderRadius:"10px",cursor:"pointer",fontSize:"13px",color:"var(--text-mid)",fontFamily:"inherit",padding:"6px 11px",fontWeight:600,minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>New</button>)}
   </div>
 </div></div>
 {/* Chat body */}
@@ -838,10 +1069,11 @@ export default function App(){
       <div style={{display:"inline-block",marginBottom:"24px",animation:"pulseGlow 4s ease-in-out infinite"}}><LanceLogo size={72}/></div>
       <div style={{fontSize:"32px",fontWeight:600,color:"var(--text-hi)",letterSpacing:"-0.03em",marginBottom:"10px",lineHeight:1.2}}>Good to see you, Pastor.</div>
       <div style={{fontSize:"16px",color:"var(--text-mid)",fontWeight:400,lineHeight:1.5,marginBottom:"28px"}}>Type, talk, or drop a screenshot.</div>
-      <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:"10px"}}>
-        <button onClick={()=>sendPreset("Prep a sermon")} style={{background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",border:"1px solid var(--line)",borderRadius:"10px",padding:"9px 16px",color:"var(--text-mid)",fontSize:"15px",fontWeight:500,fontFamily:"inherit",cursor:"pointer",transition:"all 200ms cubic-bezier(0.22,1,0.36,1)"}}>Sermon prep</button>
-        <button onClick={()=>sendPreset("Give me today's devotion")} style={{background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",border:"1px solid var(--line)",borderRadius:"10px",padding:"9px 16px",color:"var(--text-mid)",fontSize:"15px",fontWeight:500,fontFamily:"inherit",cursor:"pointer",transition:"all 200ms cubic-bezier(0.22,1,0.36,1)"}}>Daily devotion</button>
-        <button onClick={()=>sendPreset("Draft a letter")} style={{background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",border:"1px solid var(--line)",borderRadius:"10px",padding:"9px 16px",color:"var(--text-mid)",fontSize:"15px",fontWeight:500,fontFamily:"inherit",cursor:"pointer",transition:"all 200ms cubic-bezier(0.22,1,0.36,1)"}}>Draft a letter</button>
+      <div style={{display:"flex",justifyContent:"center",gap:"14px"}}>
+        <AppIcon label="Sermon" onTap={()=>sendPreset("Prep a sermon")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h5v18H6a2 2 0 01-2-2V5zM20 5a2 2 0 00-2-2h-5v18h5a2 2 0 002-2V5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M13 3v18" stroke="currentColor" strokeWidth="1.6"/></svg></AppIcon>
+        <AppIcon label="Devotion" onTap={()=>sendPreset("Give me today's devotion")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.6"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg></AppIcon>
+        <AppIcon label="Letter" onTap={()=>sendPreset("Draft a letter")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M16.5 3.5l4 4L8 20H4v-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M14 6l4 4" stroke="currentColor" strokeWidth="1.6"/></svg></AppIcon>
+        <AppIcon label="Flyer" onTap={()=>sendPreset("Design me a flyer")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg></AppIcon>
       </div>
     </div>
   </div>)}
