@@ -73,19 +73,21 @@ function WordDocCard({text, filename, onDownload, downloading}){
     <div onClick={onDownload} style={{
       display:"flex",alignItems:"center",gap:"10px",
       padding:"10px 14px",marginTop:"6px",
-      background:"rgba(255,255,255,0.97)",
-      border:"1px solid rgba(26,35,64,0.15)",
-      borderRadius:"12px",cursor:"pointer",
-      boxShadow:"0 2px 12px rgba(0,0,0,0.1)",
-      transition:"all 0.15s",maxWidth:"220px",
+      background:"var(--glass-hi)",
+      border:"1px solid var(--line)",
+      borderRadius:"14px",cursor:"pointer",
+      backdropFilter:"blur(24px) saturate(1.5)",
+      WebkitBackdropFilter:"blur(24px) saturate(1.5)",
+      boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)",
+      transition:"all 200ms cubic-bezier(0.22,1,0.36,1)",
+      maxWidth:"220px",
       opacity:downloading?0.7:1,
     }}
-    onMouseEnter={e=>e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,0.18)"}
-    onMouseLeave={e=>e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,0.1)"}
+    onMouseEnter={e=>e.currentTarget.style.boxShadow="inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 20px rgba(0,0,0,0.3)"}
+    onMouseLeave={e=>e.currentTarget.style.boxShadow="inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)"}
     >
-      {/* Word doc icon */}
       <div style={{
-        width:"36px",height:"44px",borderRadius:"4px",flexShrink:0,
+        width:"36px",height:"44px",borderRadius:"10px",flexShrink:0,
         background:"linear-gradient(160deg,#2B579A 0%,#1E3A6E 100%)",
         display:"flex",flexDirection:"column",alignItems:"center",
         justifyContent:"center",position:"relative",
@@ -103,10 +105,10 @@ function WordDocCard({text, filename, onDownload, downloading}){
         <div style={{width:"16px",height:"1.5px",background:"rgba(255,255,255,0.3)",marginTop:"2px",borderRadius:"1px"}}/>
       </div>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:"13px",fontWeight:600,color:"#1a2340",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-          {downloading?"Preparing......":"Lance Document"}
+        <div style={{fontSize:"14px",fontWeight:600,color:"var(--text-hi)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+          {downloading?"Preparing…":"Lance Document"}
         </div>
-        <div style={{fontSize:"11px",color:"#6B7280",marginTop:"1px"}}>
+        <div style={{fontSize:"12px",color:"var(--text-lo)",marginTop:"1px"}}>
           {downloading?"Building your .docx":"Tap to download .docx"}
         </div>
       </div>
@@ -128,18 +130,21 @@ function PptxDocCard({text, filename, onDownload, downloading}){
     <div onClick={onDownload} style={{
       display:"flex",alignItems:"center",gap:"10px",
       padding:"10px 14px",marginTop:"6px",
-      background:"rgba(255,255,255,0.97)",
-      border:"1px solid rgba(26,35,64,0.15)",
-      borderRadius:"12px",cursor:"pointer",
-      boxShadow:"0 2px 12px rgba(0,0,0,0.1)",
-      transition:"all 0.15s",maxWidth:"220px",
+      background:"var(--glass-hi)",
+      border:"1px solid var(--line)",
+      borderRadius:"14px",cursor:"pointer",
+      backdropFilter:"blur(24px) saturate(1.5)",
+      WebkitBackdropFilter:"blur(24px) saturate(1.5)",
+      boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)",
+      transition:"all 200ms cubic-bezier(0.22,1,0.36,1)",
+      maxWidth:"220px",
       opacity:downloading?0.7:1,
     }}
-    onMouseEnter={e=>e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,0.18)"}
-    onMouseLeave={e=>e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,0.1)"}
+    onMouseEnter={e=>e.currentTarget.style.boxShadow="inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 20px rgba(0,0,0,0.3)"}
+    onMouseLeave={e=>e.currentTarget.style.boxShadow="inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)"}
     >
       <div style={{
-        width:"36px",height:"44px",borderRadius:"4px",flexShrink:0,
+        width:"36px",height:"44px",borderRadius:"10px",flexShrink:0,
         background:"linear-gradient(160deg,#D24726 0%,#A6350F 100%)",
         display:"flex",flexDirection:"column",alignItems:"center",
         justifyContent:"center",position:"relative",
@@ -155,10 +160,10 @@ function PptxDocCard({text, filename, onDownload, downloading}){
         <div style={{width:"18px",height:"14px",border:"1.5px solid rgba(255,255,255,0.5)",marginTop:"3px",borderRadius:"1px"}}/>
       </div>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:"13px",fontWeight:600,color:"#1a2340",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-          {downloading?"Preparing...":"Lance Slides"}
+        <div style={{fontSize:"14px",fontWeight:600,color:"var(--text-hi)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+          {downloading?"Preparing…":"Lance Slides"}
         </div>
-        <div style={{fontSize:"11px",color:"#6B7280",marginTop:"1px"}}>
+        <div style={{fontSize:"12px",color:"var(--text-lo)",marginTop:"1px"}}>
           {downloading?"Building your .pptx":"Tap to download .pptx"}
         </div>
       </div>
@@ -180,18 +185,21 @@ function FlyerCard({onGenerate, generating}){
     <div onClick={onGenerate} style={{
       display:"flex",alignItems:"center",gap:"10px",
       padding:"10px 14px",marginTop:"6px",
-      background:"rgba(255,255,255,0.97)",
-      border:"1px solid rgba(26,35,64,0.15)",
-      borderRadius:"12px",cursor:"pointer",
-      boxShadow:"0 2px 12px rgba(0,0,0,0.1)",
-      transition:"all 0.15s",maxWidth:"220px",
+      background:"var(--glass-hi)",
+      border:"1px solid var(--line)",
+      borderRadius:"14px",cursor:"pointer",
+      backdropFilter:"blur(24px) saturate(1.5)",
+      WebkitBackdropFilter:"blur(24px) saturate(1.5)",
+      boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)",
+      transition:"all 200ms cubic-bezier(0.22,1,0.36,1)",
+      maxWidth:"220px",
       opacity:generating?0.7:1,
     }}
-    onMouseEnter={e=>e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,0.18)"}
-    onMouseLeave={e=>e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,0.1)"}
+    onMouseEnter={e=>e.currentTarget.style.boxShadow="inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 20px rgba(0,0,0,0.3)"}
+    onMouseLeave={e=>e.currentTarget.style.boxShadow="inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)"}
     >
       <div style={{
-        width:"36px",height:"44px",borderRadius:"4px",flexShrink:0,
+        width:"36px",height:"44px",borderRadius:"10px",flexShrink:0,
         background:"linear-gradient(160deg,#C9A84C 0%,#8a6e2a 100%)",
         display:"flex",alignItems:"center",justifyContent:"center",
         boxShadow:"0 2px 6px rgba(201,168,76,0.35)"
@@ -199,10 +207,10 @@ function FlyerCard({onGenerate, generating}){
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="#fff" strokeWidth="1.4"/><circle cx="6.5" cy="6.5" r="1.5" fill="#fff"/><path d="M2 12l4-4 3 3 3-4 4 5" stroke="#fff" strokeWidth="1.4" strokeLinejoin="round" fill="none"/></svg>
       </div>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:"13px",fontWeight:600,color:"#1a2340"}}>
-          {generating?"Designing...":"Lance Flyer"}
+        <div style={{fontSize:"14px",fontWeight:600,color:"var(--text-hi)"}}>
+          {generating?"Designing…":"Lance Flyer"}
         </div>
-        <div style={{fontSize:"11px",color:"#6B7280",marginTop:"1px"}}>
+        <div style={{fontSize:"12px",color:"var(--text-lo)",marginTop:"1px"}}>
           {generating?"Building your graphic":"Tap to create a flyer"}
         </div>
       </div>
@@ -223,14 +231,17 @@ function TextSentCard({status,onSend,scheduled}){
     <div onClick={status==="idle"?onSend:undefined} style={{
       display:"flex",alignItems:"center",gap:"10px",
       padding:"10px 14px",marginTop:"6px",
-      background:"rgba(255,255,255,0.97)",
-      border:"1px solid rgba(26,35,64,0.15)",
-      borderRadius:"12px",cursor:status==="idle"?"pointer":"default",
-      boxShadow:"0 2px 12px rgba(0,0,0,0.1)",maxWidth:"220px",
+      background:"var(--glass-hi)",
+      border:"1px solid var(--line)",
+      borderRadius:"14px",cursor:status==="idle"?"pointer":"default",
+      backdropFilter:"blur(24px) saturate(1.5)",
+      WebkitBackdropFilter:"blur(24px) saturate(1.5)",
+      boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)",
+      maxWidth:"220px",
       opacity:status==="sending"?0.7:1,
     }}>
       <div style={{
-        width:"36px",height:"36px",borderRadius:"50%",flexShrink:0,
+        width:"36px",height:"36px",borderRadius:"10px",flexShrink:0,
         background:status==="sent"?"linear-gradient(160deg,#2E9E5B,#1F7A44)":"linear-gradient(160deg,#1F4E96,#0F2A52)",
         display:"flex",alignItems:"center",justifyContent:"center",
       }}>
@@ -241,10 +252,10 @@ function TextSentCard({status,onSend,scheduled}){
         )}
       </div>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:"13px",fontWeight:600,color:"#1a2340"}}>
-          {status==="sent"?"Text sent":status==="sending"?"Sending...":status==="error"?"Failed to send":scheduled?"Scheduled text":"Text ready"}
+        <div style={{fontSize:"14px",fontWeight:600,color:"var(--text-hi)"}}>
+          {status==="sent"?"Text sent":status==="sending"?"Sending…":status==="error"?"Failed to send":scheduled?"Scheduled text":"Text ready"}
         </div>
-        <div style={{fontSize:"11px",color:"#6B7280",marginTop:"1px"}}>
+        <div style={{fontSize:"12px",color:"var(--text-lo)",marginTop:"1px"}}>
           {status==="idle"?"Tap to send now":status==="sent"?"Delivered to your phone":status==="error"?"Tap to retry":"Sending to your phone"}
         </div>
       </div>
@@ -258,32 +269,31 @@ function EmailCard({emailData,status,onEdit,onSend,gmailConnected}){
   const[body,setBody]=React.useState(emailData.body);
   if(status==="sent"){
     return(
-      <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",marginTop:"6px",background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",maxWidth:"260px"}}>
-        <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"linear-gradient(160deg,#2E9E5B,#1F7A44)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+      <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",marginTop:"6px",background:"var(--glass-hi)",border:"1px solid var(--line)",borderRadius:"14px",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06)",maxWidth:"260px"}}>
+        <div style={{width:"36px",height:"36px",borderRadius:"10px",background:"linear-gradient(160deg,#2E9E5B,#1F7A44)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 4.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
-        <div><div style={{fontSize:"13px",fontWeight:600,color:"#1a2340"}}>Email sent</div><div style={{fontSize:"11px",color:"#6B7280"}}>Delivered to {to}</div></div>
+        <div><div style={{fontSize:"14px",fontWeight:600,color:"var(--text-hi)"}}>Email sent</div><div style={{fontSize:"12px",color:"var(--text-lo)"}}>Delivered to {to}</div></div>
       </div>
     );
   }
   return(
-    <div style={{background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",padding:"14px",marginTop:"6px",maxWidth:"320px",boxShadow:"0 2px 12px rgba(0,0,0,0.1)"}}>
+    <div style={{background:"var(--glass-hi)",border:"1px solid var(--line)",borderRadius:"14px",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)",padding:"14px",marginTop:"6px",maxWidth:"320px"}}>
       {!gmailConnected&&(
-        <div style={{fontSize:"12px",color:"#B45309",background:"rgba(217,119,6,0.1)",padding:"8px 10px",borderRadius:"8px",marginBottom:"10px"}}>Gmail is not connected yet. Connect it in settings first.</div>
+        <div style={{fontSize:"12px",color:"#E8B461",background:"rgba(217,119,6,0.12)",padding:"8px 10px",borderRadius:"10px",marginBottom:"10px"}}>Gmail is not connected yet. Connect it in settings first.</div>
       )}
-      <div style={{fontSize:"11px",color:"#6B7280",marginBottom:"3px"}}>To</div>
-      <input value={to} onChange={e=>setTo(e.target.value)} style={{width:"100%",border:"1px solid #E5E7EB",borderRadius:"6px",padding:"6px 8px",fontSize:"13px",marginBottom:"8px",fontFamily:"inherit"}}/>
-      <div style={{fontSize:"11px",color:"#6B7280",marginBottom:"3px"}}>Subject</div>
-      <input value={subject} onChange={e=>setSubject(e.target.value)} style={{width:"100%",border:"1px solid #E5E7EB",borderRadius:"6px",padding:"6px 8px",fontSize:"13px",marginBottom:"8px",fontFamily:"inherit"}}/>
-      <div style={{fontSize:"11px",color:"#6B7280",marginBottom:"3px"}}>Message</div>
-      <textarea value={body} onChange={e=>setBody(e.target.value)} rows={5} style={{width:"100%",border:"1px solid #E5E7EB",borderRadius:"6px",padding:"6px 8px",fontSize:"13px",marginBottom:"10px",fontFamily:"inherit",resize:"vertical"}}/>
-      <button onClick={()=>onSend({to,subject,body})} disabled={status==="sending"||!gmailConnected} style={{width:"100%",background:gmailConnected?"linear-gradient(135deg,#1a2340,#0d1321)":"#D1D5DB",color:"#fff",border:"none",borderRadius:"8px",padding:"10px",fontSize:"13px",fontWeight:600,cursor:gmailConnected?"pointer":"default",fontFamily:"inherit"}}>
-        {status==="sending"?"Sending...":status==="error"?"Failed, tap to retry":"Send Email"}
+      <div style={{fontSize:"11px",color:"var(--text-lo)",marginBottom:"3px"}}>To</div>
+      <input value={to} onChange={e=>setTo(e.target.value)} style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid var(--line)",borderRadius:"10px",padding:"6px 8px",fontSize:"13px",marginBottom:"8px",fontFamily:"inherit",color:"var(--text-hi)"}}/>
+      <div style={{fontSize:"11px",color:"var(--text-lo)",marginBottom:"3px"}}>Subject</div>
+      <input value={subject} onChange={e=>setSubject(e.target.value)} style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid var(--line)",borderRadius:"10px",padding:"6px 8px",fontSize:"13px",marginBottom:"8px",fontFamily:"inherit",color:"var(--text-hi)"}}/>
+      <div style={{fontSize:"11px",color:"var(--text-lo)",marginBottom:"3px"}}>Message</div>
+      <textarea value={body} onChange={e=>setBody(e.target.value)} rows={5} style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid var(--line)",borderRadius:"10px",padding:"6px 8px",fontSize:"13px",marginBottom:"10px",fontFamily:"inherit",resize:"vertical",color:"var(--text-hi)"}}/>
+      <button onClick={()=>onSend({to,subject,body})} disabled={status==="sending"||!gmailConnected} style={{width:"100%",background:gmailConnected?"linear-gradient(135deg,#D4B45C,#A8863A)":"var(--glass)",color:gmailConnected?"#0B0E16":"var(--text-lo)",border:"none",borderRadius:"10px",padding:"10px",fontSize:"13px",fontWeight:600,cursor:gmailConnected?"pointer":"default",fontFamily:"inherit"}}>
+        {status==="sending"?"Sending…":status==="error"?"Failed, tap to retry":"Send Email"}
       </button>
     </div>
   );
 }
-
 function renderDocBlock(text){
   const lines=text.split("\n");
   const blocks=[];
@@ -317,10 +327,10 @@ function renderDocBlock(text){
 
 function DocPreviewModal({text,filename,onClose,onDownloadWord,onDownloadPptx,downloading}){
   return(
-    <div style={{position:"fixed",inset:0,zIndex:500,background:"rgba(13,19,33,0.75)",display:"flex",flexDirection:"column",animation:"fadeIn 0.2s ease"}} onClick={onClose}>
+    <div style={{position:"fixed",inset:0,zIndex:500,background:"rgba(6,8,15,0.8)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",display:"flex",flexDirection:"column",animation:"fadeIn 0.2s ease"}} onClick={onClose}>
       <div onClick={e=>e.stopPropagation()} style={{
         background:"#fff",margin:"env(safe-area-inset-top,20px) 12px 12px",flex:1,
-        borderRadius:"16px",display:"flex",flexDirection:"column",overflow:"hidden",
+        borderRadius:"28px 28px 0 0",display:"flex",flexDirection:"column",overflow:"hidden",
         boxShadow:"0 20px 60px rgba(0,0,0,0.4)"
       }}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",borderBottom:"1px solid rgba(26,35,64,0.1)",flexShrink:0}}>
@@ -331,8 +341,8 @@ function DocPreviewModal({text,filename,onClose,onDownloadWord,onDownloadPptx,do
           {renderDocBlock(text)}
         </div>
         <div style={{display:"flex",gap:"8px",padding:"12px 16px",borderTop:"1px solid rgba(26,35,64,0.1)",flexShrink:0}}>
-          <button onClick={onDownloadWord} disabled={downloading} style={{flex:1,background:"linear-gradient(135deg,#2B579A,#1E3A6E)",color:"#fff",border:"none",borderRadius:"10px",padding:"12px",fontSize:"14px",fontWeight:600,cursor:"pointer",fontFamily:"inherit",opacity:downloading?0.6:1}}>Save as Word</button>
-          <button onClick={onDownloadPptx} disabled={downloading} style={{flex:1,background:"linear-gradient(135deg,#D24726,#A6350F)",color:"#fff",border:"none",borderRadius:"10px",padding:"12px",fontSize:"14px",fontWeight:600,cursor:"pointer",fontFamily:"inherit",opacity:downloading?0.6:1}}>Save as Slides</button>
+          <button onClick={onDownloadWord} disabled={downloading} style={{flex:1,background:"linear-gradient(135deg,#2B579A,#1E3A6E)",color:"#fff",border:"none",borderRadius:"12px",padding:"12px",fontSize:"14px",fontWeight:600,cursor:"pointer",fontFamily:"inherit",opacity:downloading?0.6:1}}>Save as Word</button>
+          <button onClick={onDownloadPptx} disabled={downloading} style={{flex:1,background:"linear-gradient(135deg,#D24726,#A6350F)",color:"#fff",border:"none",borderRadius:"12px",padding:"12px",fontSize:"14px",fontWeight:600,cursor:"pointer",fontFamily:"inherit",opacity:downloading?0.6:1}}>Save as Slides</button>
         </div>
       </div>
     </div>
@@ -345,37 +355,60 @@ function PencilIcon(){return(<svg width="12" height="12" viewBox="0 0 12 12" fil
 
 function renderText(t){try{if(!t)return "";return t.replace(/#{1,6} /g,"").replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1").replace(/__(.*?)__/g,"$1").replace(/`(.*?)`/g,"$1").replace(/^[-*] /gm,"\u2022 ").replace(/^---+$/gm,"").replace(/\n\n\n+/g,"\n\n").trim()}catch(e){return String(t||"")}}
 
-const CSS=`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
-:root{--accent:#C9A84C;--text:#1a2340;--navy:#0d1321}
+const CSS=`:root{--bg0:#06080F;--bg1:#0B111D;--gold:#C9A84C;--gold-hi:#E8C96A;--gold-lo:#8A6E2A;--glass:rgba(255,255,255,0.055);--glass-hi:rgba(255,255,255,0.09);--line:rgba(255,255,255,0.08);--text-hi:#F5F6F8;--text-mid:rgba(245,246,248,0.62);--text-lo:rgba(245,246,248,0.38)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body,#root{height:100%;-webkit-text-size-adjust:100%}
-body{font-family:'DM Sans',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;background:linear-gradient(175deg,#0A0E18 0%,#06080F 60%);position:relative}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 120% 60% at 50% -10%,rgba(201,168,76,0.10),transparent 60%);pointer-events:none;z-index:0}
 textarea:focus,button:focus{outline:none}
+textarea::placeholder{color:var(--text-lo)}
 ::-webkit-scrollbar{width:0}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulseGlow{0%,100%{filter:drop-shadow(0 0 10px rgba(201,168,76,0.4))}50%{filter:drop-shadow(0 0 26px rgba(201,168,76,0.75))}}
-@keyframes dot{0%,80%,100%{transform:scale(0.55);opacity:0.3}40%{transform:scale(1);opacity:1}}
-@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,0.4)}50%{box-shadow:0 0 0 8px rgba(201,168,76,0)}}
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);border:1px solid var(--line)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulseGlow{0%,100%{filter:drop-shadow(0 0 8px rgba(201,168,76,0.3))}50%{filter:drop-shadow(0 0 18px rgba(201,168,76,0.6))}}
+@keyframes dot{0%,80%,100%{transform:scale(0.5);opacity:0.25}40%{transform:scale(1);opacity:1}}
+@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,0.4),0 0 12px rgba(201,168,76,0.2)}50%{box-shadow:0 0 0 6px rgba(201,168,76,0),0 0 20px rgba(201,168,76,0.4)}}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
-.speak-btn{border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:5px;border-radius:6px;transition:all 0.14s;opacity:0.55}
-.speak-btn:hover{opacity:1;background:rgba(201,168,76,0.12)}
-.speak-btn.active{opacity:1;color:#C9A84C}
-.teach-toggle{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid;transition:all 0.18s;letter-spacing:0.02em}
-.file-chip{display:flex;align-items:center;gap:6px;padding:5px 10px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:8px;font-size:13px;color:#fff;font-family:inherit}
-.file-chip button{background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.6);display:flex;align-items:center;padding:0;transition:color 0.12s}
-.file-chip button:hover{color:#fff}
-.copy-btn{border:none;background:none;cursor:pointer;padding:3px 7px;border-radius:6px;font-size:11px;font-weight:600;font-family:inherit;transition:all 0.14s;opacity:0.55;color:rgba(255,255,255,0.6)}
-.copy-btn:hover{opacity:1;background:rgba(201,168,76,0.12)}
-.copy-btn.copied{opacity:1;color:#C9A84C}
-.mic-btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:33px;height:33px;border-radius:50%;transition:all 0.14s;flex-shrink:0}
-.mic-btn.idle{background:rgba(0,0,0,0.08);color:#aaa}
-.mic-btn.listening{background:linear-gradient(135deg,#C9A84C,#a07830);color:#fff;animation:micPulse 1s ease-in-out infinite}@keyframes spin{to{transform:rotate(360deg)}}
-.saved-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:390;animation:fadeIn 0.2s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.saved-panel{position:fixed;right:0;top:0;bottom:0;width:280px;background:rgba(13,19,33,0.97);border-left:1px solid rgba(201,168,76,0.2);backdrop-filter:blur(20px);z-index:400;display:flex;flex-direction:column;animation:slideIn 0.22s ease}
-.saved-item{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.07);cursor:pointer;transition:background 0.12s}
-.saved-item:hover{background:rgba(255,255,255,0.05)}
-.saved-item.active{background:rgba(201,168,76,0.1)}`;
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes ringRotate{to{transform:rotate(360deg)}}
+.lance-ring{position:absolute;inset:-4px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity 280ms cubic-bezier(0.22,1,0.36,1)}
+.lance-ring::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0%,var(--gold) 25%,transparent 50%,transparent 100%);mask:radial-gradient(circle,transparent 50%,black 51%,black 54%,transparent 55%);-webkit-mask:radial-gradient(circle,transparent 50%,black 51%,black 54%,transparent 55%);animation:ringRotate 2.4s linear infinite}
+.lance-ring.active{opacity:1}
+.wave{display:flex;align-items:center;gap:3px;height:24px;justify-content:center}
+.wave span{width:3px;background:var(--gold);border-radius:2px;animation:waveBar 1.2s ease-in-out infinite}
+.wave span:nth-child(1){height:8px;animation-delay:0s}
+.wave span:nth-child(2){height:14px;animation-delay:0.1s}
+.wave span:nth-child(3){height:18px;animation-delay:0.2s}
+.wave span:nth-child(4){height:14px;animation-delay:0.3s}
+.wave span:nth-child(5){height:10px;animation-delay:0.4s}
+@keyframes waveBar{0%,100%{transform:scaleY(0.5);opacity:0.4}50%{transform:scaleY(1);opacity:1}}
+.speak-btn{border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:6px;border-radius:10px;transition:all 200ms cubic-bezier(0.22,1,0.36,1);opacity:0.5;color:var(--text-mid);min-width:36px;min-height:36px}
+.speak-btn:hover{opacity:1;background:rgba(201,168,76,0.08)}
+.speak-btn:active{transform:scale(0.96)}
+.speak-btn.active{opacity:1;color:var(--gold)}
+.teach-toggle{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--line);background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);transition:all 200ms cubic-bezier(0.22,1,0.36,1);color:var(--text-mid);letter-spacing:0.01em;min-height:36px}
+.teach-toggle:hover{background:var(--glass-hi);border-color:rgba(255,255,255,0.12)}
+.teach-toggle:active{transform:scale(0.96)}
+.file-chip{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--glass);border:1px solid var(--line);border-radius:10px;font-size:13px;color:var(--text-hi);font-family:inherit;-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5)}
+.file-chip button{background:none;border:none;cursor:pointer;color:var(--text-lo);display:flex;align-items:center;padding:2px;transition:color 180ms cubic-bezier(0.22,1,0.36,1);min-width:24px;min-height:24px}
+.file-chip button:hover{color:var(--text-hi)}
+.file-chip button:active{transform:scale(0.96)}
+.copy-btn{border:none;background:none;cursor:pointer;padding:4px 8px;border-radius:10px;font-size:11px;font-weight:600;font-family:inherit;transition:all 200ms cubic-bezier(0.22,1,0.36,1);opacity:0.5;color:var(--text-mid);letter-spacing:0.08em;text-transform:uppercase;min-height:28px}
+.copy-btn:hover{opacity:1;background:rgba(201,168,76,0.08)}
+.copy-btn:active{transform:scale(0.96)}
+.copy-btn.copied{opacity:1;color:var(--gold)}
+.mic-btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;transition:all 200ms cubic-bezier(0.22,1,0.36,1);flex-shrink:0}
+.mic-btn:active{transform:scale(0.96)}
+.mic-btn.idle{background:var(--glass);color:var(--text-lo);border:1px solid var(--line);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5)}
+.mic-btn.listening{background:linear-gradient(135deg,#D4B45C,#A8863A);color:#0B0E16;border:1px solid var(--gold-hi);animation:micPulse 1.4s ease-in-out infinite}
+.saved-backdrop{position:fixed;inset:0;background:rgba(6,8,15,0.7);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);z-index:390;animation:fadeIn 280ms cubic-bezier(0.22,1,0.36,1)}
+.saved-panel{position:fixed;right:0;top:0;bottom:0;width:320px;background:var(--bg1);border-left:1px solid var(--line);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);z-index:400;display:flex;flex-direction:column;animation:slideIn 300ms cubic-bezier(0.22,1,0.36,1);border-top-left-radius:28px;border-bottom-left-radius:28px;box-shadow:inset 1px 0 0 rgba(255,255,255,0.06),-8px 0 32px rgba(0,0,0,0.3)}
+.saved-item{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:background 180ms cubic-bezier(0.22,1,0.36,1);color:var(--text-mid);font-size:15px;letter-spacing:-0.01em}
+.saved-item:hover{background:rgba(255,255,255,0.04)}
+.saved-item:active{transform:scale(0.99)}
+.saved-item.active{background:rgba(201,168,76,0.08);color:var(--text-hi);border-left:2px solid var(--gold)}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}}`;
 
 export default function App(){
   const[messages,setMessages]=useState([]);
@@ -503,7 +536,7 @@ export default function App(){
     const saved=savedConvos.filter(c=>c.active!==false);
     if(saved.length>=10&&!activeConvoId){setSaveStatus("max");setTimeout(()=>setSaveStatus(null),2000);return}
     const firstUser=messages.find(m=>m.role==="user")?.content||"Conversation";
-    const title=firstUser.slice(0,50)+(firstUser.length>50?"......":"");
+    const title=firstUser.slice(0,50)+(firstUser.length>50?"…":"");
     const summary=messages.slice(-2).map(m=>m.content.slice(0,100)).join(" | ");
     const cleanMessages=messages.map(({role,content})=>({role,content}));
     const result=await saveConversation(title,summary,cleanMessages,false,0,saved.length);
@@ -670,7 +703,7 @@ export default function App(){
         else if(tag.type==="profile"){saveProfileFact(tag.domain,tag.key,tag.value,tag.confidence).catch(()=>{});setProfile(prev=>[...prev.filter(p=>!(p.domain===tag.domain&&p.key===tag.key)),{domain:tag.domain,key:tag.key,value:tag.value,confidence:tag.confidence,active:true}]);}
       }
       if(tags.some(t=>t.type==="memory")){loadMemory().then(f=>{if(Array.isArray(f))setMemoryFacts(f)}).catch(()=>{});}
-      if(msgCount.current%4===0){saveSession("general",`${t.slice(0,90)}${t.length>90?"......":""}`,msgCount.current).catch(()=>{});}
+      if(msgCount.current%4===0){saveSession("general",`${t.slice(0,90)}${t.length>90?"…":""}`,msgCount.current).catch(()=>{});}
       if(teachMode)speakText(clean,idx);if(isDoc)setDocxIdx(idx);
     }catch(e){setMessages([...next,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);}
     setLoading(false);
@@ -699,6 +732,7 @@ export default function App(){
   },[input,loading,messages,memoryFacts,profile,recentSessions,pendingFiles,teachMode,stopSpeaking,speakText,sendText]);
 
   const handleKeyDown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};
+  const sendPreset=t=>{setInput(t);setTimeout(()=>send(t),0)};
   const clearChat=()=>{stopSpeaking();setMessages([]);setPendingFiles([]);setDocxIdx(null);setActiveConvoId(null);msgCount.current=0};
 
   const pinnedConvos=savedConvos.filter(c=>c.pinned&&c.active!==false).sort((a,b)=>a.pin_order-b.pin_order);
@@ -706,10 +740,10 @@ export default function App(){
   const isEmpty=messages.length===0;
 
   return(<><style>{CSS}</style>
-  <div style={{height:"100%",display:"flex",flexDirection:"column",background:"linear-gradient(160deg,#0d1321 0%,#1a2340 45%,#0f1b2d 100%)"}} onDragOver={e=>{e.preventDefault();setDragOver(true)}} onDragLeave={()=>setDragOver(false)} onDrop={onDrop}>
+  <div style={{height:"100%",display:"flex",flexDirection:"column",background:"transparent",position:"relative",zIndex:1}} onDragOver={e=>{e.preventDefault();setDragOver(true)}} onDragLeave={()=>setDragOver(false)} onDrop={onDrop}>
 
     {/* Drag overlay */}
-    {dragOver&&(<div style={{position:"fixed",inset:0,background:"rgba(41,121,255,0.18)",border:"2px dashed rgba(130,177,255,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><div style={{color:"#fff",fontSize:"18px",fontWeight:600}}>Drop file or screenshot</div></div>)}
+    {dragOver&&(<div style={{position:"fixed",inset:0,background:"rgba(201,168,76,0.10)",border:"2px dashed rgba(201,168,76,0.5)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><div style={{color:"#fff",fontSize:"18px",fontWeight:600}}>Drop file or screenshot</div></div>)}
 
     {/* Document preview overlay */}
     {previewDoc&&(<DocPreviewModal
@@ -722,7 +756,7 @@ export default function App(){
     />)}
 
     {/* Listening overlay */}
-    {listening&&(<div style={{position:"fixed",inset:0,background:"rgba(13,19,33,0.85)",zIndex:300,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}} onClick={toggleMic}><div style={{width:"80px",height:"80px",borderRadius:"50%",background:"linear-gradient(135deg,#C9A84C,#a07830)",display:"flex",alignItems:"center",justifyContent:"center",animation:"micPulse 1s ease-in-out infinite",marginBottom:"20px"}}><MicIcon/></div><div style={{color:"#fff",fontSize:"18px",fontWeight:600,marginBottom:"8px"}}>Listening......</div><div style={{color:"rgba(255,255,255,0.5)",fontSize:"14px"}}>Tap anywhere to cancel</div></div>)}
+    {listening&&(<div style={{position:"fixed",inset:0,background:"rgba(6,8,15,0.8)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",zIndex:300,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",animation:"fadeIn 200ms cubic-bezier(0.22,1,0.36,1)"}} onClick={toggleMic}><div className="wave" style={{transform:"scale(2)",marginBottom:"32px"}}><span/><span/><span/><span/><span/></div><div style={{color:"var(--text-hi)",fontSize:"20px",fontWeight:600,marginBottom:"8px",letterSpacing:"-0.02em"}}>Listening</div><div style={{color:"var(--text-lo)",fontSize:"14px"}}>Tap anywhere to cancel</div></div>)}
 
     {/* Saved conversations panel */}
     {showSaved&&(<div className="saved-backdrop" onClick={()=>setShowSaved(false)}/>)}
@@ -739,7 +773,7 @@ export default function App(){
           <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:"6px"}}>
             <div style={{flex:1,minWidth:0}}>
               {editingId===c.id?(<input autoFocus value={editTitle} onChange={e=>setEditTitle(e.target.value)} onClick={e=>e.stopPropagation()} onBlur={commitRename} onKeyDown={e=>{if(e.key==="Enter"){e.target.blur()}if(e.key==="Escape"){setEditingId(null);setEditTitle("")}}} style={{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(201,168,76,0.4)",borderRadius:"4px",color:"#fff",fontSize:"13px",fontWeight:500,padding:"2px 6px",width:"100%",outline:"none"}}/>):(<div style={{color:"#C9A84C",fontSize:"13px",fontWeight:500,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.title}</div>)}
-              <div style={{color:"rgba(255,255,255,0.4)",fontSize:"11px",marginTop:"2px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.summary?.slice(0,60)}......</div>
+              <div style={{color:"rgba(255,255,255,0.4)",fontSize:"11px",marginTop:"2px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.summary?.slice(0,60)}</div>
             </div>
             <div style={{display:"flex",gap:"4px",flexShrink:0}} onClick={e=>e.stopPropagation()}>
               <button className="speak-btn" style={{color:"#C9A84C",opacity:1}} onClick={()=>handlePin(c)} title="Unpin"><PinIcon active={true}/></button>
@@ -767,104 +801,106 @@ export default function App(){
         </div>))}
       </div>
 
-      <div style={{padding:"12px 14px",borderTop:"1px solid rgba(255,255,255,0.08)",fontSize:"11px",color:"rgba(255,255,255,0.3)",textAlign:"center"}}>Save up to 10 conversations ...... Pin 2</div>
+      <div style={{padding:"12px 14px",borderTop:"1px solid rgba(255,255,255,0.08)",fontSize:"11px",color:"rgba(255,255,255,0.3)",textAlign:"center"}}>Save up to 10 conversations. Pin 2.</div>
     </div>)}
 
-    {/* Header */}
-    <div style={{paddingTop:"env(safe-area-inset-top,0px)",background:"rgba(0,0,0,0.18)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderBottom:"1px solid rgba(255,255,255,0.10)",flexShrink:0}}>
-    <div style={{height:"54px",padding:"0 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-      <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
-        <LanceLogo size={28}/>
-        <div>
-          <div style={{fontSize:"16px",fontWeight:600,color:"#fff",letterSpacing:"-0.02em",lineHeight:1.1}}>Lance</div>
-          <div style={{fontSize:"11px",color:"rgba(255,255,255,0.45)"}}>Pastor Devon's Agent</div>
-        </div>
-      </div>
-      <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
-        {/* Save status toast */}
-        {saveStatus&&(<div style={{fontSize:"12px",color:saveStatus==="saved"?"#C9A84C":saveStatus==="maxpin"?"#ff8080":"#ff8080",fontWeight:600}}>{saveStatus==="saved"?"Saved!":saveStatus==="max"?"Max 5":"Max 2 pins"}</div>)}
-        {/* Pinned quick access */}
-        {pinnedConvos.map((c,i)=>(<button key={c.id} onClick={()=>handleLoadConvo(c)} style={{background:activeConvoId===c.id?"rgba(201,168,76,0.25)":"rgba(255,255,255,0.08)",border:`1px solid ${activeConvoId===c.id?"rgba(201,168,76,0.5)":"rgba(255,255,255,0.15)"}`,borderRadius:"8px",padding:"3px 8px",cursor:"pointer",fontSize:"11px",color:activeConvoId===c.id?"#C9A84C":"rgba(255,255,255,0.6)",fontFamily:"inherit",maxWidth:"70px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={c.title}>........ {c.title.slice(0,12)}</button>))}
-        <button onClick={()=>setShowSaved(s=>!s)} style={{background:showSaved?"rgba(201,168,76,0.2)":"rgba(255,255,255,0.08)",border:`1px solid ${showSaved?"rgba(201,168,76,0.4)":"rgba(255,255,255,0.15)"}`,borderRadius:"8px",padding:"4px 9px",cursor:"pointer",color:showSaved?"#C9A84C":"rgba(255,255,255,0.6)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px"}}><SaveIcon/><span style={{fontSize:"12px",fontWeight:600}}>{allSaved.length}</span></button>
-        {messages.length>0&&(<button onClick={handleSave} style={{background:"rgba(201,168,76,0.12)",border:"1px solid rgba(201,168,76,0.3)",borderRadius:"8px",padding:"4px 9px",cursor:"pointer",color:"#C9A84C",fontSize:"12px",fontWeight:600,fontFamily:"inherit"}}>Save</button>)}
-        <button onClick={gmailConnected?undefined:connectGmail} title={gmailConnected?`Connected: ${gmailEmail}`:"Connect Gmail"} style={{background:gmailConnected?"rgba(46,158,91,0.15)":"rgba(255,255,255,0.08)",border:"none",borderRadius:"20px",padding:"5px 10px",color:gmailConnected?"#2E9E5B":"rgba(255,255,255,0.6)",fontSize:"11px",fontWeight:600,fontFamily:"inherit",cursor:gmailConnected?"default":"pointer",display:"flex",alignItems:"center",gap:"4px"}}>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 2.5h10v7a1 1 0 01-1 1H2a1 1 0 01-1-1v-7z" stroke="currentColor" strokeWidth="1.1" fill="none"/><path d="M1 2.5l5 3.5 5-3.5" stroke="currentColor" strokeWidth="1.1" fill="none"/></svg>
-          {gmailConnected?"Gmail":"Connect"}
-        </button>
-        <button className="teach-toggle" onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} style={{background:teachMode?"rgba(201,168,76,0.2)":"rgba(255,255,255,0.08)",borderColor:teachMode?"rgba(201,168,76,0.5)":"rgba(255,255,255,0.15)",color:teachMode?"#C9A84C":"rgba(255,255,255,0.55)",padding:"4px 9px"}}>{teachMode?"On":"Off"}</button>
-        {speakingIdx!==null&&(<button onClick={stopSpeaking} style={{background:"rgba(255,80,80,0.2)",border:"1px solid rgba(255,80,80,0.4)",borderRadius:"8px",padding:"4px 8px",cursor:"pointer",color:"rgba(255,160,160,0.9)",fontSize:"12px",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px"}}><StopIcon/></button>)}
-        {messages.length>0&&(<button onClick={clearChat} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"8px",cursor:"pointer",fontSize:"12px",color:"rgba(255,255,255,0.5)",fontFamily:"inherit",padding:"4px 8px"}}>Clear</button>)}
-      </div>
-    </div></div>
-
-    {/* Chat body */}
-    <div style={{flex:1,overflowY:"auto",padding:"16px 16px 8px",display:"flex",flexDirection:"column",gap:"4px"}}>
-      {isEmpty&&(<div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",animation:"fadeUp 0.35s ease both"}}>
-        <div style={{textAlign:"center",maxWidth:"340px"}}>
-          <div style={{display:"inline-block",marginBottom:"18px",animation:"pulseGlow 3s ease-in-out infinite"}}><LanceLogo size={72}/></div>
-          <div style={{fontSize:"30px",fontWeight:600,color:"#fff",letterSpacing:"-0.03em",marginBottom:"8px"}}>Good to see you, Pastor.</div>
-          <div style={{fontSize:"16px",color:"rgba(255,255,255,0.6)",fontWeight:300,lineHeight:1.5}}>Type, talk, or drop a screenshot.</div>
-        </div>
-      </div>)}
-
-      {messages.map((m,i)=>(<div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",animation:"fadeUp 0.2s ease both",marginBottom:"4px"}}>
-        {m.role==="assistant"&&(<div style={{flexShrink:0,marginRight:"8px",alignSelf:"flex-end"}}><LanceLogo size={22}/></div>)}
-        <div style={{maxWidth:"76%",display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start",gap:"4px"}}>
-          <div style={{padding:"11px 14px",borderRadius:m.role==="user"?"18px 18px 5px 18px":"5px 18px 18px 18px",background:m.role==="user"?"linear-gradient(135deg,#C9A84C,#a07830)":"rgba(255,255,255,0.95)",color:m.role==="user"?"#fff":"var(--text)",fontSize:"19px",lineHeight:"1.55",whiteSpace:"pre-wrap",fontWeight:400,boxShadow:m.role==="user"?"0 4px 16px rgba(0,0,0,0.25)":"0 4px 20px rgba(0,0,0,0.15)",border:m.role==="user"?"none":"1px solid rgba(255,255,255,0.5)"}}>
-            {/* Show image preview if message contains image */}
-            {m.imagePreview&&(<img src={m.imagePreview} alt="screenshot" style={{maxWidth:"100%",borderRadius:"8px",marginBottom:"8px",display:"block"}}/>)}
-            {renderText(m.content)}
-          </div>
-          {m.role==="assistant"&&(<div style={{paddingLeft:"4px"}}>
-            <div style={{display:"flex",alignItems:"center",gap:"2px",marginBottom:m.isDoc?"4px":"0"}}>
-              <button className={`speak-btn${speakingIdx===i?" active":""}`} onClick={()=>speakingIdx===i?stopSpeaking():speakText(m.content,i)} style={{color:speakingIdx===i?"#C9A84C":"rgba(255,255,255,0.6)"}} title={speakingIdx===i?"Stop":"Hear Lance"}><SpeakerIcon active={speakingIdx===i} spinning={loadingIdx===i}/></button>
-              <button className="speak-btn" onClick={()=>handleDownload(m.content,i)} style={{color:"rgba(255,255,255,0.6)"}} title="Download Word doc"><DownloadIcon/></button>
-              <button className={`copy-btn${copiedIdx===i?" copied":""}`} onClick={()=>handleCopy(m.content,i)}>{copiedIdx===i?"...... Copied":"Copy"}</button>
-            </div>
-            {m.emailData?(
-              <EmailCard emailData={m.emailData} status={emailStatusByIdx[i]||"idle"} gmailConnected={gmailConnected} onSend={(data)=>handleSendEmail(i,data)}/>
-            ):m.smsData?(
-              <TextSentCard status={smsStatusByIdx[i]||"idle"} scheduled={!!m.smsData.sendAt} onSend={()=>handleSendSms(m.smsData,i)}/>
-            ):m.flyerData?(
-              <FlyerCard onGenerate={()=>handleGenerateFlyer(m.flyerData,i)} generating={downloadingIdx===i}/>
-            ):(m.isDoc&&(<div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
-              <WordDocCard text={m.content} filename={generateFilename(m.content)} onDownload={()=>setPreviewDoc({text:m.content,filename:generateFilename(m.content),idx:i})} downloading={downloadingIdx===i}/>
-              <PptxDocCard text={m.content} filename={generateFilename(m.content)} onDownload={()=>setPreviewDoc({text:m.content,filename:generateFilename(m.content),idx:i})} downloading={downloadingIdx===i}/>
-            </div>))}
-          </div>)}
-        </div>
-      </div>))}
-
-      {loading&&(<div style={{display:"flex",alignItems:"flex-end",gap:"8px",animation:"fadeUp 0.18s ease both"}}>
-        <div style={{flexShrink:0}}><LanceLogo size={22}/></div>
-        <div style={{padding:"11px 16px",borderRadius:"5px 18px 18px 18px",background:"rgba(255,255,255,0.95)",boxShadow:"0 4px 20px rgba(0,0,0,0.15)",display:"flex",gap:"5px",alignItems:"center"}}>
-          {[0,1,2].map(i=>(<div key={i} style={{width:"7px",height:"7px",borderRadius:"50%",background:"#C9A84C",animation:`dot 1.2s ease-in-out ${i*0.2}s infinite`}}/>))}
-        </div>
-      </div>)}
-      <div ref={bottomRef}/>
+{/* Header */}
+<div style={{paddingTop:"env(safe-area-inset-top,0px)",background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",borderBottom:"1px solid var(--line)",flexShrink:0}}>
+<div style={{height:"54px",padding:"0 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:"12px"}}>
+  <div style={{display:"flex",alignItems:"center",gap:"10px",flexShrink:0}}>
+    <div style={{position:"relative",width:"28px",height:"28px",flexShrink:0}}>
+      <LanceLogo size={28}/>
+      <div className={`lance-ring${(listening||teachMode||speakingIdx!==null)?" active":""}`}/>
     </div>
+    <div>
+      <div style={{fontSize:"17px",fontWeight:600,color:"var(--text-hi)",letterSpacing:"-0.02em",lineHeight:1.1}}>Lance</div>
+      <div style={{fontSize:"11px",color:"var(--text-lo)",fontWeight:600,letterSpacing:"0.08em",textTransform:"uppercase",lineHeight:1.2}}>Personal Agent</div>
+    </div>
+  </div>
+  <div style={{display:"flex",alignItems:"center",gap:"8px",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none",msOverflowStyle:"none",flexShrink:1}}>
+        {saveStatus&&(<div style={{fontSize:"12px",color:saveStatus==="saved"?"var(--gold)":saveStatus==="maxpin"?"#ff8080":"#ff8080",fontWeight:600,whiteSpace:"nowrap"}}>{saveStatus==="saved"?"Saved!":saveStatus==="max"?"Max 5":"Max 2 pins"}</div>)}
+    {pinnedConvos.map((c,i)=>(<button key={c.id} onClick={()=>handleLoadConvo(c)} style={{background:activeConvoId===c.id?"rgba(201,168,76,0.18)":"var(--glass)",border:`1px solid ${activeConvoId===c.id?"var(--gold)":"var(--line)"}`,borderRadius:"10px",padding:"6px 10px",cursor:"pointer",fontSize:"13px",color:activeConvoId===c.id?"var(--gold-hi)":"var(--text-mid)",fontFamily:"inherit",maxWidth:"90px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minHeight:"36px",display:"flex",alignItems:"center",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}} title={c.title}>{c.title.slice(0,12)}</button>))}
+    <button onClick={()=>setShowSaved(s=>!s)} style={{background:showSaved?"rgba(201,168,76,0.18)":"var(--glass)",border:`1px solid ${showSaved?"var(--gold)":"var(--line)"}`,borderRadius:"10px",padding:"6px 10px",cursor:"pointer",color:showSaved?"var(--gold-hi)":"var(--text-mid)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}><SaveIcon/><span style={{fontSize:"13px",fontWeight:600}}>{allSaved.length}</span></button>
+    {messages.length>0&&(<button onClick={handleSave} style={{background:"rgba(201,168,76,0.12)",border:"1px solid var(--gold)",borderRadius:"10px",padding:"6px 12px",cursor:"pointer",color:"var(--gold-hi)",fontSize:"13px",fontWeight:600,fontFamily:"inherit",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>Save</button>)}
+    <button onClick={gmailConnected?undefined:connectGmail} title={gmailConnected?`Connected: ${gmailEmail}`:"Connect Gmail"} style={{background:gmailConnected?"rgba(46,158,91,0.15)":"var(--glass)",border:`1px solid ${gmailConnected?"rgba(46,158,91,0.4)":"var(--line)"}`,borderRadius:"10px",padding:"6px 11px",color:gmailConnected?"#3DB76D":"var(--text-mid)",fontSize:"12px",fontWeight:600,fontFamily:"inherit",cursor:gmailConnected?"default":"pointer",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 2.5h10v7a1 1 0 01-1 1H2a1 1 0 01-1-1v-7z" stroke="currentColor" strokeWidth="1.1" fill="none"/><path d="M1 2.5l5 3.5 5-3.5" stroke="currentColor" strokeWidth="1.1" fill="none"/></svg>
+      {gmailConnected?"Gmail":"Connect"}
+    </button>
+    <button className="teach-toggle" onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} style={{background:teachMode?"rgba(201,168,76,0.18)":"var(--glass)",border:`1px solid ${teachMode?"var(--gold)":"var(--line)"}`,borderRadius:"10px",color:teachMode?"var(--gold-hi)":"var(--text-mid)",padding:"6px 11px",fontFamily:"inherit",fontSize:"13px",fontWeight:600,cursor:"pointer",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>{teachMode?"On":"Off"}</button>
+    {speakingIdx!==null&&(<button onClick={stopSpeaking} style={{background:"rgba(255,80,80,0.15)",border:"1px solid rgba(255,80,80,0.4)",borderRadius:"10px",padding:"6px 10px",cursor:"pointer",color:"rgba(255,120,120,0.9)",fontSize:"13px",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}><StopIcon/></button>)}
+    {messages.length>0&&(<button onClick={clearChat} style={{background:"var(--glass)",border:"1px solid var(--line)",borderRadius:"10px",cursor:"pointer",fontSize:"13px",color:"var(--text-mid)",fontFamily:"inherit",padding:"6px 11px",fontWeight:600,minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>Clear</button>)}
+  </div>
+</div></div>
+{/* Chat body */}
+<div style={{flex:1,overflowY:"auto",padding:"16px 16px 8px",display:"flex",flexDirection:"column",gap:"6px"}}>
+  {isEmpty&&(<div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",animation:"fadeUp 0.35s cubic-bezier(0.22,1,0.36,1) both"}}>
+    <div style={{textAlign:"center",maxWidth:"360px"}}>
+      <div style={{display:"inline-block",marginBottom:"24px",animation:"pulseGlow 4s ease-in-out infinite"}}><LanceLogo size={72}/></div>
+      <div style={{fontSize:"32px",fontWeight:600,color:"var(--text-hi)",letterSpacing:"-0.03em",marginBottom:"10px",lineHeight:1.2}}>Good to see you, Pastor.</div>
+      <div style={{fontSize:"16px",color:"var(--text-mid)",fontWeight:400,lineHeight:1.5,marginBottom:"28px"}}>Type, talk, or drop a screenshot.</div>
+      <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:"10px"}}>
+        <button onClick={()=>sendPreset("Prep a sermon")} style={{background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",border:"1px solid var(--line)",borderRadius:"10px",padding:"9px 16px",color:"var(--text-mid)",fontSize:"15px",fontWeight:500,fontFamily:"inherit",cursor:"pointer",transition:"all 200ms cubic-bezier(0.22,1,0.36,1)"}}>Sermon prep</button>
+        <button onClick={()=>sendPreset("Give me today's devotion")} style={{background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",border:"1px solid var(--line)",borderRadius:"10px",padding:"9px 16px",color:"var(--text-mid)",fontSize:"15px",fontWeight:500,fontFamily:"inherit",cursor:"pointer",transition:"all 200ms cubic-bezier(0.22,1,0.36,1)"}}>Daily devotion</button>
+        <button onClick={()=>sendPreset("Draft a letter")} style={{background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",border:"1px solid var(--line)",borderRadius:"10px",padding:"9px 16px",color:"var(--text-mid)",fontSize:"15px",fontWeight:500,fontFamily:"inherit",cursor:"pointer",transition:"all 200ms cubic-bezier(0.22,1,0.36,1)"}}>Draft a letter</button>
+      </div>
+    </div>
+  </div>)}
+
+  {messages.map((m,i)=>(<div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",animation:"fadeUp 0.2s cubic-bezier(0.22,1,0.36,1) both",marginBottom:"4px"}}>
+    {m.role==="assistant"&&(<div style={{flexShrink:0,marginRight:"9px",alignSelf:"flex-end"}}><LanceLogo size={22}/></div>)}
+    <div style={{maxWidth:"82%",display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start",gap:"5px"}}>
+      <div style={{padding:"12px 16px",borderRadius:m.role==="user"?"20px 20px 6px 20px":"6px 20px 20px 20px",background:m.role==="user"?"linear-gradient(135deg,#D4B45C,#A8863A)":"var(--glass)",backdropFilter:m.role==="user"?"none":"blur(24px) saturate(1.5)",WebkitBackdropFilter:m.role==="user"?"none":"blur(24px) saturate(1.5)",color:m.role==="user"?"#0B0E16":"var(--text-hi)",fontSize:"17px",lineHeight:"1.5",whiteSpace:"pre-wrap",fontWeight:400,letterSpacing:"-0.012em",border:m.role==="user"?"none":`1px solid var(--line)`,boxShadow:m.role==="user"?"0 4px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.18)":"inset 0 1px 0 rgba(255,255,255,0.06)"}}>
+        {m.imagePreview&&(<img src={m.imagePreview} alt="screenshot" style={{maxWidth:"100%",borderRadius:"10px",marginBottom:"10px",display:"block"}}/>)}
+        {renderText(m.content)}
+      </div>
+      {m.role==="assistant"&&(<div style={{paddingLeft:"4px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:"2px",marginBottom:m.isDoc?"4px":"0"}}>
+          <button className={`speak-btn${speakingIdx===i?" active":""}`} onClick={()=>speakingIdx===i?stopSpeaking():speakText(m.content,i)} style={{color:speakingIdx===i?"var(--gold-hi)":"var(--text-mid)",minWidth:"36px",minHeight:"36px",display:"flex",alignItems:"center",justifyContent:"center"}} title={speakingIdx===i?"Stop":"Hear Lance"}><SpeakerIcon active={speakingIdx===i} spinning={loadingIdx===i}/></button>
+          <button className="speak-btn" onClick={()=>handleDownload(m.content,i)} style={{color:"var(--text-mid)",minWidth:"36px",minHeight:"36px",display:"flex",alignItems:"center",justifyContent:"center"}} title="Download Word doc"><DownloadIcon/></button>
+          <button className={`copy-btn${copiedIdx===i?" copied":""}`} onClick={()=>handleCopy(m.content,i)} style={{minHeight:"36px"}}>{copiedIdx===i?"Copied":"Copy"}</button>
+        </div>
+        {m.emailData?(
+          <EmailCard emailData={m.emailData} status={emailStatusByIdx[i]||"idle"} gmailConnected={gmailConnected} onSend={(data)=>handleSendEmail(i,data)}/>
+        ):m.smsData?(
+          <TextSentCard status={smsStatusByIdx[i]||"idle"} scheduled={!!m.smsData.sendAt} onSend={()=>handleSendSms(m.smsData,i)}/>
+        ):m.flyerData?(
+          <FlyerCard onGenerate={()=>handleGenerateFlyer(m.flyerData,i)} generating={downloadingIdx===i}/>
+        ):(m.isDoc&&(<div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
+          <WordDocCard text={m.content} filename={generateFilename(m.content)} onDownload={()=>setPreviewDoc({text:m.content,filename:generateFilename(m.content),idx:i})} downloading={downloadingIdx===i}/>
+          <PptxDocCard text={m.content} filename={generateFilename(m.content)} onDownload={()=>setPreviewDoc({text:m.content,filename:generateFilename(m.content),idx:i})} downloading={downloadingIdx===i}/>
+        </div>))}
+      </div>)}
+    </div>
+  </div>))}
+
+  {loading&&(<div style={{display:"flex",alignItems:"flex-end",gap:"9px",animation:"fadeUp 0.18s cubic-bezier(0.22,1,0.36,1) both"}}>
+    <div style={{flexShrink:0}}><LanceLogo size={22}/></div>
+    <div style={{padding:"12px 18px",borderRadius:"6px 20px 20px 20px",background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",border:"1px solid var(--line)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06)",display:"flex",gap:"6px",alignItems:"center"}}>
+      {[0,1,2].map(i=>(<div key={i} style={{width:"6px",height:"6px",borderRadius:"50%",background:"var(--gold)",filter:"drop-shadow(0 0 4px rgba(201,168,76,0.6))",animation:`dot 1.2s ease-in-out ${i*0.2}s infinite`}}/>))}
+    </div>
+  </div>)}
+  <div ref={bottomRef}/>
+</div>
 
     {/* Input */}
-    <div style={{paddingTop:"10px",paddingLeft:"16px",paddingRight:"16px",paddingBottom:"max(16px,env(safe-area-inset-bottom,16px))",background:"rgba(0,0,0,0.18)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:"1px solid rgba(255,255,255,0.08)",flexShrink:0}}>
+    <div style={{paddingTop:"10px",paddingLeft:"16px",paddingRight:"16px",paddingBottom:"max(16px,env(safe-area-inset-bottom,16px))",background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",borderTop:"1px solid var(--line)",flexShrink:0}}>
       {pendingFiles.length>0&&(<div style={{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"8px"}}>
         {pendingFiles.map((f,i)=>(<div key={i} className="file-chip">
-          {f.type==="image"&&<span>........</span>}
-          <span>{f.name.length>20?f.name.slice(0,17)+"......":f.name}</span>
+          <span>{f.name.length>20?f.name.slice(0,17)+"…":f.name}</span>
           <button onClick={()=>removeFile(i)} title="Remove"><CloseIcon/></button>
         </div>))}
       </div>)}
-      <div style={{display:"flex",alignItems:"flex-end",gap:"8px",background:"rgba(255,255,255,0.95)",borderRadius:"16px",border:"1px solid rgba(255,255,255,0.5)",padding:"9px 10px 9px 14px",boxShadow:"0 4px 24px rgba(0,0,0,0.2)"}}>
-        <button onClick={()=>fileRef.current?.click()} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(74,74,106,0.6)",display:"flex",alignItems:"center",padding:"4px",borderRadius:"6px",transition:"color 0.14s",flexShrink:0}} title="Attach file or screenshot" onMouseEnter={e=>e.currentTarget.style.color="var(--accent)"} onMouseLeave={e=>e.currentTarget.style.color="rgba(74,74,106,0.6)"}><AttachIcon/></button>
-        {/* Accept all image types including HEIC, screenshots */}
+      <div style={{display:"flex",alignItems:"flex-end",gap:"8px",background:"rgba(255,255,255,0.07)",borderRadius:"20px",border:"1px solid var(--line)",padding:"9px 10px 9px 14px",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06)"}}>
+        <button onClick={()=>fileRef.current?.click()} style={{background:"none",border:"none",cursor:"pointer",color:"var(--text-lo)",display:"flex",alignItems:"center",padding:"4px",borderRadius:"6px",transition:"color 0.14s",flexShrink:0,minWidth:"36px",minHeight:"36px",justifyContent:"center"}} title="Attach file or screenshot" onMouseEnter={e=>e.currentTarget.style.color="var(--gold)"} onMouseLeave={e=>e.currentTarget.style.color="var(--text-lo)"}><AttachIcon/></button>
         <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg,.webp,.heic,.heif,.gif,.bmp,image/*" style={{display:"none"}} onChange={e=>{handleFiles(e.target.files);e.target.value=""}}/>
-        <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData?.items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder="Message Lance...... (paste screenshots here)" rows={1} style={{flex:1,border:"none",background:"transparent",fontSize:"17px",color:"var(--text)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:300,letterSpacing:"-0.01em",fontFamily:"inherit"}}/>
+        <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData?.items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder="Message Lance" rows={1} style={{flex:1,border:"none",background:"transparent",fontSize:"17px",color:"var(--text-hi)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:400,letterSpacing:"-0.012em",fontFamily:"inherit"}}/>
         <button className={`mic-btn${teachMode?" listening":" idle"}`} onClick={toggleVoiceConversation} title={teachMode?"End voice conversation":"Start voice conversation"} style={{marginRight:"2px"}}>
           <VoiceChatIcon/>
         </button>
         <button className={`mic-btn${listening?" listening":" idle"}`} onClick={toggleMic} title={listening?"Stop":"Talk to Lance"}>
           <MicIcon/>
         </button>
-        <button onClick={()=>send()} disabled={(!input.trim()&&pendingFiles.length===0)||loading} style={{width:"33px",height:"33px",borderRadius:"50%",background:(input.trim()||pendingFiles.length>0)&&!loading?"linear-gradient(135deg,#C9A84C,#a07830)":"rgba(0,0,0,0.08)",border:"none",cursor:(input.trim()||pendingFiles.length>0)&&!loading?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:(input.trim()||pendingFiles.length>0)&&!loading?"#fff":"#aaa",boxShadow:(input.trim()||pendingFiles.length>0)&&!loading?"0 3px 10px rgba(201,168,76,0.4)":"none",transition:"all 0.14s"}}><SendIcon/></button>
+        <button onClick={()=>send()} disabled={(!input.trim()&&pendingFiles.length===0)||loading} style={{width:"36px",height:"36px",borderRadius:"50%",background:(input.trim()||pendingFiles.length>0)&&!loading?"linear-gradient(135deg,#D4B45C,#A8863A)":"var(--glass)",border:"none",cursor:(input.trim()||pendingFiles.length>0)&&!loading?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:(input.trim()||pendingFiles.length>0)&&!loading?"#0B0E16":"var(--text-lo)",boxShadow:(input.trim()||pendingFiles.length>0)&&!loading?"0 3px 12px rgba(201,168,76,0.4)":"none",transition:"all 200ms cubic-bezier(0.22,1,0.36,1)",transform:"scale(1)"}} onMouseDown={e=>e.currentTarget.style.transform="scale(0.96)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"} onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}><SendIcon/></button>
       </div>
     </div>
   </div></>);
