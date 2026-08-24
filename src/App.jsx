@@ -1,6 +1,6 @@
 import React,{useState,useRef,useEffect,useCallback}from"react";
 import{callClaude,speak,readFile,detectDocumentContent,webSearch,formatSearchResults}from"./api";
-import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag}from"./memory";
+import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseEmailTag}from"./memory";
 import{SESSION_ID,SUPABASE_URL,SB_HEADERS}from"./config";
 import{LanceLogo,SendIcon,SpeakerIcon,StopIcon,DownloadIcon,AttachIcon,CloseIcon}from"./icons";
 
@@ -8,6 +8,10 @@ const DOCX_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-docx
 const PPTX_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-pptx";
 const FLYER_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-flyer";
 const SMS_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-sms";
+const GMAIL_AUTH_URL="https://accounts.google.com/o/oauth2/v2/auth";
+const GMAIL_SEND_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-gmail-send";
+const GMAIL_REDIRECT_URI="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-gmail-callback";
+const GOOGLE_CLIENT_ID=""; // Set once Pastor provides it from Google Cloud Console
 const TTS_URL=`${SUPABASE_URL}/functions/v1/lance-tts`;
 const SERMON_URL=`${SUPABASE_URL}/functions/v1/lance-sermon-prep`;
 const EXAM_URL=`${SUPABASE_URL}/functions/v1/lance-exam-gen`;
@@ -248,6 +252,38 @@ function TextSentCard({status,onSend,scheduled}){
   );
 }
 
+function EmailCard({emailData,status,onEdit,onSend,gmailConnected}){
+  const[to,setTo]=React.useState(emailData.to);
+  const[subject,setSubject]=React.useState(emailData.subject);
+  const[body,setBody]=React.useState(emailData.body);
+  if(status==="sent"){
+    return(
+      <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",marginTop:"6px",background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",maxWidth:"260px"}}>
+        <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"linear-gradient(160deg,#2E9E5B,#1F7A44)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 4.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </div>
+        <div><div style={{fontSize:"13px",fontWeight:600,color:"#1a2340"}}>Email sent</div><div style={{fontSize:"11px",color:"#6B7280"}}>Delivered to {to}</div></div>
+      </div>
+    );
+  }
+  return(
+    <div style={{background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",padding:"14px",marginTop:"6px",maxWidth:"320px",boxShadow:"0 2px 12px rgba(0,0,0,0.1)"}}>
+      {!gmailConnected&&(
+        <div style={{fontSize:"12px",color:"#B45309",background:"rgba(217,119,6,0.1)",padding:"8px 10px",borderRadius:"8px",marginBottom:"10px"}}>Gmail is not connected yet. Connect it in settings first.</div>
+      )}
+      <div style={{fontSize:"11px",color:"#6B7280",marginBottom:"3px"}}>To</div>
+      <input value={to} onChange={e=>setTo(e.target.value)} style={{width:"100%",border:"1px solid #E5E7EB",borderRadius:"6px",padding:"6px 8px",fontSize:"13px",marginBottom:"8px",fontFamily:"inherit"}}/>
+      <div style={{fontSize:"11px",color:"#6B7280",marginBottom:"3px"}}>Subject</div>
+      <input value={subject} onChange={e=>setSubject(e.target.value)} style={{width:"100%",border:"1px solid #E5E7EB",borderRadius:"6px",padding:"6px 8px",fontSize:"13px",marginBottom:"8px",fontFamily:"inherit"}}/>
+      <div style={{fontSize:"11px",color:"#6B7280",marginBottom:"3px"}}>Message</div>
+      <textarea value={body} onChange={e=>setBody(e.target.value)} rows={5} style={{width:"100%",border:"1px solid #E5E7EB",borderRadius:"6px",padding:"6px 8px",fontSize:"13px",marginBottom:"10px",fontFamily:"inherit",resize:"vertical"}}/>
+      <button onClick={()=>onSend({to,subject,body})} disabled={status==="sending"||!gmailConnected} style={{width:"100%",background:gmailConnected?"linear-gradient(135deg,#1a2340,#0d1321)":"#D1D5DB",color:"#fff",border:"none",borderRadius:"8px",padding:"10px",fontSize:"13px",fontWeight:600,cursor:gmailConnected?"pointer":"default",fontFamily:"inherit"}}>
+        {status==="sending"?"Sending...":status==="error"?"Failed, tap to retry":"Send Email"}
+      </button>
+    </div>
+  );
+}
+
 function renderDocBlock(text){
   const lines=text.split("\n");
   const blocks=[];
@@ -363,6 +399,9 @@ export default function App(){
   const[editingId,setEditingId]=useState(null);
   const[smsStatusByIdx,setSmsStatusByIdx]=useState({});
   const[previewDoc,setPreviewDoc]=useState(null);
+  const[emailStatusByIdx,setEmailStatusByIdx]=useState({});
+  const[gmailConnected,setGmailConnected]=useState(false);
+  const[gmailEmail,setGmailEmail]=useState("");
   const[editTitle,setEditTitle]=useState("");
   const[savedConvos,setSavedConvos]=useState([]);
   const[activeConvoId,setActiveConvoId]=useState(null);
@@ -388,6 +427,20 @@ export default function App(){
       setRecentSessions(Array.isArray(s)?s:[]);
       setSavedConvos(Array.isArray(c)?c:[]);
     })();
+    // Check Gmail connection status
+    (async()=>{
+      try{
+        const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_gmail_tokens?id=eq.1&select=email_address,refresh_token`,{headers:SB_HEADERS});
+        const rows=await r.json();
+        if(Array.isArray(rows)&&rows[0]?.refresh_token){setGmailConnected(true);setGmailEmail(rows[0].email_address||"")}
+      }catch(e){}
+    })();
+    // Handle redirect back from Google OAuth
+    const params=new URLSearchParams(window.location.search);
+    if(params.get("gmail")==="connected"){
+      setGmailConnected(true);
+      window.history.replaceState({},"",window.location.pathname);
+    }
   },[]);
 
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"})},[messages,loading]);
@@ -562,6 +615,21 @@ export default function App(){
       }
     }catch(e){setSmsStatusByIdx(p=>({...p,[idx]:"error"}));console.error(e)}
   },[]);
+  const handleSendEmail=useCallback(async(idx,data)=>{
+    setEmailStatusByIdx(p=>({...p,[idx]:"sending"}));
+    try{
+      const res=await fetch(GMAIL_SEND_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+      const result=await res.json();
+      if(result.success){setEmailStatusByIdx(p=>({...p,[idx]:"sent"}))}
+      else{setEmailStatusByIdx(p=>({...p,[idx]:"error"}));console.error("Email error:",result.error)}
+    }catch(e){setEmailStatusByIdx(p=>({...p,[idx]:"error"}));console.error(e)}
+  },[]);
+  const connectGmail=useCallback(()=>{
+    if(!GOOGLE_CLIENT_ID){alert("Gmail connection is not configured yet. Ask Lance's developer to finish setup.");return}
+    const scope="https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email";
+    const authUrl=`${GMAIL_AUTH_URL}?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}&redirect_uri=${encodeURIComponent(GMAIL_REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
+    window.location.href=authUrl;
+  },[]);
 
   const handleCopy=async(text,idx)=>{
     try{await navigator.clipboard.writeText(text);setCopiedIdx(idx);setTimeout(()=>setCopiedIdx(null),2000)}catch(e){}
@@ -595,7 +663,7 @@ export default function App(){
         raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile);
       }
       const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-      setMessages([...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw)}]);msgCount.current+=2;
+      setMessages([...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw)}]);msgCount.current+=2;
       saveMessage("assistant",clean).catch(()=>{});
       for(const tag of tags){
         if(tag.type==="memory"){saveMemoryFact(tag.category,tag.fact,tag.confidence,SESSION_ID).catch(()=>{});}
@@ -622,7 +690,7 @@ export default function App(){
         const cleanMessages=next.map(({role,content})=>({role,content}));
         const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile);
         const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-        setMessages([...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw)}]);msgCount.current+=2;
+        setMessages([...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw)}]);msgCount.current+=2;
         saveMessage("assistant",clean).catch(()=>{});
         if(teachMode)speakText(clean,idx);
       }catch(e){setMessages(prev=>[...prev,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);}
@@ -719,6 +787,10 @@ export default function App(){
         {pinnedConvos.map((c,i)=>(<button key={c.id} onClick={()=>handleLoadConvo(c)} style={{background:activeConvoId===c.id?"rgba(201,168,76,0.25)":"rgba(255,255,255,0.08)",border:`1px solid ${activeConvoId===c.id?"rgba(201,168,76,0.5)":"rgba(255,255,255,0.15)"}`,borderRadius:"8px",padding:"3px 8px",cursor:"pointer",fontSize:"11px",color:activeConvoId===c.id?"#C9A84C":"rgba(255,255,255,0.6)",fontFamily:"inherit",maxWidth:"70px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={c.title}>........ {c.title.slice(0,12)}</button>))}
         <button onClick={()=>setShowSaved(s=>!s)} style={{background:showSaved?"rgba(201,168,76,0.2)":"rgba(255,255,255,0.08)",border:`1px solid ${showSaved?"rgba(201,168,76,0.4)":"rgba(255,255,255,0.15)"}`,borderRadius:"8px",padding:"4px 9px",cursor:"pointer",color:showSaved?"#C9A84C":"rgba(255,255,255,0.6)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px"}}><SaveIcon/><span style={{fontSize:"12px",fontWeight:600}}>{allSaved.length}</span></button>
         {messages.length>0&&(<button onClick={handleSave} style={{background:"rgba(201,168,76,0.12)",border:"1px solid rgba(201,168,76,0.3)",borderRadius:"8px",padding:"4px 9px",cursor:"pointer",color:"#C9A84C",fontSize:"12px",fontWeight:600,fontFamily:"inherit"}}>Save</button>)}
+        <button onClick={gmailConnected?undefined:connectGmail} title={gmailConnected?`Connected: ${gmailEmail}`:"Connect Gmail"} style={{background:gmailConnected?"rgba(46,158,91,0.15)":"rgba(255,255,255,0.08)",border:"none",borderRadius:"20px",padding:"5px 10px",color:gmailConnected?"#2E9E5B":"rgba(255,255,255,0.6)",fontSize:"11px",fontWeight:600,fontFamily:"inherit",cursor:gmailConnected?"default":"pointer",display:"flex",alignItems:"center",gap:"4px"}}>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 2.5h10v7a1 1 0 01-1 1H2a1 1 0 01-1-1v-7z" stroke="currentColor" strokeWidth="1.1" fill="none"/><path d="M1 2.5l5 3.5 5-3.5" stroke="currentColor" strokeWidth="1.1" fill="none"/></svg>
+          {gmailConnected?"Gmail":"Connect"}
+        </button>
         <button className="teach-toggle" onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} style={{background:teachMode?"rgba(201,168,76,0.2)":"rgba(255,255,255,0.08)",borderColor:teachMode?"rgba(201,168,76,0.5)":"rgba(255,255,255,0.15)",color:teachMode?"#C9A84C":"rgba(255,255,255,0.55)",padding:"4px 9px"}}>{teachMode?"On":"Off"}</button>
         {speakingIdx!==null&&(<button onClick={stopSpeaking} style={{background:"rgba(255,80,80,0.2)",border:"1px solid rgba(255,80,80,0.4)",borderRadius:"8px",padding:"4px 8px",cursor:"pointer",color:"rgba(255,160,160,0.9)",fontSize:"12px",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px"}}><StopIcon/></button>)}
         {messages.length>0&&(<button onClick={clearChat} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"8px",cursor:"pointer",fontSize:"12px",color:"rgba(255,255,255,0.5)",fontFamily:"inherit",padding:"4px 8px"}}>Clear</button>)}
@@ -749,7 +821,9 @@ export default function App(){
               <button className="speak-btn" onClick={()=>handleDownload(m.content,i)} style={{color:"rgba(255,255,255,0.6)"}} title="Download Word doc"><DownloadIcon/></button>
               <button className={`copy-btn${copiedIdx===i?" copied":""}`} onClick={()=>handleCopy(m.content,i)}>{copiedIdx===i?"...... Copied":"Copy"}</button>
             </div>
-            {m.smsData?(
+            {m.emailData?(
+              <EmailCard emailData={m.emailData} status={emailStatusByIdx[i]||"idle"} gmailConnected={gmailConnected} onSend={(data)=>handleSendEmail(i,data)}/>
+            ):m.smsData?(
               <TextSentCard status={smsStatusByIdx[i]||"idle"} scheduled={!!m.smsData.sendAt} onSend={()=>handleSendSms(m.smsData,i)}/>
             ):m.flyerData?(
               <FlyerCard onGenerate={()=>handleGenerateFlyer(m.flyerData,i)} generating={downloadingIdx===i}/>
