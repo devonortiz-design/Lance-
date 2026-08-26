@@ -113,11 +113,12 @@ export default async function handler(req, res) {
     ];
 
     const useModel = (model && String(model).trim()) || DEFAULT_MODEL;
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${useModel}:generateContent?key=${encodeURIComponent(key)}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${useModel}:generateContent`;
 
+    // Key travels in a header, not the URL, so it stays out of access logs.
     const gRes = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({
         contents: [{ role: 'user', parts }],
         generationConfig: { temperature: 0.4, maxOutputTokens: 8192 },
