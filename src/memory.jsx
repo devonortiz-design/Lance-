@@ -68,7 +68,22 @@ export function parseMemoryTags(text) {
 }
 
 export function stripMemoryTags(t) {
-  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[EMAIL:[^\]]+\]/gi, "").trim();
+  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[EMAIL:[^\]]+\]/gi, "").replace(/\[CALENDAR:[^\]]+\]/gi, "").trim();
+}
+
+export function parseCalendarTag(text) {
+  const re = /\[CALENDAR:\s*([^\]]+)\]/i;
+  const m = re.exec(text);
+  if (!m) return null;
+  const fields = {};
+  m[1].split("|").forEach(pair => {
+    const eq = pair.indexOf("=");
+    if (eq === -1) return;
+    const key = pair.slice(0, eq).trim().toLowerCase();
+    const val = pair.slice(eq + 1).trim();
+    fields[key] = val;
+  });
+  return { title: fields.title || "", start: fields.start || "", end: fields.end || "", location: fields.location || "", description: fields.description || "" };
 }
 
 export function parseEmailTag(text) {
