@@ -1,6 +1,6 @@
 import React,{useState,useRef,useEffect,useCallback}from"react";
 import{callClaude,speak,readFile,detectDocumentContent,webSearch,formatSearchResults}from"./api";
-import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseEmailTag}from"./memory";
+import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseEmailTag,parseVideoTag}from"./memory";
 import{SESSION_ID,SUPABASE_URL,SB_HEADERS}from"./config";
 import{LanceLogo,SendIcon,SpeakerIcon,StopIcon,DownloadIcon,AttachIcon,CloseIcon}from"./icons";
 
@@ -8,6 +8,7 @@ const DOCX_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-docx
 const PPTX_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-pptx";
 const FLYER_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-flyer";
 const SMS_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-sms";
+const WATCH_VIDEO_URL="/api/watch-video";
 const GMAIL_AUTH_URL="https://accounts.google.com/o/oauth2/v2/auth";
 const GMAIL_SEND_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-gmail-send";
 const GMAIL_REDIRECT_URI="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-gmail-callback";
@@ -211,6 +212,52 @@ function FlyerCard({ onGenerate, generating }) {
       </div>
       <div style={{ fontSize: 16, color: 'var(--text-lo)' }}>›</div>
     </button>
+  );
+}
+
+function VideoCard({ videoData, state, onWatch }) {
+  const status = state?.status || "idle";
+  const label =
+    status === "watching" ? "Watching…" :
+    status === "done" ? "Video watched" :
+    status === "error" ? "Could not watch" : "Watch this video";
+  const sub =
+    status === "watching" ? "Reading frames and audio" :
+    status === "done" ? "Breakdown ready below" :
+    status === "error" ? "Tap to retry" :
+    videoData.clip ? `Clip ${videoData.clip}${videoData.fps ? ` · ${videoData.fps} fps` : ""}` :
+    videoData.fps ? `${videoData.fps} fps` : "Scene-by-scene, tap to run";
+  return (
+    <div style={{ marginTop: 6, maxWidth: 320 }}>
+      <button
+        className="file-tile"
+        onClick={status === "watching" ? undefined : onWatch}
+        disabled={status === "watching"}
+        style={{ width: "100%", maxWidth: 320 }}
+      >
+        <div
+          className="doc-glyph"
+          style={{ background: "linear-gradient(160deg, #E23B3B, #9A1F1F)" }}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M4 2.5v9l7-4.5-7-4.5z" fill="#fff" />
+          </svg>
+        </div>
+        <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-hi)" }}>{label}</div>
+          <div style={{ fontSize: 12, color: "var(--text-lo)", marginTop: 2 }}>{sub}</div>
+        </div>
+        <div style={{ fontSize: 16, color: "var(--text-lo)" }}>›</div>
+      </button>
+      {status === "error" && state?.error && (
+        <div style={{ fontSize: 12, color: "#E8B461", background: "rgba(217,119,6,0.12)", padding: "8px 10px", borderRadius: 10, marginTop: 6, maxWidth: 320 }}>{state.error}</div>
+      )}
+      {status === "done" && state?.analysis && (
+        <div style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", marginTop: 8, maxWidth: 320, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2)" }}>
+          {renderDocBlock(state.analysis)}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -618,6 +665,7 @@ export default function App(){
   const[smsStatusByIdx,setSmsStatusByIdx]=useState({});
   const[previewDoc,setPreviewDoc]=useState(null);
   const[emailStatusByIdx,setEmailStatusByIdx]=useState({});
+  const[videoStateByIdx,setVideoStateByIdx]=useState({});
   const[gmailConnected,setGmailConnected]=useState(false);
   const[gmailEmail,setGmailEmail]=useState("");
   const[editTitle,setEditTitle]=useState("");
@@ -869,6 +917,16 @@ export default function App(){
       else{setEmailStatusByIdx(p=>({...p,[idx]:"error"}));console.error("Email error:",result.error)}
     }catch(e){setEmailStatusByIdx(p=>({...p,[idx]:"error"}));console.error(e)}
   },[]);
+  const handleWatchVideo=useCallback(async(videoData,idx)=>{
+    if(!videoData?.url)return;
+    setVideoStateByIdx(p=>({...p,[idx]:{status:"watching"}}));
+    try{
+      const res=await fetch(WATCH_VIDEO_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(videoData)});
+      const data=await res.json();
+      if(res.ok&&data.analysis){setVideoStateByIdx(p=>({...p,[idx]:{status:"done",analysis:data.analysis}}))}
+      else{setVideoStateByIdx(p=>({...p,[idx]:{status:"error",error:data.error||"Video watch failed."}}))}
+    }catch(e){setVideoStateByIdx(p=>({...p,[idx]:{status:"error",error:e.message}}))}
+  },[]);
   const connectGmail=useCallback(()=>{
     if(!GOOGLE_CLIENT_ID){alert("Gmail connection is not configured yet. Ask Lance's developer to finish setup.");return}
     const scope="https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email";
@@ -908,7 +966,7 @@ export default function App(){
         raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile,activeProject);
       }
       const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw)}];setMessages(finalMsgs);autosaveChat(finalMsgs);msgCount.current+=2;
+      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw),videoData:parseVideoTag(raw)}];setMessages(finalMsgs);autosaveChat(finalMsgs);msgCount.current+=2;
       saveMessage("assistant",clean).catch(()=>{});
       for(const tag of tags){
         if(tag.type==="memory"){saveMemoryFact(tag.category,tag.fact,tag.confidence,SESSION_ID).catch(()=>{});}
@@ -935,7 +993,7 @@ export default function App(){
         const cleanMessages=next.map(({role,content})=>({role,content}));
         const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile,activeProject);
         const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw)}];setMessages(finalMsgs);autosaveChat(finalMsgs);msgCount.current+=2;
+        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw),videoData:parseVideoTag(raw)}];setMessages(finalMsgs);autosaveChat(finalMsgs);msgCount.current+=2;
         saveMessage("assistant",clean).catch(()=>{});
         if(teachMode)speakText(clean,idx);
       }catch(e){setMessages(prev=>[...prev,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);}
@@ -1081,6 +1139,7 @@ export default function App(){
         <AppIcon label="Devotion" onTap={()=>sendPreset("Give me today's devotion")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.6"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg></AppIcon>
         <AppIcon label="Letter" onTap={()=>sendPreset("Draft a letter")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M16.5 3.5l4 4L8 20H4v-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M14 6l4 4" stroke="currentColor" strokeWidth="1.6"/></svg></AppIcon>
         <AppIcon label="Flyer" onTap={()=>sendPreset("Design me a flyer")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg></AppIcon>
+        <AppIcon label="Video" onTap={()=>{setInput("Break down this video: ");setTimeout(()=>inputRef.current?.focus(),0)}}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" strokeWidth="1.6"/><path d="M10 9l5 3-5 3V9z" fill="currentColor"/></svg></AppIcon>
       </div>
     </div>
   </div>)}
@@ -1098,7 +1157,9 @@ export default function App(){
           <button className="speak-btn" onClick={()=>handleDownload(m.content,i)} style={{color:"var(--text-mid)",minWidth:"36px",minHeight:"36px",display:"flex",alignItems:"center",justifyContent:"center"}} title="Download Word doc"><DownloadIcon/></button>
           <button className={`copy-btn${copiedIdx===i?" copied":""}`} onClick={()=>handleCopy(m.content,i)} style={{minHeight:"36px"}}>{copiedIdx===i?"Copied":"Copy"}</button>
         </div>
-        {m.emailData?(
+        {m.videoData?(
+          <VideoCard videoData={m.videoData} state={videoStateByIdx[i]} onWatch={()=>handleWatchVideo(m.videoData,i)}/>
+        ):m.emailData?(
           <EmailCard emailData={m.emailData} status={emailStatusByIdx[i]||"idle"} gmailConnected={gmailConnected} onSend={(data)=>handleSendEmail(i,data)}/>
         ):m.smsData?(
           <TextSentCard status={smsStatusByIdx[i]||"idle"} scheduled={!!m.smsData.sendAt} onSend={()=>handleSendSms(m.smsData,i)}/>
