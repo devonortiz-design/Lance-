@@ -3,40 +3,52 @@
 // through Google Gemini and returns a scene-by-scene breakdown with timestamps.
 // Needs GEMINI_API_KEY in the environment. Free key: https://aistudio.google.com/apikey
 
-const DEFAULT_MODEL = 'gemini-2.5-flash';
+const DEFAULT_MODEL = 'gemini-flash-latest';
 
-const FULL_REPORT_PROMPT = `You are watching this video for Pastor Devon. Give a real breakdown, not a summary.
+// Mirrors the desktop watch_video.py skill so a breakdown reads the same on
+// either surface. Accuracy rules come first on purpose.
+const FULL_REPORT_PROMPT = `Analyze this video and return a structured markdown report using the exact sections below.
 
-Return these sections, in this order, using markdown headings:
+ACCURACY RULES - these override everything else:
+1. Report only what is actually in the video. Do not infer, guess, or fill in plausible-sounding detail.
+2. Never invent a creator, presenter, narrator, or speaker name. If no name is shown on screen or clearly spoken, say the video has no identified creator.
+3. Never fabricate a voiceover, dialogue, or transcript. Many videos are silent or have music only, and that is normal. If there is no speech, say "No speech detected."
+4. Separate what you SEE from what you INFER. Label anything inferred with "(inferred)".
+5. Use only real timestamps taken from the video. Never estimate or invent one.
 
-# Overview
-Two or three sentences on what this video is and who it seems to be for.
+## Summary
+Two to four sentences on what actually happens and who the video is for.
 
-## Scene-by-scene
-A numbered list. For every distinct shot or cut give the exact timestamp it starts (M:SS), what is on screen, and any camera move or edit. Short-form video cuts fast -- catch every cut.
+## Scene-by-Scene Breakdown
+Walk the video in order with \`MM:SS\` timestamps for every distinct cut, scene, or beat. For each one give:
+- what is on screen (people, setting, b-roll, product, UI)
+- what is said, if anything
+- any on-screen text or caption, quoted verbatim
+- the cut or transition that ends the beat
 
-## Transcript
-Everything spoken, with timestamps. If the video is silent, music only, or ambient noise only, say that plainly. Never invent a voiceover.
+## Audio
+Report only what you actually hear. Valid answers include "No audio track present", "Silent - no speech, music, or effects detected", "Music only: [describe]", or a verbatim transcript with \`MM:SS\` timestamps if speech is genuinely present.
 
-## On-screen captions
-Every word of on-screen text or caption, with the timestamp it appears. If there is none, say so.
+## On-Screen Text and Visuals
+Every caption, title card, or overlay, quoted verbatim with its timestamp. Then the caption style, the text placement, and any branding or products actually shown.
 
 ## Structure
-Name the hook (first few seconds), the turn, and the payoff. Quote the exact lines or describe the exact frames that do each job.
+Identify these four beats with timestamps, and say plainly if one is missing:
+- The hook: the first 3 seconds, what is said and what is shown
+- The turn: where the video shifts or the tension is introduced
+- The payoff: the moment the promise is delivered
+- The close: how it ends and what the viewer is asked to do
 
 ## Pacing
-Average shot length, where it speeds up or slows down, and what the edit is doing to hold attention.
+Average seconds per cut, the total number of cuts, and where the pace changes.
 
-## Why it works (or doesn't)
-Direct, honest read.
+## Key Moments
+Three to seven \`[MM:SS] Description\` bullets a viewer would actually remember.
 
-Hard rules you never break:
-- Only describe what is actually in the video. Never invent a creator, speaker, brand, statistic, or quote.
-- Use only real timestamps from the video. Never estimate or round one to look tidy.
-- If there is no voiceover, say so instead of filling the gap.`;
+Be concrete. When you are unsure, say so. Reporting less with confidence beats reporting more with confabulation.`;
 
 function clipToOffsets(clip) {
-  // "0:00-0:05" -> { startOffset: "0s", endOffset: "5s" }
+  // "0:00-0:05" -> { start_offset: "0s", end_offset: "5s" }, matching the API's video_metadata keys.
   if (!clip || typeof clip !== 'string' || clip.indexOf('-') === -1) return null;
   const [rawStart, rawEnd] = clip.split('-').map((s) => s.trim());
   const toSeconds = (t) => {
@@ -47,11 +59,11 @@ function clipToOffsets(clip) {
   const start = toSeconds(rawStart);
   const end = toSeconds(rawEnd);
   if (start === null || end === null) return null;
-  return { startOffset: `${start}s`, endOffset: `${end}s` };
+  return { start_offset: `${start}s`, end_offset: `${end}s` };
 }
 
 function isYouTube(url) {
-  return /(?:youtube\.com\/|youtu\.be\/)/i.test(url || '');
+  return /^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//i.test((url || '').trim());
 }
 
 export default async function handler(req, res) {
@@ -96,8 +108,8 @@ export default async function handler(req, res) {
     if (Object.keys(videoMetadata).length > 0) videoPart.video_metadata = videoMetadata;
 
     const parts = [
-      { text: (prompt && prompt.trim()) ? prompt.trim() : FULL_REPORT_PROMPT },
       videoPart,
+      { text: (prompt && prompt.trim()) ? prompt.trim() : FULL_REPORT_PROMPT },
     ];
 
     const useModel = (model && String(model).trim()) || DEFAULT_MODEL;
@@ -115,7 +127,9 @@ export default async function handler(req, res) {
     const data = await gRes.json();
 
     if (!gRes.ok) {
-      const msg = data?.error?.message || `Gemini error ${gRes.status}`;
+      let msg = data?.error?.message || `Gemini error ${gRes.status}`;
+      if (gRes.status === 404) msg += ' Try model=gemini-2.5-flash.';
+      if (gRes.status === 429) msg = 'Rate limit hit on the free tier. Wait a minute and retry, or shorten it with a clip.';
       return res.status(502).json({ error: msg });
     }
 
