@@ -1,6 +1,6 @@
 import React,{useState,useRef,useEffect,useCallback}from"react";
 import{callClaude,speak,readFile,detectDocumentContent,webSearch,formatSearchResults}from"./api";
-import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseEmailTag,parseVideoTag}from"./memory";
+import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseEmailTag,parseVideoTag,parseCalendarTag}from"./memory";
 import{SESSION_ID,SUPABASE_URL,SB_HEADERS}from"./config";
 import{LanceLogo,SendIcon,SpeakerIcon,StopIcon,DownloadIcon,AttachIcon,CloseIcon}from"./icons";
 
@@ -12,6 +12,9 @@ const WATCH_VIDEO_URL="/api/watch-video";
 const GMAIL_AUTH_URL="https://accounts.google.com/o/oauth2/v2/auth";
 const GMAIL_SEND_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-gmail-send";
 const GMAIL_REDIRECT_URI="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-gmail-callback";
+const CAL_AUTH_URL="https://accounts.google.com/o/oauth2/v2/auth";
+const CAL_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-calendar";
+const CAL_REDIRECT_URI="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-calendar-callback";
 const GOOGLE_CLIENT_ID=""; // Set once Pastor provides it from Google Cloud Console
 const TTS_URL=`${SUPABASE_URL}/functions/v1/lance-tts`;
 const SERMON_URL=`${SUPABASE_URL}/functions/v1/lance-sermon-prep`;
@@ -349,6 +352,41 @@ function EmailCard({emailData,status,onEdit,onSend,gmailConnected}){
     </div>
   );
 }
+
+function CalendarEventCard({eventData,status,onSend,calConnected}){
+  const[title,setTitle]=React.useState(eventData.title);
+  const[start,setStart]=React.useState(eventData.start);
+  const[end,setEnd]=React.useState(eventData.end);
+  const[location,setLocation]=React.useState(eventData.location);
+  if(status==="sent"){
+    return(
+      <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",marginTop:"6px",background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",maxWidth:"260px"}}>
+        <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"linear-gradient(160deg,#2E9E5B,#1F7A44)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 4.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </div>
+        <div><div style={{fontSize:"13px",fontWeight:600,color:"#1a2340"}}>Added to calendar</div><div style={{fontSize:"11px",color:"#6B7280"}}>{title}</div></div>
+      </div>
+    );
+  }
+  return(
+    <div style={{background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",padding:"14px",marginTop:"6px",maxWidth:"320px",boxShadow:"0 2px 12px rgba(0,0,0,0.1)"}}>
+      {!calConnected&&(
+        <div style={{fontSize:"12px",color:"#B45309",background:"rgba(217,119,6,0.1)",padding:"8px 10px",borderRadius:"8px",marginBottom:"10px"}}>Calendar is not connected yet. Connect it in settings first.</div>
+      )}
+      <div style={{fontSize:"11px",color:"#6B7280",marginBottom:"3px"}}>Event</div>
+      <input value={title} onChange={e=>setTitle(e.target.value)} style={{width:"100%",border:"1px solid #E5E7EB",borderRadius:"6px",padding:"6px 8px",fontSize:"13px",marginBottom:"8px",fontFamily:"inherit"}}/>
+      <div style={{fontSize:"11px",color:"#6B7280",marginBottom:"3px"}}>Starts</div>
+      <input type="datetime-local" value={start} onChange={e=>setStart(e.target.value)} style={{width:"100%",border:"1px solid #E5E7EB",borderRadius:"6px",padding:"6px 8px",fontSize:"13px",marginBottom:"8px",fontFamily:"inherit"}}/>
+      <div style={{fontSize:"11px",color:"#6B7280",marginBottom:"3px"}}>Ends</div>
+      <input type="datetime-local" value={end} onChange={e=>setEnd(e.target.value)} style={{width:"100%",border:"1px solid #E5E7EB",borderRadius:"6px",padding:"6px 8px",fontSize:"13px",marginBottom:"8px",fontFamily:"inherit"}}/>
+      <div style={{fontSize:"11px",color:"#6B7280",marginBottom:"3px"}}>Location</div>
+      <input value={location} onChange={e=>setLocation(e.target.value)} style={{width:"100%",border:"1px solid #E5E7EB",borderRadius:"6px",padding:"6px 8px",fontSize:"13px",marginBottom:"10px",fontFamily:"inherit"}}/>
+      <button onClick={()=>onSend({title,start,end,location,description:eventData.description})} disabled={status==="sending"||!calConnected} style={{width:"100%",background:calConnected?"linear-gradient(135deg,#1a2340,#0d1321)":"#D1D5DB",color:"#fff",border:"none",borderRadius:"8px",padding:"10px",fontSize:"13px",fontWeight:600,cursor:calConnected?"pointer":"default",fontFamily:"inherit"}}>
+        {status==="sending"?"Adding...":status==="error"?"Failed, tap to retry":"Add to Calendar"}
+      </button>
+    </div>
+  );
+}
 function renderDocBlock(text){
   const lines=text.split("\n");
   const blocks=[];
@@ -666,6 +704,8 @@ export default function App(){
   const[previewDoc,setPreviewDoc]=useState(null);
   const[emailStatusByIdx,setEmailStatusByIdx]=useState({});
   const[videoStateByIdx,setVideoStateByIdx]=useState({});
+  const[calendarStatusByIdx,setCalendarStatusByIdx]=useState({});
+  const[calConnected,setCalConnected]=useState(false);
   const[gmailConnected,setGmailConnected]=useState(false);
   const[gmailEmail,setGmailEmail]=useState("");
   const[editTitle,setEditTitle]=useState("");
@@ -713,10 +753,21 @@ export default function App(){
         if(Array.isArray(rows)&&rows[0]?.refresh_token){setGmailConnected(true);setGmailEmail(rows[0].email_address||"")}
       }catch(e){}
     })();
+    (async()=>{
+      try{
+        const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_calendar_tokens?id=eq.1&select=refresh_token`,{headers:SB_HEADERS});
+        const rows=await r.json();
+        if(Array.isArray(rows)&&rows[0]?.refresh_token){setCalConnected(true)}
+      }catch(e){}
+    })();
     // Handle redirect back from Google OAuth
     const params=new URLSearchParams(window.location.search);
     if(params.get("gmail")==="connected"){
       setGmailConnected(true);
+      window.history.replaceState({},"",window.location.pathname);
+    }
+    if(params.get("calendar")==="connected"){
+      setCalConnected(true);
       window.history.replaceState({},"",window.location.pathname);
     }
   },[]);
@@ -933,6 +984,21 @@ export default function App(){
     const authUrl=`${GMAIL_AUTH_URL}?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}&redirect_uri=${encodeURIComponent(GMAIL_REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
     window.location.href=authUrl;
   },[]);
+  const handleCreateEvent=useCallback(async(idx,data)=>{
+    setCalendarStatusByIdx(p=>({...p,[idx]:"sending"}));
+    try{
+      const res=await fetch(CAL_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"create",title:data.title,start:data.start,end:data.end,location:data.location,description:data.description})});
+      const result=await res.json();
+      if(result.success){setCalendarStatusByIdx(p=>({...p,[idx]:"sent"}))}
+      else{setCalendarStatusByIdx(p=>({...p,[idx]:"error"}));console.error("Calendar error:",result.error)}
+    }catch(e){setCalendarStatusByIdx(p=>({...p,[idx]:"error"}));console.error(e)}
+  },[]);
+  const connectCalendar=useCallback(()=>{
+    if(!GOOGLE_CLIENT_ID){alert("Calendar connection is not configured yet. Ask Lance's developer to finish setup.");return}
+    const scope="https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email";
+    const authUrl=`${CAL_AUTH_URL}?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}&redirect_uri=${encodeURIComponent(CAL_REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
+    window.location.href=authUrl;
+  },[]);
 
   const handleCopy=async(text,idx)=>{
     try{await navigator.clipboard.writeText(text);setCopiedIdx(idx);setTimeout(()=>setCopiedIdx(null),2000)}catch(e){}
@@ -966,7 +1032,7 @@ export default function App(){
         raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile,activeProject);
       }
       const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw),videoData:parseVideoTag(raw)}];setMessages(finalMsgs);autosaveChat(finalMsgs);msgCount.current+=2;
+      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw),videoData:parseVideoTag(raw),calendarData:parseCalendarTag(raw)}];setMessages(finalMsgs);autosaveChat(finalMsgs);msgCount.current+=2;
       saveMessage("assistant",clean).catch(()=>{});
       for(const tag of tags){
         if(tag.type==="memory"){saveMemoryFact(tag.category,tag.fact,tag.confidence,SESSION_ID).catch(()=>{});}
@@ -993,7 +1059,7 @@ export default function App(){
         const cleanMessages=next.map(({role,content})=>({role,content}));
         const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile,activeProject);
         const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw),videoData:parseVideoTag(raw)}];setMessages(finalMsgs);autosaveChat(finalMsgs);msgCount.current+=2;
+        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw),videoData:parseVideoTag(raw),calendarData:parseCalendarTag(raw)}];setMessages(finalMsgs);autosaveChat(finalMsgs);msgCount.current+=2;
         saveMessage("assistant",clean).catch(()=>{});
         if(teachMode)speakText(clean,idx);
       }catch(e){setMessages(prev=>[...prev,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);}
@@ -1122,6 +1188,10 @@ export default function App(){
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 2.5h10v7a1 1 0 01-1 1H2a1 1 0 01-1-1v-7z" stroke="currentColor" strokeWidth="1.1" fill="none"/><path d="M1 2.5l5 3.5 5-3.5" stroke="currentColor" strokeWidth="1.1" fill="none"/></svg>
       {gmailConnected?"Gmail":"Connect"}
     </button>
+    <button onClick={calConnected?undefined:connectCalendar} title={calConnected?"Calendar connected":"Connect Calendar"} style={{background:calConnected?"rgba(46,158,91,0.15)":"rgba(255,255,255,0.08)",border:"none",borderRadius:"20px",padding:"5px 10px",color:calConnected?"#2E9E5B":"rgba(255,255,255,0.6)",fontSize:"11px",fontWeight:600,fontFamily:"inherit",cursor:calConnected?"default":"pointer",display:"flex",alignItems:"center",gap:"4px"}}>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1.5" y="2" width="9" height="8.5" rx="1" stroke="currentColor" strokeWidth="1.1" fill="none"/><path d="M1.5 4.5h9M4 1.5v1.5M8 1.5v1.5" stroke="currentColor" strokeWidth="1.1"/></svg>
+      {calConnected?"Calendar":"Connect"}
+    </button>
     <button className="teach-toggle" onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} style={{background:teachMode?"rgba(201,168,76,0.18)":"var(--glass)",border:`1px solid ${teachMode?"var(--gold)":"var(--line)"}`,borderRadius:"10px",color:teachMode?"var(--gold-hi)":"var(--text-mid)",padding:"6px 11px",fontFamily:"inherit",fontSize:"13px",fontWeight:600,cursor:"pointer",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>{teachMode?"On":"Off"}</button>
     {speakingIdx!==null&&(<button onClick={stopSpeaking} style={{background:"rgba(255,80,80,0.15)",border:"1px solid rgba(255,80,80,0.4)",borderRadius:"10px",padding:"6px 10px",cursor:"pointer",color:"rgba(255,120,120,0.9)",fontSize:"13px",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}><StopIcon/></button>)}
     {messages.length>0&&(<button onClick={clearChat} style={{background:"var(--glass)",border:"1px solid var(--line)",borderRadius:"10px",cursor:"pointer",fontSize:"13px",color:"var(--text-mid)",fontFamily:"inherit",padding:"6px 11px",fontWeight:600,minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>New</button>)}
@@ -1159,6 +1229,8 @@ export default function App(){
         </div>
         {m.videoData?(
           <VideoCard videoData={m.videoData} state={videoStateByIdx[i]} onWatch={()=>handleWatchVideo(m.videoData,i)}/>
+        ):m.calendarData?(
+          <CalendarEventCard eventData={m.calendarData} status={calendarStatusByIdx[i]||"idle"} calConnected={calConnected} onSend={(data)=>handleCreateEvent(i,data)}/>
         ):m.emailData?(
           <EmailCard emailData={m.emailData} status={emailStatusByIdx[i]||"idle"} gmailConnected={gmailConnected} onSend={(data)=>handleSendEmail(i,data)}/>
         ):m.smsData?(
