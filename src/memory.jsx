@@ -68,7 +68,28 @@ export function parseMemoryTags(text) {
 }
 
 export function stripMemoryTags(t) {
-  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[EMAIL:[^\]]+\]/gi, "").replace(/\[CALENDAR:[^\]]+\]/gi, "").trim();
+  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[EMAIL:[^\]]+\]/gi, "").replace(/\[CALENDAR:[^\]]+\]/gi, "").replace(/\[VIDEO:[^\]]+\]/gi, "").trim();
+}
+
+export function parseVideoTag(text) {
+  const re = /\[VIDEO:\s*([^\]]+)\]/i;
+  const m = re.exec(text);
+  if (!m) return null;
+  const fields = {};
+  m[1].split("|").forEach(pair => {
+    const eq = pair.indexOf("=");
+    if (eq === -1) return;
+    const key = pair.slice(0, eq).trim().toLowerCase();
+    const val = pair.slice(eq + 1).trim();
+    fields[key] = val;
+  });
+  if (!fields.url) return null;
+  return {
+    url: fields.url,
+    prompt: fields.prompt || "",
+    clip: fields.clip || "",
+    fps: fields.fps || "",
+  };
 }
 
 export function parseCalendarTag(text) {
