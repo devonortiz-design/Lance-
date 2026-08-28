@@ -127,16 +127,25 @@ export default async function handler(req, res) {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${useModel}:generateContent`;
 
     // Key travels in a header, not the URL, so it stays out of access logs.
-    const reqBody = JSON.stringify({
+    // Long videos (livestream replays, full sermons) blow past the token budget at
+    // default resolution. If the first try fails on size or a 400, retry at low
+    // resolution -- that fits hours of video and keeps the argument (audio) intact.
+    const buildBody = (lowRes) => JSON.stringify({
       contents: [{ role: 'user', parts }],
-      generationConfig: { temperature: 0.4, maxOutputTokens: 8192 },
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 8192,
+        ...(lowRes ? { mediaResolution: 'MEDIA_RESOLUTION_LOW' } : {}),
+      },
     });
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     const busy = (status, msg) =>
-      status === 429 || status === 500 || status === 502 || status === 503 || status === 529 ||
+      status === 500 || status === 502 || status === 503 || status === 529 ||
       /overloaded|high demand|temporarily|try again later/i.test(msg || '');
+    const tooBig = (msg) => /token|too long|too large|exceeds|maximum|context window/i.test(msg || '');
 
-    const MAX_TRIES = 4;
+    const MAX_TRIES = 5;
+    let lowRes = false;
     let lastStatus = 502;
     let lastMsg = 'Gemini did not respond.';
     for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
@@ -145,7 +154,7 @@ export default async function handler(req, res) {
         gRes = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-          body: reqBody,
+          body: buildBody(lowRes),
         });
         data = await gRes.json();
       } catch (e) {
@@ -159,7 +168,7 @@ export default async function handler(req, res) {
           .map((p) => p.text || '')
           .join('')
           .trim();
-        if (analysis) return res.status(200).json({ analysis, model: useModel });
+        if (analysis) return res.status(200).json({ analysis, model: useModel, lowRes });
         const reason = data?.candidates?.[0]?.finishReason;
         return res.status(502).json({
           error: reason
@@ -170,14 +179,32 @@ export default async function handler(req, res) {
 
       lastStatus = gRes.status;
       lastMsg = data?.error?.message || `Gemini error ${gRes.status}`;
-      if (busy(gRes.status, lastMsg) && attempt < MAX_TRIES - 1) {
+
+      // Size/context or a 400 on a valid link -> drop to low resolution and retry now.
+      if (!lowRes && (tooBig(lastMsg) || lastStatus === 400) && attempt < MAX_TRIES - 1) {
+        lowRes = true;
+        continue;
+      }
+      // Transient overload -> back off and retry.
+      if (busy(lastStatus, lastMsg) && attempt < MAX_TRIES - 1) {
         await wait(1000 * 2 ** attempt);
+        continue;
+      }
+      // Free-tier rate limit -> back off a little longer, then retry.
+      if (lastStatus === 429 && attempt < MAX_TRIES - 1) {
+        await wait(2000 * 2 ** attempt);
         continue;
       }
       break;
     }
 
-    // Retries exhausted, or a non-retryable error -- give a clear message.
+    // Retries exhausted, or a non-retryable error -- give an honest message.
+    if (tooBig(lastMsg)) {
+      return res.status(413).json({ error: 'This video is too long to read whole, even at low resolution. Watch a section instead -- give a time range like clip 20:00-35:00.' });
+    }
+    if (lastStatus === 429) {
+      return res.status(429).json({ error: 'Hit the free Gemini tier limit -- long videos use a lot of it. Wait a minute and tap retry, or watch a shorter clip.' });
+    }
     if (busy(lastStatus, lastMsg)) {
       return res.status(502).json({ error: 'The video service is busy right now. Give it a minute and tap retry.' });
     }
