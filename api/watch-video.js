@@ -66,6 +66,17 @@ function isYouTube(url) {
   return /^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//i.test((url || '').trim());
 }
 
+// Gemini reliably accepts the canonical watch?v= form. Normalize youtu.be,
+// /live/, /shorts/, and /embed/ links (and drop tracking params) to that.
+function canonicalizeYouTube(url) {
+  const u = (url || '').trim();
+  const m =
+    u.match(/[?&]v=([A-Za-z0-9_-]{11})/) ||
+    u.match(/youtu\.be\/([A-Za-z0-9_-]{11})/i) ||
+    u.match(/\/(?:live|shorts|embed)\/([A-Za-z0-9_-]{11})/i);
+  return m ? `https://www.youtube.com/watch?v=${m[1]}` : u;
+}
+
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -104,7 +115,7 @@ export default async function handler(req, res) {
     const fpsNum = parseFloat(fps);
     if (!Number.isNaN(fpsNum) && fpsNum > 0) videoMetadata.fps = fpsNum;
 
-    const videoPart = { file_data: { file_uri: url } };
+    const videoPart = { file_data: { file_uri: canonicalizeYouTube(url) } };
     if (Object.keys(videoMetadata).length > 0) videoPart.video_metadata = videoMetadata;
 
     const parts = [
@@ -116,39 +127,67 @@ export default async function handler(req, res) {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${useModel}:generateContent`;
 
     // Key travels in a header, not the URL, so it stays out of access logs.
-    const gRes = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts }],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 8192 },
-      }),
+    const reqBody = JSON.stringify({
+      contents: [{ role: 'user', parts }],
+      generationConfig: { temperature: 0.4, maxOutputTokens: 8192 },
     });
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const busy = (status, msg) =>
+      status === 429 || status === 500 || status === 502 || status === 503 || status === 529 ||
+      /overloaded|high demand|temporarily|try again later/i.test(msg || '');
 
-    const data = await gRes.json();
+    const MAX_TRIES = 4;
+    let lastStatus = 502;
+    let lastMsg = 'Gemini did not respond.';
+    for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
+      let gRes, data;
+      try {
+        gRes = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+          body: reqBody,
+        });
+        data = await gRes.json();
+      } catch (e) {
+        lastMsg = e && e.message ? e.message : 'Network error reaching Gemini.';
+        if (attempt < MAX_TRIES - 1) { await wait(1000 * 2 ** attempt); continue; }
+        return res.status(502).json({ error: 'Could not reach the video service. Try again in a moment.' });
+      }
 
-    if (!gRes.ok) {
-      let msg = data?.error?.message || `Gemini error ${gRes.status}`;
-      if (gRes.status === 404) msg += ' Try model=gemini-2.5-flash.';
-      if (gRes.status === 429) msg = 'Rate limit hit on the free tier. Wait a minute and retry, or shorten it with a clip.';
-      return res.status(502).json({ error: msg });
+      if (gRes.ok) {
+        const analysis = (data?.candidates?.[0]?.content?.parts || [])
+          .map((p) => p.text || '')
+          .join('')
+          .trim();
+        if (analysis) return res.status(200).json({ analysis, model: useModel });
+        const reason = data?.candidates?.[0]?.finishReason;
+        return res.status(502).json({
+          error: reason
+            ? `Gemini returned no analysis (${reason}). The video may be private, age-restricted, or still live.`
+            : 'Gemini returned no analysis. The link may be private, unlisted, or age-restricted.',
+        });
+      }
+
+      lastStatus = gRes.status;
+      lastMsg = data?.error?.message || `Gemini error ${gRes.status}`;
+      if (busy(gRes.status, lastMsg) && attempt < MAX_TRIES - 1) {
+        await wait(1000 * 2 ** attempt);
+        continue;
+      }
+      break;
     }
 
-    const analysis = (data?.candidates?.[0]?.content?.parts || [])
-      .map((p) => p.text || '')
-      .join('')
-      .trim();
-
-    if (!analysis) {
-      const reason = data?.candidates?.[0]?.finishReason;
-      return res.status(502).json({
-        error: reason
-          ? `Gemini returned no analysis (${reason}). The video may be private, age-restricted, or too long for this clip window.`
-          : 'Gemini returned no analysis. The link may be private, unlisted, or age-restricted.',
-      });
+    // Retries exhausted, or a non-retryable error -- give a clear message.
+    if (busy(lastStatus, lastMsg)) {
+      return res.status(502).json({ error: 'The video service is busy right now. Give it a minute and tap retry.' });
     }
-
-    return res.status(200).json({ analysis, model: useModel });
+    if (lastStatus === 400) {
+      return res.status(400).json({ error: 'Gemini could not read that link. It may be an ongoing livestream, or a private, unlisted, or age-restricted video. A normal public YouTube video works best.' });
+    }
+    if (lastStatus === 404) {
+      return res.status(502).json({ error: lastMsg + ' Try model=gemini-2.5-flash.' });
+    }
+    return res.status(502).json({ error: lastMsg });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: String(e && e.message ? e.message : e) });
