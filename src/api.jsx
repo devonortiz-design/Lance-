@@ -21,22 +21,51 @@ export async function callClaude(messages, facts, sessions, fileContents = [], p
 
   // Route through Supabase proxy to avoid CORS/browser security issues on iPhone
   const CLAUDE_URL = "https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-claude";
-  const res = await fetch(CLAUDE_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 4096,
-      system: buildSystem(facts, profile, sessions, project),
-      messages: apiMessages,
-    }),
+  const body = JSON.stringify({
+    model: MODEL,
+    max_tokens: 4096,
+    system: buildSystem(facts, profile, sessions, project),
+    messages: apiMessages,
   });
 
-  const d = await res.json();
-  if (d.error) throw new Error(d.error.message);
-  return d.content?.[0]?.text || "";
+  // Anthropic sometimes returns a transient overload ("high demand") or rate limit.
+  // Retry a few times with backoff so those spikes ride through instead of surfacing.
+  const retryable = (status, msg) =>
+    status === 429 || status === 500 || status === 502 || status === 503 || status === 529 ||
+    /overloaded|high demand|rate.?limit|temporarily|try again/i.test(msg || "");
+  const wait = (ms) => new Promise(r => setTimeout(r, ms));
+
+  const MAX_TRIES = 4;
+  let lastMsg = "Something went wrong reaching the model.";
+  for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
+    let res, d;
+    try {
+      res = await fetch(CLAUDE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+      d = await res.json();
+    } catch (e) {
+      lastMsg = e.message || "Network error.";
+      if (attempt < MAX_TRIES - 1) { await wait(800 * 2 ** attempt + Math.random() * 400); continue; }
+      throw new Error("Lance could not reach the model. Check your connection and try again.");
+    }
+
+    if (!d.error && res.ok) return d.content?.[0]?.text || "";
+
+    lastMsg = d.error?.message || `Request failed (${res.status}).`;
+    if (retryable(res.status, lastMsg) && attempt < MAX_TRIES - 1) {
+      await wait(800 * 2 ** attempt + Math.random() * 400);
+      continue;
+    }
+    break;
+  }
+
+  if (/overloaded|high demand/i.test(lastMsg)) {
+    throw new Error("Anthropic's servers are busy right now. Give it a few seconds and try again.");
+  }
+  throw new Error(lastMsg);
 }
 
 export async function speak(text, onStart, onEnd, onError) {
