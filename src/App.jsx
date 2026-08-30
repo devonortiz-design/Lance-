@@ -411,7 +411,7 @@ function renderDocBlock(text){
     if(t.startsWith("#### ")){blocks.push(<h4 key={i} style={{fontSize:"14px",fontWeight:600,color:"#374151",margin:"12px 0 4px"}}>{inline(t.slice(5))}</h4>);return}
     if(/^[-*_]{3,}$/.test(t)){blocks.push(<hr key={i} style={{border:"none",borderTop:"1px solid #E5E7EB",margin:"18px 0"}}/>);return}
     if(t.startsWith("> ")){blocks.push(<div key={i} style={{borderLeft:"3px solid #D1D5DB",paddingLeft:"14px",margin:"10px 0",color:"#4B5563",fontStyle:"italic"}}>{inline(t.slice(2))}</div>);return}
-    if(/^[*\-] /.test(t)){blocks.push(<div key={i} style={{display:"flex",gap:"10px",margin:"4px 0",paddingLeft:"2px",lineHeight:1.6,color:"#1F2937"}}><span style={{color:"#9CA3AF",flexShrink:0}}>&#8211;</span><span>{inline(t.slice(2))}</span></div>);return}
+    if(/^[*\-] /.test(t)){blocks.push(<div key={i} style={{display:"flex",gap:"10px",margin:"4px 0",paddingLeft:"2px",lineHeight:1.6,color:"#1F2937"}}><span style={{color:"#70757E",flexShrink:0}}>&#8211;</span><span>{inline(t.slice(2))}</span></div>);return}
     if(/^\d+\.\s/.test(t)){const num=t.match(/^\d+/)[0];blocks.push(<div key={i} style={{display:"flex",gap:"10px",margin:"4px 0",paddingLeft:"2px",lineHeight:1.6,color:"#1F2937"}}><span style={{color:"#6B7280",fontWeight:500,flexShrink:0}}>{num}.</span><span>{inline(t.replace(/^\d+\.\s/,""))}</span></div>);return}
     blocks.push(<p key={i} style={{margin:"8px 0",lineHeight:1.65,color:"#1F2937",fontSize:"15.5px"}}>{inline(t)}</p>);
   });
