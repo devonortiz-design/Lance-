@@ -1067,7 +1067,7 @@ export default function App(){
     }else{sendText(t);}
   },[input,loading,messages,memoryFacts,profile,recentSessions,pendingFiles,teachMode,stopSpeaking,speakText,sendText,activeProject,autosaveChat]);
 
-  const handleKeyDown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};
+  const handleKeyDown=e=>{};
   const sendPreset=t=>{setInput(t);setTimeout(()=>send(t),0)};
   const clearChat=()=>{stopSpeaking();setMessages([]);setPendingFiles([]);setDocxIdx(null);setActiveConvoId(null);chatIdRef.current=null;msgCount.current=0};
 
