@@ -68,7 +68,7 @@ export function parseMemoryTags(text) {
 }
 
 export function stripMemoryTags(t) {
-  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[EMAIL:[^\]]+\]/gi, "").replace(/\[CALENDAR:[^\]]+\]/gi, "").replace(/\[VIDEO:[^\]]+\]/gi, "").trim();
+  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[EMAIL:[^\]]+\]/gi, "").replace(/\[CALENDAR:[^\]]+\]/gi, "").replace(/\[VIDEO:[^\]]+\]/gi, "").replace(/\[TASK:[^\]]+\]/gi, "").trim();
 }
 
 export function parseVideoTag(text) {
@@ -163,4 +163,43 @@ export function parseFlyerTag(text) {
     template: fields.template || "event",
     brand: fields.brand || "church",
   };
+}
+
+
+export function parseTaskTag(text) {
+  const re = /\[TASK:\s*([^\]]+)\]/i;
+  const m = re.exec(text);
+  if (!m) return null;
+  const fields = {};
+  m[1].split("|").forEach(pair => {
+    const eq = pair.indexOf("=");
+    if (eq === -1) return;
+    const key = pair.slice(0, eq).trim().toLowerCase();
+    const val = pair.slice(eq + 1).trim();
+    fields[key] = val;
+  });
+  return { title: fields.title || "", due: fields.due || "", category: fields.category || "" };
+}
+
+export async function saveTask(title, due, category) {
+  return sbPost("lance_tasks", { title, due_date: due || null, category: category || null, status: "open" });
+}
+
+export async function loadOpenTasks() {
+  return sbGet("lance_tasks", "status=eq.open&order=due_date.asc.nullslast,created_at.asc&limit=50");
+}
+
+export async function completeTask(id) {
+  await fetch(`${SUPABASE_URL}/rest/v1/lance_tasks?id=eq.${id}`, {
+    method: "PATCH",
+    headers: SB_HEADERS,
+    body: JSON.stringify({ status: "done", completed_at: new Date().toISOString() }),
+  });
+}
+
+export async function deleteTask(id) {
+  await fetch(`${SUPABASE_URL}/rest/v1/lance_tasks?id=eq.${id}`, {
+    method: "DELETE",
+    headers: SB_HEADERS,
+  });
 }
