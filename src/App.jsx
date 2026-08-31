@@ -1,6 +1,6 @@
 import React,{useState,useRef,useEffect,useCallback}from"react";
 import{callClaude,speak,readFile,detectDocumentContent,webSearch,formatSearchResults}from"./api";
-import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseEmailTag,parseVideoTag,parseCalendarTag}from"./memory";
+import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseEmailTag,parseVideoTag,parseCalendarTag,parseTaskTag,saveTask,loadOpenTasks,completeTask,deleteTask}from"./memory";
 import{SESSION_ID,SUPABASE_URL,SB_HEADERS}from"./config";
 import{LanceLogo,SendIcon,SpeakerIcon,StopIcon,DownloadIcon,AttachIcon,CloseIcon}from"./icons";
 
@@ -387,6 +387,44 @@ function CalendarEventCard({eventData,status,onSend,calConnected}){
     </div>
   );
 }
+
+function TaskAddedCard({title,due}){
+  return(
+    <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",marginTop:"6px",background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",maxWidth:"280px",boxShadow:"0 2px 12px rgba(0,0,0,0.1)"}}>
+      <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"linear-gradient(160deg,#1F4E96,#0F2A52)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5h9M7.5 3v9" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>
+      </div>
+      <div><div style={{fontSize:"13px",fontWeight:600,color:"#1a2340"}}>Added to your list</div><div style={{fontSize:"11px",color:"#6B7280"}}>{title}{due?` -- due ${due}`:""}</div></div>
+    </div>
+  );
+}
+
+function TasksPanel({tasks,onClose,onComplete,onDelete}){
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:500,background:"rgba(13,19,33,0.75)",display:"flex",flexDirection:"column"}} onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",margin:"env(safe-area-inset-top,20px) 12px 12px",flex:1,borderRadius:"16px",display:"flex",flexDirection:"column",overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.4)"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",borderBottom:"1px solid rgba(26,35,64,0.1)",flexShrink:0}}>
+          <div style={{fontSize:"15px",fontWeight:700,color:"#1a2340"}}>Open Tasks</div>
+          <button onClick={onClose} style={{background:"rgba(26,35,64,0.08)",border:"none",borderRadius:"50%",width:"32px",height:"32px",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#1a2340",fontSize:"18px"}}>&#215;</button>
+        </div>
+        <div style={{flex:1,overflowY:"auto",padding:"12px 16px"}}>
+          {tasks.length===0?(
+            <div style={{textAlign:"center",color:"#9CA3AF",fontSize:"14px",marginTop:"40px"}}>Nothing on the list right now.</div>
+          ):tasks.map(t=>(
+            <div key={t.id} style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 0",borderBottom:"1px solid #F3F4F6"}}>
+              <button onClick={()=>onComplete(t.id)} style={{width:"22px",height:"22px",borderRadius:"50%",border:"2px solid #D1D5DB",background:"none",cursor:"pointer",flexShrink:0}}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:"14px",color:"#1F2937"}}>{t.title}</div>
+                {t.due_date&&<div style={{fontSize:"11px",color:"#9CA3AF"}}>Due {t.due_date}</div>}
+              </div>
+              <button onClick={()=>onDelete(t.id)} style={{background:"none",border:"none",color:"#D1D5DB",fontSize:"18px",cursor:"pointer",padding:"4px"}}>&#215;</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 function renderDocBlock(text){
   const lines=text.split("\n");
   const blocks=[];
@@ -705,6 +743,8 @@ export default function App(){
   const[emailStatusByIdx,setEmailStatusByIdx]=useState({});
   const[videoStateByIdx,setVideoStateByIdx]=useState({});
   const[calendarStatusByIdx,setCalendarStatusByIdx]=useState({});
+  const[openTasks,setOpenTasks]=useState([]);
+  const[showTasks,setShowTasks]=useState(false);
   const[calConnected,setCalConnected]=useState(false);
   const[gmailConnected,setGmailConnected]=useState(false);
   const[gmailEmail,setGmailEmail]=useState("");
@@ -744,6 +784,9 @@ export default function App(){
       setProfile(Array.isArray(p)?p:[]);
       setRecentSessions(Array.isArray(s)?s:[]);
       setSavedConvos(Array.isArray(c)?c:[]);
+    })();
+    (async()=>{
+      try{const t=await loadOpenTasks();setOpenTasks(Array.isArray(t)?t:[])}catch(e){}
     })();
     // Check Gmail connection status
     (async()=>{
@@ -999,6 +1042,20 @@ export default function App(){
     const authUrl=`${CAL_AUTH_URL}?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}&redirect_uri=${encodeURIComponent(CAL_REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
     window.location.href=authUrl;
   },[]);
+  const handleAddTask=useCallback(async(taskData)=>{
+    if(!taskData?.title)return;
+    try{
+      await saveTask(taskData.title,taskData.due,taskData.category);
+      const t=await loadOpenTasks();
+      setOpenTasks(Array.isArray(t)?t:[]);
+    }catch(e){console.error("Task save error:",e)}
+  },[]);
+  const handleCompleteTask=useCallback(async(id)=>{
+    try{await completeTask(id);const t=await loadOpenTasks();setOpenTasks(Array.isArray(t)?t:[])}catch(e){console.error(e)}
+  },[]);
+  const handleDeleteTask=useCallback(async(id)=>{
+    try{await deleteTask(id);const t=await loadOpenTasks();setOpenTasks(Array.isArray(t)?t:[])}catch(e){console.error(e)}
+  },[]);
 
   const handleCopy=async(text,idx)=>{
     try{await navigator.clipboard.writeText(text);setCopiedIdx(idx);setTimeout(()=>setCopiedIdx(null),2000)}catch(e){}
@@ -1032,7 +1089,8 @@ export default function App(){
         raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile,activeProject);
       }
       const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw),videoData:parseVideoTag(raw),calendarData:parseCalendarTag(raw)}];setMessages(finalMsgs);autosaveChat(finalMsgs);msgCount.current+=2;
+      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw),videoData:parseVideoTag(raw),calendarData:parseCalendarTag(raw),taskData:parseTaskTag(raw)}];setMessages(finalMsgs);
+      const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}autosaveChat(finalMsgs);msgCount.current+=2;
       saveMessage("assistant",clean).catch(()=>{});
       for(const tag of tags){
         if(tag.type==="memory"){saveMemoryFact(tag.category,tag.fact,tag.confidence,SESSION_ID).catch(()=>{});}
@@ -1059,7 +1117,8 @@ export default function App(){
         const cleanMessages=next.map(({role,content})=>({role,content}));
         const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile,activeProject);
         const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw),videoData:parseVideoTag(raw),calendarData:parseCalendarTag(raw)}];setMessages(finalMsgs);autosaveChat(finalMsgs);msgCount.current+=2;
+        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw),videoData:parseVideoTag(raw),calendarData:parseCalendarTag(raw),taskData:parseTaskTag(raw)}];setMessages(finalMsgs);
+      const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}autosaveChat(finalMsgs);msgCount.current+=2;
         saveMessage("assistant",clean).catch(()=>{});
         if(teachMode)speakText(clean,idx);
       }catch(e){setMessages(prev=>[...prev,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);}
@@ -1080,6 +1139,8 @@ export default function App(){
 
     {/* Drag overlay */}
     {dragOver&&(<div style={{position:"fixed",inset:0,background:"rgba(201,168,76,0.10)",border:"2px dashed rgba(201,168,76,0.5)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><div style={{color:"#fff",fontSize:"18px",fontWeight:600}}>Drop file or screenshot</div></div>)}
+
+    {showTasks&&(<TasksPanel tasks={openTasks} onClose={()=>setShowTasks(false)} onComplete={handleCompleteTask} onDelete={handleDeleteTask}/>)}
 
     {/* Document preview overlay */}
     {previewDoc&&(<DocPreviewModal
@@ -1192,6 +1253,10 @@ export default function App(){
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1.5" y="2" width="9" height="8.5" rx="1" stroke="currentColor" strokeWidth="1.1" fill="none"/><path d="M1.5 4.5h9M4 1.5v1.5M8 1.5v1.5" stroke="currentColor" strokeWidth="1.1"/></svg>
       {calConnected?"Calendar":"Connect"}
     </button>
+    <button onClick={()=>setShowTasks(true)} style={{background:openTasks.length>0?"rgba(31,78,150,0.12)":"rgba(255,255,255,0.08)",border:"none",borderRadius:"20px",padding:"5px 10px",color:openTasks.length>0?"#1F4E96":"rgba(255,255,255,0.6)",fontSize:"11px",fontWeight:600,fontFamily:"inherit",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"}}>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2v8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+      Tasks{openTasks.length>0?` (${openTasks.length})`:""}
+    </button>
     <button className="teach-toggle" onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} style={{background:teachMode?"rgba(201,168,76,0.18)":"var(--glass)",border:`1px solid ${teachMode?"var(--gold)":"var(--line)"}`,borderRadius:"10px",color:teachMode?"var(--gold-hi)":"var(--text-mid)",padding:"6px 11px",fontFamily:"inherit",fontSize:"13px",fontWeight:600,cursor:"pointer",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>{teachMode?"On":"Off"}</button>
     {speakingIdx!==null&&(<button onClick={stopSpeaking} style={{background:"rgba(255,80,80,0.15)",border:"1px solid rgba(255,80,80,0.4)",borderRadius:"10px",padding:"6px 10px",cursor:"pointer",color:"rgba(255,120,120,0.9)",fontSize:"13px",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}><StopIcon/></button>)}
     {messages.length>0&&(<button onClick={clearChat} style={{background:"var(--glass)",border:"1px solid var(--line)",borderRadius:"10px",cursor:"pointer",fontSize:"13px",color:"var(--text-mid)",fontFamily:"inherit",padding:"6px 11px",fontWeight:600,minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>New</button>)}
@@ -1227,7 +1292,9 @@ export default function App(){
           <button className="speak-btn" onClick={()=>handleDownload(m.content,i)} style={{color:"var(--text-mid)",minWidth:"36px",minHeight:"36px",display:"flex",alignItems:"center",justifyContent:"center"}} title="Download Word doc"><DownloadIcon/></button>
           <button className={`copy-btn${copiedIdx===i?" copied":""}`} onClick={()=>handleCopy(m.content,i)} style={{minHeight:"36px"}}>{copiedIdx===i?"Copied":"Copy"}</button>
         </div>
-        {m.videoData?(
+        {m.taskData?.title?(
+          <TaskAddedCard title={m.taskData.title} due={m.taskData.due}/>
+        ):m.videoData?(
           <VideoCard videoData={m.videoData} state={videoStateByIdx[i]} onWatch={()=>handleWatchVideo(m.videoData,i)}/>
         ):m.calendarData?(
           <CalendarEventCard eventData={m.calendarData} status={calendarStatusByIdx[i]||"idle"} calConnected={calConnected} onSend={(data)=>handleCreateEvent(i,data)}/>
