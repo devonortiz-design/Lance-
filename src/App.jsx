@@ -1,7 +1,7 @@
 import React,{useState,useRef,useEffect,useCallback}from"react";
 import{callClaude,speak,readFile,detectDocumentContent,webSearch,formatSearchResults}from"./api";
-import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseEmailTag,parseVideoTag,parseCalendarTag,parseTaskTag,saveTask,loadOpenTasks,completeTask,deleteTask}from"./memory";
-import{SESSION_ID,SUPABASE_URL,SB_HEADERS}from"./config";
+import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseEmailTag,parseVideoTag,parseCalendarTag,parseTaskTag,saveTask,loadOpenTasks,completeTask,deleteTask,parseStaffEventTags,parseStaffNoteTags,saveStaffEvent,saveStaffNote}from"./memory";
+import{SESSION_ID,SUPABASE_URL,SB_HEADERS,STAFF_CALENDAR_CODE}from"./config";
 import{LanceLogo,SendIcon,SpeakerIcon,StopIcon,DownloadIcon,AttachIcon,CloseIcon}from"./icons";
 
 const DOCX_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-docx";
@@ -388,6 +388,68 @@ function CalendarEventCard({eventData,status,onSend,calConnected}){
   );
 }
 
+const STAFF_CAT_COLOR={Service:"#C9A84C",Youth:"#5A9BE6",Outreach:"#4FAE7A",Meeting:"#E0965A",Other:"#9B87C4"};
+
+function StaffEventRow({ev,status,onAdd}){
+  const label=[ev.date,ev.start&&fmtStaffTime(ev.start)+(ev.end?`–${fmtStaffTime(ev.end)}`:"")].filter(Boolean).join(" · ");
+  return(
+    <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"9px 10px",borderRadius:"9px",background:"rgba(0,0,0,0.02)",marginBottom:"6px"}}>
+      <div style={{width:"8px",height:"8px",borderRadius:"50%",background:STAFF_CAT_COLOR[ev.category]||STAFF_CAT_COLOR.Other,flexShrink:0}}/>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:"13px",fontWeight:600,color:"#1a2340",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{ev.title||"Untitled event"}</div>
+        <div style={{fontSize:"11px",color:"#6B7280"}}>{label}{ev.location?` · ${ev.location}`:""}{ev.repeat==="weekly"?" · weekly":""}</div>
+      </div>
+      <button onClick={onAdd} disabled={status==="sending"||status==="sent"} style={{flexShrink:0,background:status==="sent"?"#E8F5EC":"linear-gradient(135deg,#1a2340,#0d1321)",color:status==="sent"?"#1F7A44":"#fff",border:"none",borderRadius:"7px",padding:"7px 11px",fontSize:"12px",fontWeight:600,cursor:status==="sent"?"default":"pointer",fontFamily:"inherit",minWidth:"56px"}}>
+        {status==="sending"?"…":status==="sent"?"Added":status==="error"?"Retry":"Add"}
+      </button>
+    </div>
+  );
+}
+
+function fmtStaffTime(t){
+  if(!t)return"";
+  const[h,m]=t.split(":").map(Number);
+  const ap=h>=12?"pm":"am";
+  return`${((h%12)||12)}${m?":"+String(m).padStart(2,"0"):""}${ap}`;
+}
+
+function StaffEventsCard({events,statusByEventIdx,onAdd,onAddAll}){
+  const allDone=events.every((_,i)=>statusByEventIdx[i]==="sent");
+  return(
+    <div style={{background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",padding:"12px",marginTop:"6px",maxWidth:"340px",boxShadow:"0 2px 12px rgba(0,0,0,0.1)"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"8px"}}>
+        <div style={{fontSize:"12px",fontWeight:600,color:"#6B7280"}}>Staff calendar · {events.length} event{events.length===1?"":"s"}</div>
+        {!allDone&&events.length>1&&(
+          <button onClick={onAddAll} style={{background:"none",border:"none",color:"#A8863A",fontSize:"12px",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Add all</button>
+        )}
+      </div>
+      {events.map((ev,i)=>(<StaffEventRow key={i} ev={ev} status={statusByEventIdx[i]||"idle"} onAdd={()=>onAdd(i)}/>))}
+    </div>
+  );
+}
+
+function StaffNoteCard({note,status,onAdd}){
+  if(status==="sent"){
+    return(
+      <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",marginTop:"6px",background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",maxWidth:"300px"}}>
+        <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"linear-gradient(160deg,#2E9E5B,#1F7A44)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 4.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </div>
+        <div><div style={{fontSize:"13px",fontWeight:600,color:"#1a2340"}}>Posted to staff board</div></div>
+      </div>
+    );
+  }
+  return(
+    <div style={{background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",padding:"12px",marginTop:"6px",maxWidth:"320px",boxShadow:"0 2px 12px rgba(0,0,0,0.1)"}}>
+      <div style={{fontSize:"11px",color:"#6B7280",marginBottom:"4px"}}>Staff note</div>
+      <div style={{fontSize:"13px",color:"#1a2340",marginBottom:"10px",whiteSpace:"pre-wrap"}}>{note.text}</div>
+      <button onClick={onAdd} disabled={status==="sending"} style={{width:"100%",background:"linear-gradient(135deg,#1a2340,#0d1321)",color:"#fff",border:"none",borderRadius:"8px",padding:"9px",fontSize:"13px",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+        {status==="sending"?"Posting...":status==="error"?"Failed, tap to retry":"Post to staff board"}
+      </button>
+    </div>
+  );
+}
+
 function TaskAddedCard({title,due}){
   return(
     <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",marginTop:"6px",background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",maxWidth:"280px",boxShadow:"0 2px 12px rgba(0,0,0,0.1)"}}>
@@ -743,6 +805,8 @@ export default function App(){
   const[emailStatusByIdx,setEmailStatusByIdx]=useState({});
   const[videoStateByIdx,setVideoStateByIdx]=useState({});
   const[calendarStatusByIdx,setCalendarStatusByIdx]=useState({});
+  const[staffEventStatusByIdx,setStaffEventStatusByIdx]=useState({});
+  const[staffNoteStatusByIdx,setStaffNoteStatusByIdx]=useState({});
   const[openTasks,setOpenTasks]=useState([]);
   const[showTasks,setShowTasks]=useState(false);
   const[calConnected,setCalConnected]=useState(false);
@@ -1036,6 +1100,24 @@ export default function App(){
       else{setCalendarStatusByIdx(p=>({...p,[idx]:"error"}));console.error("Calendar error:",result.error)}
     }catch(e){setCalendarStatusByIdx(p=>({...p,[idx]:"error"}));console.error(e)}
   },[]);
+  const handleAddStaffEvent=useCallback(async(msgIdx,evIdx,ev)=>{
+    const key=`${msgIdx}:${evIdx}`;
+    setStaffEventStatusByIdx(p=>({...p,[key]:"sending"}));
+    try{
+      await saveStaffEvent(STAFF_CALENDAR_CODE,ev);
+      setStaffEventStatusByIdx(p=>({...p,[key]:"sent"}));
+    }catch(e){setStaffEventStatusByIdx(p=>({...p,[key]:"error"}));console.error("Staff event error:",e)}
+  },[]);
+  const handleAddAllStaffEvents=useCallback(async(msgIdx,events)=>{
+    for(let i=0;i<events.length;i++){await handleAddStaffEvent(msgIdx,i,events[i])}
+  },[handleAddStaffEvent]);
+  const handleAddStaffNote=useCallback(async(msgIdx,note)=>{
+    setStaffNoteStatusByIdx(p=>({...p,[msgIdx]:"sending"}));
+    try{
+      await saveStaffNote(STAFF_CALENDAR_CODE,note);
+      setStaffNoteStatusByIdx(p=>({...p,[msgIdx]:"sent"}));
+    }catch(e){setStaffNoteStatusByIdx(p=>({...p,[msgIdx]:"error"}));console.error("Staff note error:",e)}
+  },[]);
   const connectCalendar=useCallback(()=>{
     if(!GOOGLE_CLIENT_ID){alert("Calendar connection is not configured yet. Ask Lance's developer to finish setup.");return}
     const scope="https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email";
@@ -1089,7 +1171,7 @@ export default function App(){
         raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile,activeProject);
       }
       const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw),videoData:parseVideoTag(raw),calendarData:parseCalendarTag(raw),taskData:parseTaskTag(raw)}];setMessages(finalMsgs);
+      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw),videoData:parseVideoTag(raw),calendarData:parseCalendarTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw)}];setMessages(finalMsgs);
       const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}autosaveChat(finalMsgs);msgCount.current+=2;
       saveMessage("assistant",clean).catch(()=>{});
       for(const tag of tags){
@@ -1117,7 +1199,7 @@ export default function App(){
         const cleanMessages=next.map(({role,content})=>({role,content}));
         const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile,activeProject);
         const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw),videoData:parseVideoTag(raw),calendarData:parseCalendarTag(raw),taskData:parseTaskTag(raw)}];setMessages(finalMsgs);
+        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),emailData:parseEmailTag(raw),videoData:parseVideoTag(raw),calendarData:parseCalendarTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw)}];setMessages(finalMsgs);
       const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}autosaveChat(finalMsgs);msgCount.current+=2;
         saveMessage("assistant",clean).catch(()=>{});
         if(teachMode)speakText(clean,idx);
@@ -1292,7 +1374,11 @@ export default function App(){
           <button className="speak-btn" onClick={()=>handleDownload(m.content,i)} style={{color:"var(--text-mid)",minWidth:"36px",minHeight:"36px",display:"flex",alignItems:"center",justifyContent:"center"}} title="Download Word doc"><DownloadIcon/></button>
           <button className={`copy-btn${copiedIdx===i?" copied":""}`} onClick={()=>handleCopy(m.content,i)} style={{minHeight:"36px"}}>{copiedIdx===i?"Copied":"Copy"}</button>
         </div>
-        {m.taskData?.title?(
+        {m.staffEventsData?.length>0?(
+          <StaffEventsCard events={m.staffEventsData} statusByEventIdx={Object.fromEntries(m.staffEventsData.map((_,ei)=>[ei,staffEventStatusByIdx[`${i}:${ei}`]||"idle"]))} onAdd={(ei)=>handleAddStaffEvent(i,ei,m.staffEventsData[ei])} onAddAll={()=>handleAddAllStaffEvents(i,m.staffEventsData)}/>
+        ):m.staffNotesData?.length>0?(
+          <StaffNoteCard note={m.staffNotesData[0]} status={staffNoteStatusByIdx[i]||"idle"} onAdd={()=>handleAddStaffNote(i,m.staffNotesData[0])}/>
+        ):m.taskData?.title?(
           <TaskAddedCard title={m.taskData.title} due={m.taskData.due}/>
         ):m.videoData?(
           <VideoCard videoData={m.videoData} state={videoStateByIdx[i]} onWatch={()=>handleWatchVideo(m.videoData,i)}/>
@@ -1331,7 +1417,7 @@ export default function App(){
       </div>)}
       <div style={{display:"flex",alignItems:"flex-end",gap:"8px",background:"rgba(255,255,255,0.07)",borderRadius:"20px",border:"1px solid var(--line)",padding:"9px 10px 9px 14px",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06)"}}>
         <button onClick={()=>fileRef.current?.click()} style={{background:"none",border:"none",cursor:"pointer",color:"var(--text-lo)",display:"flex",alignItems:"center",padding:"4px",borderRadius:"6px",transition:"color 0.14s",flexShrink:0,minWidth:"36px",minHeight:"36px",justifyContent:"center"}} title="Attach file or screenshot" onMouseEnter={e=>e.currentTarget.style.color="var(--gold)"} onMouseLeave={e=>e.currentTarget.style.color="var(--text-lo)"}><AttachIcon/></button>
-        <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg,.webp,.heic,.heif,.gif,.bmp,image/*" style={{display:"none"}} onChange={e=>{handleFiles(e.target.files);e.target.value=""}}/>
+        <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.doc,.txt,.xlsx,.xls,.csv,.png,.jpg,.jpeg,.webp,.heic,.heif,.gif,.bmp,image/*" style={{display:"none"}} onChange={e=>{handleFiles(e.target.files);e.target.value=""}}/>
         <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData?.items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder="Message Lance" rows={1} style={{flex:1,border:"none",background:"transparent",fontSize:"17px",color:"var(--text-hi)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:400,letterSpacing:"-0.012em",fontFamily:"inherit"}}/>
         <button className={`mic-btn${teachMode?" listening":" idle"}`} onClick={toggleVoiceConversation} title={teachMode?"End voice conversation":"Start voice conversation"} style={{marginRight:"2px"}}>
           <VoiceChatIcon/>
