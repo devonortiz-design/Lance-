@@ -436,7 +436,7 @@ async function callLanceAI(text,bulk,existing,todayLabel){
   const r=await fetch(`${SB_URL}/functions/v1/staff-calendar-ai`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
     body:JSON.stringify({code:S.code,text,today:todayLabel,existing,bulk})});
   const parsed=await r.json();
-  if(!r.ok||parsed.error) throw new Error(parsed.error||('HTTP '+r.status));
+  if(!r.ok||parsed.error){ const err=new Error(parsed.error||('HTTP '+r.status)); err.raw=parsed.raw; throw err; }
   return parsed;
 }
 async function askLance(){
@@ -449,17 +449,26 @@ async function askLance(){
     .slice(0,40).map(o=>`${o.date} ${o.start||''} ${o.title}`).join('\n');
   try{
     if(aiFileText){
-      const chunks=chunkSpreadsheetText(aiFileText,25);
+      const chunks=chunkSpreadsheetText(aiFileText,15);
       const merged={events:[],notes:[],warning:''};
+      const failedBatches=[]; let lastRaw='';
       for(let i=0;i<chunks.length;i++){
         st.textContent=chunks.length>1?`Reading batch ${i+1} of ${chunks.length}…`:'Lance is reading the spreadsheet.';
         const chunkText=`[SPREADSHEET: ${aiFileName}]\n${chunks[i]}\n[END SPREADSHEET]\n\n${typed||'Add every event in this spreadsheet to the calendar.'}`;
-        const result=await callLanceAI(chunkText,true,soon,todayLabel);
-        if(result.events) merged.events.push(...result.events);
-        if(result.notes) merged.notes.push(...result.notes);
-        if(result.warning&&!merged.warning) merged.warning=result.warning;
+        try{
+          const result=await callLanceAI(chunkText,true,soon,todayLabel);
+          if(result.events) merged.events.push(...result.events);
+          if(result.notes) merged.notes.push(...result.notes);
+          if(result.warning&&!merged.warning) merged.warning=result.warning;
+        }catch(e){ failedBatches.push(i+1); if(e.raw) lastRaw=e.raw; }
       }
-      showPreview(merged); st.textContent=`Found ${merged.events.length} event${merged.events.length===1?'':'s'}. Check the details, then add what you want.`; clearAiFile();
+      showPreview(merged);
+      if(failedBatches.length){
+        st.textContent=`Found ${merged.events.length} event${merged.events.length===1?'':'s'}. Batch${failedBatches.length===1?'':'es'} ${failedBatches.join(', ')} of ${chunks.length} could not be read${lastRaw?' — check the rows in that part of the file for stray formatting':''}.`;
+      } else {
+        st.textContent=`Found ${merged.events.length} event${merged.events.length===1?'':'s'}. Check the details, then add what you want.`;
+      }
+      if(merged.events.length||merged.notes.length) clearAiFile();
     } else {
       const parsed=await callLanceAI(typed,false,soon,todayLabel);
       showPreview(parsed); st.textContent='Check the details, then add what you want.';
