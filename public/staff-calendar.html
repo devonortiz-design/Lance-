@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Victory Baptist Church Calendar</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --gold:#C9A84C; --gold-deep:#a07830; --ink:#1c1a17; --paper:rgba(255,255,255,0.95);
@@ -85,6 +86,10 @@
   .toast.show{opacity:1}
   .legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:#6b665e;margin-top:8px}
   .legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:var(--c)}
+  .file-drop{border:1.5px dashed rgba(0,0,0,0.2);border-radius:10px;padding:14px;text-align:center;font-size:13px;color:#8a8479;margin-top:8px;cursor:pointer;transition:border-color .15s,background .15s}
+  .file-drop.over{border-color:var(--gold);background:#fffbf0;color:var(--gold-deep)}
+  .file-chip{display:none;align-items:center;gap:8px;margin-top:8px;padding:8px 10px;border-radius:9px;background:#fffbf0;border:1px solid rgba(201,168,76,0.4);font-size:13px;color:var(--ink)}
+  .chip-x{margin-left:auto;background:none;border:none;font-size:16px;line-height:1;color:#8a8479;cursor:pointer;padding:2px 4px}
   @media (max-width:420px){.who input{width:110px}.brand h1{font-size:22px}}
 </style>
 </head>
@@ -151,6 +156,9 @@
       <h2>Speak or type. Lance sets it up.</h2>
       <p class="small" style="margin-bottom:10px">Example: "Youth rally Saturday the 19th at 6 pm in the gym, Bro. Mike is speaking. Also remind the staff to turn in October schedules by Friday."</p>
       <div class="ai-box"><textarea id="aiText" placeholder="Tap the mic and talk, or type here"></textarea></div>
+      <div class="file-drop" id="fileDrop" onclick="document.getElementById('aiFile').click()" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="handleAiFileDrop(event)">Drop a spreadsheet here, or tap to attach</div>
+      <input type="file" id="aiFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleAiFileSelect(event)">
+      <div class="file-chip" id="aiFileChip"></div>
       <div class="row spread" style="margin-top:10px">
         <button class="mic" id="mic" onclick="toggleMic()" title="Talk">🎙</button>
         <button class="gold" id="aiGo" onclick="askLance()">Set it up</button>
@@ -367,19 +375,57 @@ function toggleMic(){
   S.rec.start(); S.listening=true; document.getElementById('mic').classList.add('live'); document.getElementById('aiStatus').textContent='Listening. Tap the mic again when you are done.';
 }
 
+/* ---------- AI file attach ---------- */
+let aiFileText='', aiFileName='';
+function handleAiFileDrop(e){
+  e.preventDefault(); document.getElementById('fileDrop').classList.remove('over');
+  const f=e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) processAiFile(f);
+}
+function handleAiFileSelect(e){
+  const f=e.target.files&&e.target.files[0]; if(f) processAiFile(f); e.target.value='';
+}
+async function processAiFile(file){
+  if(!/\.(xlsx|xls|csv)$/i.test(file.name)){ toast('Attach an Excel (.xlsx) or CSV file.'); return; }
+  const chip=document.getElementById('aiFileChip');
+  chip.style.display='flex'; chip.innerHTML=`Reading ${esc(file.name)}…`;
+  try{
+    if(/\.csv$/i.test(file.name)){
+      aiFileText=await file.text();
+    } else {
+      const buf=await file.arrayBuffer();
+      const wb=XLSX.read(buf,{type:'array'});
+      const parts=wb.SheetNames.map(sn=>{
+        const csv=XLSX.utils.sheet_to_csv(wb.Sheets[sn]);
+        return wb.SheetNames.length>1?`--- Sheet: ${sn} ---\n${csv}`:csv;
+      });
+      aiFileText=parts.join('\n\n');
+    }
+    aiFileName=file.name;
+    chip.innerHTML=`📎 ${esc(file.name)}<button class="chip-x" onclick="clearAiFile()" title="Remove">&times;</button>`;
+  }catch(e){
+    toast('Could not read that file.'); chip.style.display='none'; aiFileText=''; aiFileName='';
+  }
+}
+function clearAiFile(){
+  aiFileText=''; aiFileName='';
+  const chip=document.getElementById('aiFileChip'); chip.style.display='none'; chip.innerHTML='';
+}
+
 /* ---------- AI ---------- */
 async function askLance(){
-  const text=document.getElementById('aiText').value.trim(); if(!text){ toast('Say or type what you want scheduled.'); return; }
+  const typed=document.getElementById('aiText').value.trim();
+  if(!typed&&!aiFileText){ toast('Say or type what you want scheduled, or attach a spreadsheet.'); return; }
+  const text=aiFileText?`[SPREADSHEET: ${aiFileName}]\n${aiFileText}\n[END SPREADSHEET]\n\n${typed||'Add every event in this spreadsheet to the calendar.'}`:typed;
   if(S.listening) S.rec.stop();
   const btn=document.getElementById('aiGo'), st=document.getElementById('aiStatus'); btn.disabled=true; st.textContent='Lance is setting it up.';
   const today=new Date(); const soon=occurrences(isoDate(today),isoDate(new Date(today.getFullYear(),today.getMonth()+2,today.getDate())))
     .slice(0,40).map(o=>`${o.date} ${o.start||''} ${o.title}`).join('\n');
   try{
     const r=await fetch(`${SB_URL}/functions/v1/staff-calendar-ai`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
-      body:JSON.stringify({code:S.code,text,today:today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}),existing:soon})});
+      body:JSON.stringify({code:S.code,text,today:today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}),existing:soon,bulk:!!aiFileName})});
     const parsed=await r.json();
     if(!r.ok||parsed.error) throw new Error(parsed.error||('HTTP '+r.status));
-    showPreview(parsed); st.textContent='Check the details, then add what you want.';
+    showPreview(parsed); st.textContent='Check the details, then add what you want.'; clearAiFile();
   }catch(e){ st.textContent='Lance could not set that up: '+e.message; }
   btn.disabled=false;
 }
