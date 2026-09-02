@@ -68,7 +68,7 @@ export function parseMemoryTags(text) {
 }
 
 export function stripMemoryTags(t) {
-  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[EMAIL:[^\]]+\]/gi, "").replace(/\[CALENDAR:[^\]]+\]/gi, "").replace(/\[VIDEO:[^\]]+\]/gi, "").replace(/\[TASK:[^\]]+\]/gi, "").trim();
+  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[EMAIL:[^\]]+\]/gi, "").replace(/\[CALENDAR:[^\]]+\]/gi, "").replace(/\[VIDEO:[^\]]+\]/gi, "").replace(/\[TASK:[^\]]+\]/gi, "").replace(/\[STAFF_EVENT:[^\]]+\]/gi, "").replace(/\[STAFF_NOTE:[^\]]+\]/gi, "").trim();
 }
 
 export function parseVideoTag(text) {
@@ -179,6 +179,72 @@ export function parseTaskTag(text) {
     fields[key] = val;
   });
   return { title: fields.title || "", due: fields.due || "", category: fields.category || "" };
+}
+
+export function parseStaffEventTags(text) {
+  const re = /\[STAFF_EVENT:\s*([^\]]+)\]/gi;
+  const out = [];
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const fields = {};
+    m[1].split("|").forEach(pair => {
+      const eq = pair.indexOf("=");
+      if (eq === -1) return;
+      const key = pair.slice(0, eq).trim().toLowerCase();
+      const val = pair.slice(eq + 1).trim();
+      fields[key] = val;
+    });
+    out.push({
+      title: fields.title || "",
+      date: fields.date || "",
+      start: fields.start || "",
+      end: fields.end || "",
+      location: fields.location || "",
+      category: fields.category || "Other",
+      repeat: fields.repeat || "",
+      until: fields.until || "",
+      notes: fields.notes || "",
+    });
+  }
+  return out;
+}
+
+export function parseStaffNoteTags(text) {
+  const re = /\[STAFF_NOTE:\s*([^\]]+)\]/gi;
+  const out = [];
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const fields = {};
+    m[1].split("|").forEach(pair => {
+      const eq = pair.indexOf("=");
+      if (eq === -1) return;
+      const key = pair.slice(0, eq).trim().toLowerCase();
+      const val = pair.slice(eq + 1).trim();
+      fields[key] = val;
+    });
+    out.push({ text: fields.text || "" });
+  }
+  return out;
+}
+
+export async function saveStaffEvent(code, ev) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/staff_event_save`, {
+    method: "POST",
+    headers: SB_HEADERS,
+    body: JSON.stringify({ p_code: code, p: ev }),
+  });
+  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || `HTTP ${r.status}`); }
+  return r.json();
+}
+
+export async function saveStaffNote(code, note) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/staff_note_save`, {
+    method: "POST",
+    headers: SB_HEADERS,
+    body: JSON.stringify({ p_code: code, p: note }),
+  });
+  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || `HTTP ${r.status}`); }
+  return r.json();
 }
 
 export async function saveTask(title, due, category) {
