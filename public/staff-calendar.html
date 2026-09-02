@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Victory Baptist Church Calendar</title>
+<style>
+  :root{
+    --gold:#C9A84C; --gold-deep:#a07830; --ink:#1c1a17; --paper:rgba(255,255,255,0.95);
+    --muted:rgba(255,255,255,0.62); --line:rgba(255,255,255,0.14);
+    --service:#C9A84C; --youth:#5aa9e6; --outreach:#69c48a; --meeting:#e08a5a; --other:#b59ad8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,"SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;
+    font-weight:300;color:#fff;
+    background:radial-gradient(1200px 700px at 20% -10%,#2f2a3f 0%,#171522 45%,#0f0e16 100%);
+    background-attachment:fixed;min-height:100vh;
+  }
+  button,input,select,textarea{font-family:inherit;font-size:16px}
+  button{cursor:pointer}
+  .app{max-width:720px;margin:0 auto;padding:18px 14px 90px}
+  .top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .brand h1{font-size:26px;font-weight:600;letter-spacing:-0.03em;line-height:1.1}
+  .brand p{color:var(--muted);font-size:14px;margin-top:4px}
+  .who{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+  .who label{font-size:12px;color:var(--muted)}
+  .who input{width:140px;background:rgba(255,255,255,0.08);border:1px solid var(--line);color:#fff;border-radius:9px;padding:7px 10px;font-size:14px}
+  .tabs{display:flex;gap:6px;background:rgba(255,255,255,0.06);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px}
+  .tabs button{flex:1;background:transparent;border:0;color:var(--muted);padding:9px 4px;border-radius:9px;font-size:15px;font-weight:400}
+  .tabs button.on{background:linear-gradient(135deg,var(--gold),var(--gold-deep));color:#fff;font-weight:500}
+  .card{background:var(--paper);color:var(--ink);border-radius:16px;padding:14px;box-shadow:0 6px 24px rgba(0,0,0,0.25);margin-bottom:12px}
+  .card h2{font-size:17px;font-weight:600;letter-spacing:-0.01em;margin-bottom:8px}
+  .row{display:flex;align-items:center;gap:8px}
+  .spread{justify-content:space-between}
+  .ghost{background:transparent;border:1px solid rgba(0,0,0,0.15);color:var(--ink);border-radius:9px;padding:7px 12px;font-size:14px}
+  .ghost.light{border-color:var(--line);color:#fff}
+  .gold{background:linear-gradient(135deg,var(--gold),var(--gold-deep));border:0;color:#fff;border-radius:10px;padding:10px 16px;font-weight:500}
+  .danger{background:transparent;border:1px solid rgba(200,40,40,0.35);color:#a02020;border-radius:9px;padding:7px 12px;font-size:14px}
+  .small{font-size:13px;color:#6b665e}
+  .month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .month-nav strong{font-size:18px;font-weight:600}
+  .dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:12px;color:#8a8479;margin-bottom:4px}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .day{aspect-ratio:1/1;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:14px;color:var(--ink);padding:0}
+  .day.dim{opacity:0.35}
+  .day.today{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+  .day.sel{background:linear-gradient(135deg,var(--gold),var(--gold-deep));color:#fff}
+  .dots{display:flex;gap:2px;height:5px}
+  .dot{width:5px;height:5px;border-radius:50%}
+  .ev{display:flex;gap:10px;padding:10px 0;border-top:1px solid rgba(0,0,0,0.07);align-items:flex-start}
+  .ev:first-of-type{border-top:0}
+  .bar{width:4px;border-radius:3px;align-self:stretch;flex-shrink:0}
+  .ev .t{font-weight:500;font-size:16px}
+  .ev .m{font-size:13px;color:#6b665e;margin-top:2px}
+  .ev .n{font-size:14px;color:#3f3b35;margin-top:5px;white-space:pre-wrap}
+  .ev .act{margin-left:auto;display:flex;gap:6px;flex-shrink:0}
+  .ev .act button{padding:5px 9px;font-size:13px}
+  .empty{color:#8a8479;font-size:14px;padding:8px 0}
+  .field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+  .field label{font-size:13px;color:#6b665e}
+  .field input,.field select,.field textarea{border:1px solid rgba(0,0,0,0.15);border-radius:9px;padding:9px 10px;background:#fff;color:var(--ink)}
+  .field textarea{min-height:70px;resize:vertical}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:none;align-items:flex-end;justify-content:center;z-index:20}
+  .sheet-bg.open{display:flex}
+  .sheet{background:var(--paper);color:var(--ink);width:100%;max-width:720px;border-radius:18px 18px 0 0;padding:16px 16px 28px;max-height:92vh;overflow:auto}
+  .sheet h2{font-size:18px;font-weight:600;margin-bottom:12px}
+  .note{padding:10px 0;border-top:1px solid rgba(0,0,0,0.07)}
+  .note:first-of-type{border-top:0}
+  .note .b{white-space:pre-wrap;font-size:15px;line-height:1.5}
+  .note .m{font-size:13px;color:#6b665e;margin-top:4px;display:flex;justify-content:space-between;align-items:center}
+  .ai-box{position:relative}
+  .ai-box textarea{width:100%;min-height:110px;border:1px solid rgba(0,0,0,0.15);border-radius:12px;padding:12px 12px 12px 12px;background:#fff;color:var(--ink);resize:vertical}
+  .mic{width:56px;height:56px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--gold),var(--gold-deep));color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(201,168,76,0.35)}
+  .mic.live{animation:pulse 1.2s ease-in-out infinite;background:linear-gradient(135deg,#d9534f,#a02020)}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+  .preview{border:1px solid rgba(201,168,76,0.5);background:#fffbf0;border-radius:12px;padding:12px;margin-top:10px}
+  .preview .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:500}
+  .chip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;color:#fff;margin-left:6px;vertical-align:middle}
+  .status{color:var(--muted);font-size:13px;text-align:center;margin-top:6px}
+  .fab{position:fixed;right:18px;bottom:22px;width:58px;height:58px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--gold),var(--gold-deep));color:#fff;font-size:30px;line-height:1;box-shadow:0 8px 22px rgba(0,0,0,0.35);z-index:10}
+  .toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:#fff;color:var(--ink);padding:10px 16px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.3);font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30}
+  .toast.show{opacity:1}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:#6b665e;margin-top:8px}
+  .legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:var(--c)}
+  @media (max-width:420px){.who input{width:110px}.brand h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="brand">
+      <h1>Victory Baptist Church</h1>
+      <p>Staff calendar and notes. Everyone with this link sees the same board.</p>
+    </div>
+    <div class="who">
+      <label for="who">Your name <a href="#" onclick="signOut();return false" style="color:var(--gold);margin-left:6px">sign out</a></label>
+      <input id="who" placeholder="Pastor" oninput="S.who=this.value;sessionStorage.setItem('vbc_staff_name',this.value)">
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="on" data-tab="cal" onclick="tab('cal')">Calendar</button>
+    <button data-tab="notes" onclick="tab('notes')">Notes</button>
+    <button data-tab="ai" onclick="tab('ai')">Ask Lance</button>
+  </div>
+
+  <!-- CALENDAR -->
+  <div id="tab-cal">
+    <div class="card">
+      <div class="month-nav">
+        <button class="ghost" onclick="shiftMonth(-1)">‹</button>
+        <strong id="monthLabel"></strong>
+        <button class="ghost" onclick="shiftMonth(1)">›</button>
+      </div>
+      <div class="dow"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+      <div class="grid" id="grid"></div>
+      <div class="legend">
+        <span style="--c:var(--service)">Service</span><span style="--c:var(--youth)">Youth</span>
+        <span style="--c:var(--outreach)">Outreach</span><span style="--c:var(--meeting)">Meeting</span><span style="--c:var(--other)">Other</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row spread"><h2 id="dayLabel">Today</h2><button class="ghost" onclick="openEvent(null, S.sel)">Add here</button></div>
+      <div id="dayList"></div>
+    </div>
+    <div class="card">
+      <h2>Next 30 days</h2>
+      <div id="upList"></div>
+    </div>
+  </div>
+
+  <!-- NOTES -->
+  <div id="tab-notes" style="display:none">
+    <div class="card">
+      <h2>Add a staff note</h2>
+      <div class="field"><textarea id="noteText" placeholder="Announcements, reminders, follow ups, things the team needs to know"></textarea></div>
+      <div class="row spread"><span class="small">Posts under the name at the top.</span><button class="gold" onclick="addNote()">Post note</button></div>
+    </div>
+    <div class="card">
+      <h2>Staff notes</h2>
+      <div id="noteList"></div>
+    </div>
+  </div>
+
+  <!-- AI -->
+  <div id="tab-ai" style="display:none">
+    <div class="card">
+      <h2>Speak or type. Lance sets it up.</h2>
+      <p class="small" style="margin-bottom:10px">Example: "Youth rally Saturday the 19th at 6 pm in the gym, Bro. Mike is speaking. Also remind the staff to turn in October schedules by Friday."</p>
+      <div class="ai-box"><textarea id="aiText" placeholder="Tap the mic and talk, or type here"></textarea></div>
+      <div class="row spread" style="margin-top:10px">
+        <button class="mic" id="mic" onclick="toggleMic()" title="Talk">🎙</button>
+        <button class="gold" id="aiGo" onclick="askLance()">Set it up</button>
+      </div>
+      <div class="status" id="aiStatus" style="color:#6b665e"></div>
+      <div id="aiPreview"></div>
+    </div>
+  </div>
+</div>
+
+<div id="gate" style="position:fixed;inset:0;background:radial-gradient(1200px 700px at 20% -10%,#2f2a3f 0%,#171522 45%,#0f0e16 100%);display:none;align-items:center;justify-content:center;z-index:50;padding:20px">
+  <div class="card" style="width:100%;max-width:380px">
+    <h2 style="font-size:20px">Victory Baptist staff calendar</h2>
+    <p class="small" style="margin-bottom:12px">Enter your name and the staff code Pastor gave you.</p>
+    <div class="field"><label>Your name</label><input id="gateName" placeholder="Bro. Mike"></div>
+    <div class="field"><label>Staff code</label><input id="gateCode" type="password" placeholder="Code" onkeydown="if(event.key==='Enter')enter()"></div>
+    <div class="small" id="gateMsg" style="color:#a02020;min-height:18px"></div>
+    <button class="gold" style="width:100%;margin-top:6px" onclick="enter()">Open calendar</button>
+  </div>
+</div>
+<button class="fab" onclick="openEvent(null, S.sel)" title="Add event">+</button>
+<div class="toast" id="toast"></div>
+
+<!-- EVENT SHEET -->
+<div class="sheet-bg" id="sheetBg" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet">
+    <h2 id="sheetTitle">Add event</h2>
+    <input type="hidden" id="f_id">
+    <div class="field"><label>Event</label><input id="f_title" placeholder="Sunday Morning Service"></div>
+    <div class="two">
+      <div class="field"><label>Date</label><input type="date" id="f_date"></div>
+      <div class="field"><label>Category</label>
+        <select id="f_cat"><option>Service</option><option>Youth</option><option>Outreach</option><option>Meeting</option><option>Other</option></select></div>
+    </div>
+    <div class="two">
+      <div class="field"><label>Start</label><input type="time" id="f_start"></div>
+      <div class="field"><label>End</label><input type="time" id="f_end"></div>
+    </div>
+    <div class="field"><label>Location</label><input id="f_loc" placeholder="Main auditorium"></div>
+    <div class="two">
+      <div class="field"><label>Repeats</label>
+        <select id="f_rep"><option value="">Does not repeat</option><option value="weekly">Every week</option></select></div>
+      <div class="field"><label>Until (if repeating)</label><input type="date" id="f_until"></div>
+    </div>
+    <div class="field"><label>Notes for staff</label><textarea id="f_notes" placeholder="Who is responsible, what to prepare, anything the team should know"></textarea></div>
+    <div class="row spread">
+      <button class="danger" id="f_del" onclick="deleteEvent()" style="display:none">Delete</button>
+      <div class="row" style="margin-left:auto"><button class="ghost" onclick="closeSheet()">Cancel</button><button class="gold" onclick="saveEvent()">Save</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY = 'vbc-calendar-v1';
+const COLORS = {Service:'var(--service)',Youth:'var(--youth)',Outreach:'var(--outreach)',Meeting:'var(--meeting)',Other:'var(--other)'};
+const S = { data:{events:[],notes:[]}, view:new Date(), sel:isoDate(new Date()), who:'', rec:null, listening:false };
+
+function isoDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function parseDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function fmtDate(s){ return parseDate(s).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); }
+function fmtTime(t){ if(!t) return ''; const [h,m]=t.split(':').map(Number); const ap=h>=12?'pm':'am'; return ((h%12)||12)+(m?':'+String(m).padStart(2,'0'):'')+' '+ap; }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
+
+/* ---------- backend: Supabase (Victory Baptist Hub) ---------- */
+const SB_URL='https://dtqmzdteomgjresjfrog.supabase.co';
+const SB_KEY='sb_publishable_MUIvsF6NpFjW04mUAlajQw_jVs84rj6';
+S.code=sessionStorage.getItem('vbc_staff_code')||'';
+S.who=sessionStorage.getItem('vbc_staff_name')||'';
+async function rpc(fn,args){
+  const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},body:JSON.stringify(args)});
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.message||('HTTP '+r.status)); }
+  const t=await r.text(); return t?JSON.parse(t):null;
+}
+async function load(){
+  if(!S.code) return false;
+  try{ const d=await rpc('staff_calendar_load',{p_code:S.code}); S.data={events:d.events||[],notes:d.notes||[]}; return true; }
+  catch(e){ if(/Wrong staff code/i.test(e.message)){ S.code=''; sessionStorage.removeItem('vbc_staff_code'); showGate('That code did not match.'); } else toast('Could not reach the calendar: '+e.message); return false; }
+}
+async function mutate(fn){
+  try{ await fn(); } catch(e){ toast('Save failed: '+e.message); }
+  await load(); render();
+}
+function showGate(msg){ document.getElementById('gate').style.display='flex'; document.getElementById('gateMsg').textContent=msg||''; }
+async function enter(){
+  const c=document.getElementById('gateCode').value.trim(), n=document.getElementById('gateName').value.trim();
+  if(!c||!n){ document.getElementById('gateMsg').textContent='Enter your name and the staff code.'; return; }
+  S.code=c; S.who=n; document.getElementById('who').value=n;
+  if(await load()){ sessionStorage.setItem('vbc_staff_code',c); sessionStorage.setItem('vbc_staff_name',n); document.getElementById('gate').style.display='none'; render(); }
+}
+function signOut(){ sessionStorage.clear(); location.reload(); }
+
+/* ---------- occurrences (handles weekly repeats) ---------- */
+function occurrences(from,to){
+  const out=[];
+  for(const e of S.data.events){
+    if(!e.date) continue;
+    if(e.repeat==='weekly'){
+      let d=parseDate(e.date); const until=e.until?parseDate(e.until):parseDate(to);
+      while(d<=until){ const ds=isoDate(d); if(ds>=from&&ds<=to) out.push({...e,date:ds,base:e.date}); d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+7); }
+    } else if(e.date>=from&&e.date<=to) out.push({...e,base:e.date});
+  }
+  return out.sort((a,b)=>(a.date+(a.start||'')).localeCompare(b.date+(b.start||'')));
+}
+
+/* ---------- render ---------- */
+function render(){ renderGrid(); renderDay(); renderUpcoming(); renderNotes(); }
+function renderGrid(){
+  const y=S.view.getFullYear(), m=S.view.getMonth();
+  document.getElementById('monthLabel').textContent=S.view.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
+  const from=isoDate(start), to=isoDate(new Date(y,m,42-first.getDay()));
+  const occ=occurrences(from,to); const byDay={}; occ.forEach(o=>{(byDay[o.date]=byDay[o.date]||[]).push(o)});
+  const today=isoDate(new Date()); let html='';
+  for(let i=0;i<42;i++){
+    const d=new Date(y,m,1-first.getDay()+i), ds=isoDate(d);
+    const cats=[...new Set((byDay[ds]||[]).map(o=>o.cat||'Other'))].slice(0,4);
+    html+=`<button class="day ${d.getMonth()!==m?'dim':''} ${ds===today?'today':''} ${ds===S.sel?'sel':''}" onclick="selectDay('${ds}')">
+      <span>${d.getDate()}</span><span class="dots">${cats.map(c=>`<i class="dot" style="background:${ds===S.sel?'#fff':COLORS[c]}"></i>`).join('')}</span></button>`;
+  }
+  document.getElementById('grid').innerHTML=html;
+}
+function evHTML(o,showDate){
+  const when=(showDate?fmtDate(o.date)+' ':'')+(o.start?fmtTime(o.start)+(o.end?' to '+fmtTime(o.end):''):'All day');
+  return `<div class="ev"><div class="bar" style="background:${COLORS[o.cat]||COLORS.Other}"></div>
+    <div style="flex:1;min-width:0"><div class="t">${esc(o.title)}</div>
+    <div class="m">${when}${o.loc?' · '+esc(o.loc):''}${o.repeat==='weekly'?' · weekly':''}${o.by?' · added by '+esc(o.by):''}</div>
+    ${o.notes?`<div class="n">${esc(o.notes)}</div>`:''}</div>
+    <div class="act"><button class="ghost" onclick="openEvent('${o.id}')">Edit</button></div></div>`;
+}
+function renderDay(){
+  const list=occurrences(S.sel,S.sel);
+  document.getElementById('dayLabel').textContent=fmtDate(S.sel);
+  document.getElementById('dayList').innerHTML=list.length?list.map(o=>evHTML(o,false)).join(''):'<div class="empty">Nothing scheduled. Tap "Add here" to put something on this day.</div>';
+}
+function renderUpcoming(){
+  const t=new Date(), end=new Date(t.getFullYear(),t.getMonth(),t.getDate()+30);
+  const list=occurrences(isoDate(t),isoDate(end));
+  document.getElementById('upList').innerHTML=list.length?list.map(o=>evHTML(o,true)).join(''):'<div class="empty">The next 30 days are open.</div>';
+}
+function renderNotes(){
+  const notes=[...S.data.notes].sort((a,b)=>b.ts-a.ts);
+  document.getElementById('noteList').innerHTML=notes.length?notes.map(n=>`<div class="note">
+    <div class="b" id="nb_${n.id}">${esc(n.text)}</div>
+    <div class="m"><span>${esc(n.by||'Staff')} · ${new Date(n.ts).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}${n.edited?' · edited':''}</span>
+    <span class="row"><button class="ghost" onclick="editNote('${n.id}')">Edit</button><button class="danger" onclick="delNote('${n.id}')">Delete</button></span></div></div>`).join(''):'<div class="empty">No staff notes yet.</div>';
+}
+
+/* ---------- calendar actions ---------- */
+function selectDay(ds){ S.sel=ds; renderGrid(); renderDay(); }
+function shiftMonth(n){ S.view=new Date(S.view.getFullYear(),S.view.getMonth()+n,1); renderGrid(); }
+function tab(t){ document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  ['cal','notes','ai'].forEach(x=>document.getElementById('tab-'+x).style.display=x===t?'':'none'); }
+
+function openEvent(id,date){
+  const e=id?S.data.events.find(x=>x.id===id):null;
+  document.getElementById('sheetTitle').textContent=e?'Edit event':'Add event';
+  document.getElementById('f_id').value=e?e.id:'';
+  document.getElementById('f_title').value=e?e.title:'';
+  document.getElementById('f_date').value=e?e.date:(date||S.sel);
+  document.getElementById('f_cat').value=e?(e.cat||'Other'):'Service';
+  document.getElementById('f_start').value=e?(e.start||''):'';
+  document.getElementById('f_end').value=e?(e.end||''):'';
+  document.getElementById('f_loc').value=e?(e.loc||''):'';
+  document.getElementById('f_rep').value=e?(e.repeat||''):'';
+  document.getElementById('f_until').value=e?(e.until||''):'';
+  document.getElementById('f_notes').value=e?(e.notes||''):'';
+  document.getElementById('f_del').style.display=e?'':'none';
+  document.getElementById('sheetBg').classList.add('open');
+}
+function closeSheet(){ document.getElementById('sheetBg').classList.remove('open'); }
+function readForm(){
+  return { title:document.getElementById('f_title').value.trim(), date:document.getElementById('f_date').value,
+    cat:document.getElementById('f_cat').value, start:document.getElementById('f_start').value, end:document.getElementById('f_end').value,
+    loc:document.getElementById('f_loc').value.trim(), repeat:document.getElementById('f_rep').value, until:document.getElementById('f_until').value,
+    notes:document.getElementById('f_notes').value.trim() };
+}
+async function saveEvent(){
+  const f=readForm(); if(!f.title||!f.date){ toast('Give the event a name and a date.'); return; }
+  const id=document.getElementById('f_id').value;
+  await mutate(()=>rpc('staff_event_save',{p_code:S.code,p:{...f,id,by:S.who}}));
+  S.sel=f.date; S.view=parseDate(f.date); closeSheet(); render(); toast(id?'Event updated':'Event added');
+}
+async function deleteEvent(){
+  const id=document.getElementById('f_id').value; if(!id) return;
+  if(!confirm('Delete this event for everyone?')) return;
+  await mutate(()=>rpc('staff_event_delete',{p_code:S.code,p_id:id})); closeSheet(); toast('Event deleted');
+}
+
+/* ---------- notes ---------- */
+async function addNote(){
+  const t=document.getElementById('noteText').value.trim(); if(!t){ toast('Write the note first.'); return; }
+  await mutate(()=>rpc('staff_note_save',{p_code:S.code,p:{text:t,by:S.who}}));
+  document.getElementById('noteText').value=''; toast('Note posted');
+}
+async function editNote(id){
+  const n=S.data.notes.find(x=>x.id===id); if(!n) return;
+  const t=prompt('Edit note',n.text); if(t===null) return;
+  await mutate(()=>rpc('staff_note_save',{p_code:S.code,p:{id,text:t.trim(),by:S.who}}));
+}
+async function delNote(id){ if(!confirm('Delete this note for everyone?')) return; await mutate(()=>rpc('staff_note_delete',{p_code:S.code,p_id:id})); }
+
+/* ---------- voice ---------- */
+function toggleMic(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ toast('This browser does not support voice. Type instead.'); return; }
+  if(S.listening){ S.rec.stop(); return; }
+  S.rec=new SR(); S.rec.lang='en-US'; S.rec.interimResults=true; S.rec.continuous=true;
+  const box=document.getElementById('aiText'); const base=box.value?box.value.trim()+' ':'';
+  S.rec.onresult=ev=>{ let txt=''; for(let i=0;i<ev.results.length;i++) txt+=ev.results[i][0].transcript+' '; box.value=base+txt.trim(); };
+  S.rec.onend=()=>{ S.listening=false; document.getElementById('mic').classList.remove('live'); document.getElementById('aiStatus').textContent=''; };
+  S.rec.onerror=e=>{ toast('Mic error: '+e.error); };
+  S.rec.start(); S.listening=true; document.getElementById('mic').classList.add('live'); document.getElementById('aiStatus').textContent='Listening. Tap the mic again when you are done.';
+}
+
+/* ---------- AI ---------- */
+async function askLance(){
+  const text=document.getElementById('aiText').value.trim(); if(!text){ toast('Say or type what you want scheduled.'); return; }
+  if(S.listening) S.rec.stop();
+  const btn=document.getElementById('aiGo'), st=document.getElementById('aiStatus'); btn.disabled=true; st.textContent='Lance is setting it up.';
+  const today=new Date(); const soon=occurrences(isoDate(today),isoDate(new Date(today.getFullYear(),today.getMonth()+2,today.getDate())))
+    .slice(0,40).map(o=>`${o.date} ${o.start||''} ${o.title}`).join('\n');
+  try{
+    const r=await fetch(`${SB_URL}/functions/v1/staff-calendar-ai`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
+      body:JSON.stringify({code:S.code,text,today:today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}),existing:soon})});
+    const parsed=await r.json();
+    if(!r.ok||parsed.error) throw new Error(parsed.error||('HTTP '+r.status));
+    showPreview(parsed); st.textContent='Check the details, then add what you want.';
+  }catch(e){ st.textContent='Lance could not set that up: '+e.message; }
+  btn.disabled=false;
+}
+function showPreview(p){
+  const evs=p.events||[], nts=p.notes||[]; let html='';
+  if(p.warning) html+=`<div class="preview" style="border-color:#d9534f;background:#fff4f2"><strong>Heads up:</strong> ${esc(p.warning)}</div>`;
+  evs.forEach((e,i)=>{ html+=`<div class="preview" id="pv_e${i}">
+    <div class="hd"><span>Event<span class="chip" style="background:${COLORS[e.cat]||COLORS.Other}">${esc(e.cat||'Other')}</span></span></div>
+    <div class="field"><input id="pe_title_${i}" value="${esc(e.title)}"></div>
+    <div class="two"><div class="field"><label>Date</label><input type="date" id="pe_date_${i}" value="${esc(e.date)}"></div>
+      <div class="field"><label>Category</label><select id="pe_cat_${i}">${['Service','Youth','Outreach','Meeting','Other'].map(c=>`<option ${c===e.cat?'selected':''}>${c}</option>`).join('')}</select></div></div>
+    <div class="two"><div class="field"><label>Start</label><input type="time" id="pe_start_${i}" value="${esc(e.start)}"></div>
+      <div class="field"><label>End</label><input type="time" id="pe_end_${i}" value="${esc(e.end)}"></div></div>
+    <div class="field"><label>Location</label><input id="pe_loc_${i}" value="${esc(e.loc)}"></div>
+    <div class="two"><div class="field"><label>Repeats</label><select id="pe_rep_${i}"><option value="" ${!e.repeat?'selected':''}>Does not repeat</option><option value="weekly" ${e.repeat==='weekly'?'selected':''}>Every week</option></select></div>
+      <div class="field"><label>Until</label><input type="date" id="pe_until_${i}" value="${esc(e.until)}"></div></div>
+    <div class="field"><label>Notes for staff</label><textarea id="pe_notes_${i}">${esc(e.notes)}</textarea></div>
+    <div class="row" style="justify-content:flex-end"><button class="ghost" onclick="document.getElementById('pv_e${i}').remove()">Skip</button><button class="gold" onclick="acceptEvent(${i})">Add to calendar</button></div></div>`; });
+  nts.forEach((n,i)=>{ html+=`<div class="preview" id="pv_n${i}"><div class="hd"><span>Staff note</span></div>
+    <div class="field"><textarea id="pn_${i}">${esc(n.text)}</textarea></div>
+    <div class="row" style="justify-content:flex-end"><button class="ghost" onclick="document.getElementById('pv_n${i}').remove()">Skip</button><button class="gold" onclick="acceptNote(${i})">Post note</button></div></div>`; });
+  if(!evs.length&&!nts.length) html='<div class="empty">Lance found nothing to schedule in that.</div>';
+  document.getElementById('aiPreview').innerHTML=html;
+}
+async function acceptEvent(i){
+  const g=id=>document.getElementById(id).value;
+  const f={title:g(`pe_title_${i}`).trim(),date:g(`pe_date_${i}`),cat:g(`pe_cat_${i}`),start:g(`pe_start_${i}`),end:g(`pe_end_${i}`),loc:g(`pe_loc_${i}`).trim(),repeat:g(`pe_rep_${i}`),until:g(`pe_until_${i}`),notes:g(`pe_notes_${i}`).trim()};
+  if(!f.title||!f.date){ toast('This one needs a name and a date.'); return; }
+  await mutate(()=>rpc('staff_event_save',{p_code:S.code,p:{...f,by:S.who||'Lance'}}));
+  document.getElementById(`pv_e${i}`).remove(); toast('Added: '+f.title);
+}
+async function acceptNote(i){
+  const t=document.getElementById(`pn_${i}`).value.trim(); if(!t) return;
+  await mutate(()=>rpc('staff_note_save',{p_code:S.code,p:{text:t,by:S.who||'Lance'}}));
+  document.getElementById(`pv_n${i}`).remove(); toast('Note posted');
+}
+
+/* ---------- boot ---------- */
+(async()=>{
+  document.getElementById('who').value=S.who;
+  if(S.code && await load()){ render(); } else showGate('');
+  setInterval(async()=>{ if(S.code && await load()) render(); },20000);
+})();
+</script>
+</body>
+</html>
