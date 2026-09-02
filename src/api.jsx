@@ -107,6 +107,26 @@ export function formatSearchResults(data) {
 export async function readFile(file) {
   const isImage = file.type.startsWith("image/") || file.name.toLowerCase().match(/\.(heic|heif)$/);
   const isPDF = file.type === "application/pdf";
+  const isSpreadsheet = file.name.toLowerCase().match(/\.(xlsx|xls)$/);
+
+  if (isSpreadsheet) {
+    const XLSX = await import("xlsx");
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const wb = XLSX.read(reader.result, { type: "array" });
+          const parts = wb.SheetNames.map(name => {
+            const csv = XLSX.utils.sheet_to_csv(wb.Sheets[name]);
+            return wb.SheetNames.length > 1 ? `--- Sheet: ${name} ---\n${csv}` : csv;
+          });
+          resolve({ name: file.name, type: "text", text: parts.join("\n\n") });
+        } catch (e) { reject(e); }
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  }
 
   if (isImage) {
     // Compress image to stay under 10MB Anthropic limit
