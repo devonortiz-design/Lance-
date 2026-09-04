@@ -478,9 +478,9 @@ async function askLance(){
   if(!typed&&!aiFileText){ toast('Say or type what you want scheduled, or attach a spreadsheet.'); return; }
   if(S.listening) S.rec.stop();
   const btn=document.getElementById('aiGo'), st=document.getElementById('aiStatus'); btn.disabled=true;
+  await load();
   const today=new Date(); const todayLabel=today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  const soon=occurrences(isoDate(today),isoDate(new Date(today.getFullYear(),today.getMonth()+2,today.getDate())))
-    .slice(0,40).map(o=>`${o.date} ${o.start||''} ${o.title}`).join('\n');
+  const soon=S.data.events.slice(0,400).map(e=>`${e.id}|${e.date}|${(e.title||'').replace(/\|/g,'/').replace(/\n/g,' ')}|${e.cat||'Other'}${e.repeat?'|'+e.repeat:''}`).join('\n');
   try{
     if(aiFileText){
       const chunks=chunkSpreadsheetText(aiFileText,15);
@@ -514,9 +514,21 @@ function showPreview(p){
   const evs=p.events||[], nts=p.notes||[]; let html='';
   if(p.reply) html+=`<div class="preview" style="background:#f3f0e8;border-color:rgba(201,168,76,0.4)"><strong>Lance:</strong> ${esc(p.reply)}</div>`;
   if(p.warning) html+=`<div class="preview" style="border-color:#d9534f;background:#fff4f2"><strong>Heads up:</strong> ${esc(p.warning)}</div>`;
-  if(evs.length>1) html+=`<div class="row spread" style="margin:2px 0 8px"><span class="small">${evs.length} events found</span><button class="gold" onclick="acceptAllEvents()" id="addAllBtn">Add all ${evs.length}</button></div>`;
-  evs.forEach((e,i)=>{ html+=`<div class="preview" id="pv_e${i}">
-    <div class="hd"><span>Event<span class="chip" style="background:${COLORS[e.cat]||COLORS.Other}">${esc(e.cat||'Other')}</span></span></div>
+  const addable=evs.filter(e=>e.action!=='delete');
+  if(addable.length>1) html+=`<div class="row spread" style="margin:2px 0 8px"><span class="small">${addable.length} to add or update</span><button class="gold" onclick="acceptAllEvents()" id="addAllBtn">Add/update all ${addable.length}</button></div>`;
+  evs.forEach((e,i)=>{
+    if(e.action==='delete'){
+      html+=`<div class="preview" data-action="delete" id="pv_e${i}" style="border-color:rgba(217,83,79,0.4);background:#fff4f2">
+        <div class="hd"><span>Remove from calendar<span class="chip" style="background:${COLORS[e.cat]||COLORS.Other}">${esc(e.cat||'Other')}</span></span></div>
+        <div style="font-size:14px;color:var(--ink);margin-bottom:10px"><strong>${esc(e.title)}</strong><br><span class="small">${esc(e.date)}${e.repeat?' · '+e.repeat:''}</span></div>
+        <input type="hidden" id="pe_id_${i}" value="${esc(e.id)}">
+        <div class="row" style="justify-content:flex-end"><button class="ghost" onclick="document.getElementById('pv_e${i}').remove()">Keep it</button><button class="danger" onclick="acceptDelete(${i})" style="background:#d9534f;color:#fff;border:0">Remove from calendar</button></div></div>`;
+      return;
+    }
+    const isEdit=e.action==='edit';
+    html+=`<div class="preview" data-action="${isEdit?'edit':'create'}" id="pv_e${i}">
+    <div class="hd"><span>${isEdit?'Update event':'New event'}<span class="chip" style="background:${COLORS[e.cat]||COLORS.Other}">${esc(e.cat||'Other')}</span></span></div>
+    <input type="hidden" id="pe_id_${i}" value="${esc(e.id||'')}">
     <div class="field"><input id="pe_title_${i}" value="${esc(e.title)}"></div>
     <div class="two"><div class="field"><label>Date</label><input type="date" id="pe_date_${i}" value="${esc(e.date)}"></div>
       <div class="field"><label>Category</label><select id="pe_cat_${i}">${['Service','Youth','Outreach','Meeting','Birthday','Anniversary','Other'].map(c=>`<option ${c===e.cat?'selected':''}>${c}</option>`).join('')}</select></div></div>
@@ -526,7 +538,7 @@ function showPreview(p){
     <div class="two"><div class="field"><label>Repeats</label><select id="pe_rep_${i}"><option value="" ${!e.repeat?'selected':''}>Does not repeat</option><option value="weekly" ${e.repeat==='weekly'?'selected':''}>Every week</option><option value="yearly" ${e.repeat==='yearly'?'selected':''}>Every year</option></select></div>
       <div class="field"><label>Until</label><input type="date" id="pe_until_${i}" value="${esc(e.until)}"></div></div>
     <div class="field"><label>Notes for staff</label><textarea id="pe_notes_${i}">${esc(e.notes)}</textarea></div>
-    <div class="row" style="justify-content:flex-end"><button class="ghost" onclick="document.getElementById('pv_e${i}').remove()">Skip</button><button class="gold" onclick="acceptEvent(${i})">Add to calendar</button></div></div>`; });
+    <div class="row" style="justify-content:flex-end"><button class="ghost" onclick="document.getElementById('pv_e${i}').remove()">Skip</button><button class="gold" onclick="acceptEvent(${i})">${isEdit?'Save changes':'Add to calendar'}</button></div></div>`; });
   nts.forEach((n,i)=>{ html+=`<div class="preview" id="pv_n${i}"><div class="hd"><span>Staff note</span></div>
     <div class="field"><textarea id="pn_${i}">${esc(n.text)}</textarea></div>
     <div class="row" style="justify-content:flex-end"><button class="ghost" onclick="document.getElementById('pv_n${i}').remove()">Skip</button><button class="gold" onclick="acceptNote(${i})">Post note</button></div></div>`; });
@@ -535,26 +547,33 @@ function showPreview(p){
 }
 async function acceptEvent(i){
   const g=id=>document.getElementById(id).value;
+  const eid=g(`pe_id_${i}`);
   const f={title:g(`pe_title_${i}`).trim(),date:g(`pe_date_${i}`),cat:g(`pe_cat_${i}`),start:g(`pe_start_${i}`),end:g(`pe_end_${i}`),loc:g(`pe_loc_${i}`).trim(),repeat:g(`pe_rep_${i}`),until:g(`pe_until_${i}`),notes:g(`pe_notes_${i}`).trim()};
   if(!f.title||!f.date){ toast('This one needs a name and a date.'); return; }
-  await mutate(()=>rpc('staff_event_save',{p_code:S.code,p:{...f,by:S.who||'Lance'}}));
-  document.getElementById(`pv_e${i}`).remove(); toast('Added: '+f.title);
+  await mutate(()=>rpc('staff_event_save',{p_code:S.code,p:{...f,id:eid||undefined,by:S.who||'Lance'}}));
+  document.getElementById(`pv_e${i}`).remove(); toast((eid?'Updated: ':'Added: ')+f.title);
+}
+async function acceptDelete(i){
+  const id=document.getElementById(`pe_id_${i}`).value; if(!id) return;
+  await mutate(()=>rpc('staff_event_delete',{p_code:S.code,p_id:id}));
+  document.getElementById(`pv_e${i}`).remove(); toast('Removed from calendar');
 }
 async function acceptAllEvents(){
   const btn=document.getElementById('addAllBtn'); if(btn){btn.disabled=true;}
-  const cards=[...document.querySelectorAll('[id^="pv_e"]')];
+  const cards=[...document.querySelectorAll('[id^="pv_e"]')].filter(c=>c.dataset.action!=='delete');
   let added=0, failed=0;
   for(const card of cards){
     const i=card.id.replace('pv_e','');
     const g=id=>{const el=document.getElementById(id);return el?el.value:''};
+    const eid=g(`pe_id_${i}`);
     const f={title:g(`pe_title_${i}`).trim(),date:g(`pe_date_${i}`),cat:g(`pe_cat_${i}`),start:g(`pe_start_${i}`),end:g(`pe_end_${i}`),loc:g(`pe_loc_${i}`).trim(),repeat:g(`pe_rep_${i}`),until:g(`pe_until_${i}`),notes:g(`pe_notes_${i}`).trim()};
     if(!f.title||!f.date){ failed++; continue; }
-    if(btn) btn.textContent=`Adding ${added+failed+1} of ${cards.length}…`;
-    try{ await rpc('staff_event_save',{p_code:S.code,p:{...f,by:S.who||'Lance'}}); added++; card.remove(); }
+    if(btn) btn.textContent=`Working ${added+failed+1} of ${cards.length}…`;
+    try{ await rpc('staff_event_save',{p_code:S.code,p:{...f,id:eid||undefined,by:S.who||'Lance'}}); added++; card.remove(); }
     catch(e){ failed++; }
   }
   await load(); render();
-  toast(failed?`Added ${added}, ${failed} needs a name or date`:`Added ${added} event${added===1?'':'s'}`);
+  toast(failed?`Done: ${added}, ${failed} needs a name or date`:`Done: ${added} event${added===1?'':'s'}`);
 }
 async function acceptNote(i){
   const t=document.getElementById(`pn_${i}`).value.trim(); if(!t) return;
