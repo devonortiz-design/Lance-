@@ -77,6 +77,8 @@
   .mic{width:56px;height:56px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--gold),var(--gold-deep));color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(201,168,76,0.35)}
   .mic.live{animation:pulse 1.2s ease-in-out infinite;background:linear-gradient(135deg,#d9534f,#a02020)}
   @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spinner .7s linear infinite;vertical-align:-2px;margin-right:7px}
+  @keyframes spinner{to{transform:rotate(360deg)}}
   .preview{border:1px solid rgba(201,168,76,0.5);background:#fffbf0;border-radius:12px;padding:12px;margin-top:10px}
   .preview .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:500}
   .chip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;color:#fff;margin-left:6px;vertical-align:middle}
@@ -477,7 +479,9 @@ async function askLance(){
   const typed=document.getElementById('aiText').value.trim();
   if(!typed&&!aiFileText){ toast('Say or type what you want scheduled, or attach a spreadsheet.'); return; }
   if(S.listening) S.rec.stop();
-  const btn=document.getElementById('aiGo'), st=document.getElementById('aiStatus'); btn.disabled=true;
+  const btn=document.getElementById('aiGo'), st=document.getElementById('aiStatus');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Thinking…';
+  st.textContent='Lance is working on it.';
   await load();
   const today=new Date(); const todayLabel=today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const soon=S.data.events.slice(0,400).map(e=>`${e.id}|${e.date}|${(e.title||'').replace(/\|/g,'/').replace(/\n/g,' ')}|${e.cat||'Other'}${e.repeat?'|'+e.repeat:''}`).join('\n');
@@ -488,6 +492,7 @@ async function askLance(){
       const failedBatches=[]; let lastRaw='';
       for(let i=0;i<chunks.length;i++){
         st.textContent=chunks.length>1?`Reading batch ${i+1} of ${chunks.length}…`:'Lance is reading the spreadsheet.';
+        btn.innerHTML=chunks.length>1?`<span class="spin"></span>Batch ${i+1}/${chunks.length}`:'<span class="spin"></span>Reading…';
         const chunkText=`[SPREADSHEET: ${aiFileName}]\n${chunks[i]}\n[END SPREADSHEET]\n\n${typed||'Add every event in this spreadsheet to the calendar.'}`;
         try{
           const result=await callLanceAI(chunkText,true,soon,todayLabel);
@@ -508,14 +513,16 @@ async function askLance(){
       showPreview(parsed); st.textContent='Check the details, then add what you want.';
     }
   }catch(e){ st.textContent='Lance could not set that up: '+e.message; }
-  btn.disabled=false;
+  btn.disabled=false; btn.textContent='Set it up';
 }
 function showPreview(p){
   const evs=p.events||[], nts=p.notes||[]; let html='';
   if(p.reply) html+=`<div class="preview" style="background:#f3f0e8;border-color:rgba(201,168,76,0.4)"><strong>Lance:</strong> ${esc(p.reply)}</div>`;
   if(p.warning) html+=`<div class="preview" style="border-color:#d9534f;background:#fff4f2"><strong>Heads up:</strong> ${esc(p.warning)}</div>`;
   const addable=evs.filter(e=>e.action!=='delete');
+  const deletable=evs.filter(e=>e.action==='delete');
   if(addable.length>1) html+=`<div class="row spread" style="margin:2px 0 8px"><span class="small">${addable.length} to add or update</span><button class="gold" onclick="acceptAllEvents()" id="addAllBtn">Add/update all ${addable.length}</button></div>`;
+  if(deletable.length>1) html+=`<div class="row spread" style="margin:2px 0 8px"><span class="small" style="color:#a02020">${deletable.length} to remove</span><button onclick="acceptAllDeletes()" id="delAllBtn" style="background:#d9534f;color:#fff;border:0;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer">Remove all ${deletable.length}</button></div>`;
   evs.forEach((e,i)=>{
     if(e.action==='delete'){
       html+=`<div class="preview" data-action="delete" id="pv_e${i}" style="border-color:rgba(217,83,79,0.4);background:#fff4f2">
@@ -557,6 +564,24 @@ async function acceptDelete(i){
   const id=document.getElementById(`pe_id_${i}`).value; if(!id) return;
   await mutate(()=>rpc('staff_event_delete',{p_code:S.code,p_id:id}));
   document.getElementById(`pv_e${i}`).remove(); toast('Removed from calendar');
+}
+async function acceptAllDeletes(){
+  const cards=[...document.querySelectorAll('[data-action="delete"]')];
+  if(!cards.length) return;
+  const names=cards.map(c=>c.querySelector('strong')?.textContent||'an event').slice(0,5).join(', ')+(cards.length>5?`, and ${cards.length-5} more`:'');
+  if(!confirm(`Remove ${cards.length} event${cards.length===1?'':'s'} from the calendar? This cannot be undone.\n\n${names}`)) return;
+  const btn=document.getElementById('delAllBtn'); if(btn) btn.disabled=true;
+  let removed=0, failed=0;
+  for(const card of cards){
+    const i=card.id.replace('pv_e','');
+    const id=document.getElementById(`pe_id_${i}`)?.value;
+    if(!id){ failed++; continue; }
+    if(btn) btn.textContent=`Removing ${removed+failed+1} of ${cards.length}…`;
+    try{ await rpc('staff_event_delete',{p_code:S.code,p_id:id}); removed++; card.remove(); }
+    catch(e){ failed++; }
+  }
+  await load(); render();
+  toast(failed?`Removed ${removed}, ${failed} failed`:`Removed ${removed} event${removed===1?'':'s'}`);
 }
 async function acceptAllEvents(){
   const btn=document.getElementById('addAllBtn'); if(btn){btn.disabled=true;}
