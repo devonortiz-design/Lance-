@@ -388,7 +388,7 @@ function CalendarEventCard({eventData,status,onSend,calConnected}){
   );
 }
 
-const STAFF_CAT_COLOR={Service:"#C9A84C",Youth:"#5A9BE6",Outreach:"#4FAE7A",Meeting:"#E0965A",Other:"#9B87C4"};
+const STAFF_CAT_COLOR={Service:"#C9A84C",Youth:"#5A9BE6",Outreach:"#4FAE7A",Meeting:"#E0965A",Birthday:"#E07A9E",Other:"#9B87C4"};
 
 function StaffEventRow({ev,status,onAdd}){
   const label=[ev.date,ev.start&&fmtStaffTime(ev.start)+(ev.end?`–${fmtStaffTime(ev.end)}`:"")].filter(Boolean).join(" · ");
