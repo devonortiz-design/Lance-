@@ -9,7 +9,7 @@
   :root{
     --gold:#C9A84C; --gold-deep:#a07830; --ink:#1c1a17; --paper:rgba(255,255,255,0.95);
     --muted:rgba(255,255,255,0.62); --line:rgba(255,255,255,0.14);
-    --service:#C9A84C; --youth:#5aa9e6; --outreach:#69c48a; --meeting:#e08a5a; --other:#b59ad8; --birthday:#e07a9e; --anniversary:#8ec4d6;
+    --service:#C9A84C; --youth:#5aa9e6; --outreach:#69c48a; --meeting:#e08a5a; --other:#b59ad8; --birthday:#e07a9e; --anniversary:#8ec4d6; --holiday:#6b9e6b;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -126,7 +126,7 @@
       <div class="grid" id="grid"></div>
       <div class="legend">
         <span style="--c:var(--service)">Service</span><span style="--c:var(--youth)">Youth</span>
-        <span style="--c:var(--outreach)">Outreach</span><span style="--c:var(--meeting)">Meeting</span><span style="--c:var(--birthday)">Birthday</span><span style="--c:var(--anniversary)">Anniversary</span><span style="--c:var(--other)">Other</span>
+        <span style="--c:var(--outreach)">Outreach</span><span style="--c:var(--meeting)">Meeting</span><span style="--c:var(--birthday)">Birthday</span><span style="--c:var(--anniversary)">Anniversary</span><span style="--c:var(--holiday)">Holiday</span><span style="--c:var(--other)">Other</span>
       </div>
     </div>
     <div class="card">
@@ -198,7 +198,7 @@
     <div class="two">
       <div class="field"><label>Date</label><input type="date" id="f_date"></div>
       <div class="field"><label>Category</label>
-        <select id="f_cat" onchange="onCategoryChange(this.value)"><option>Service</option><option>Youth</option><option>Outreach</option><option>Meeting</option><option>Birthday</option><option>Anniversary</option><option>Other</option></select></div>
+        <select id="f_cat" onchange="onCategoryChange(this.value)"><option>Service</option><option>Youth</option><option>Outreach</option><option>Meeting</option><option>Birthday</option><option>Anniversary</option><option>Holiday</option><option>Other</option></select></div>
     </div>
     <div class="two">
       <div class="field"><label>Start</label><input type="time" id="f_start"></div>
@@ -220,7 +220,7 @@
 
 <script>
 const KEY = 'vbc-calendar-v1';
-const COLORS = {Service:'var(--service)',Youth:'var(--youth)',Outreach:'var(--outreach)',Meeting:'var(--meeting)',Birthday:'var(--birthday)',Anniversary:'var(--anniversary)',Other:'var(--other)'};
+const COLORS = {Service:'var(--service)',Youth:'var(--youth)',Outreach:'var(--outreach)',Meeting:'var(--meeting)',Birthday:'var(--birthday)',Anniversary:'var(--anniversary)',Holiday:'var(--holiday)',Other:'var(--other)'};
 const S = { data:{events:[],notes:[]}, view:new Date(), sel:isoDate(new Date()), who:'', rec:null, listening:false };
 
 function isoDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -538,7 +538,7 @@ function showPreview(p){
     <input type="hidden" id="pe_id_${i}" value="${esc(e.id||'')}">
     <div class="field"><input id="pe_title_${i}" value="${esc(e.title)}"></div>
     <div class="two"><div class="field"><label>Date</label><input type="date" id="pe_date_${i}" value="${esc(e.date)}"></div>
-      <div class="field"><label>Category</label><select id="pe_cat_${i}">${['Service','Youth','Outreach','Meeting','Birthday','Anniversary','Other'].map(c=>`<option ${c===e.cat?'selected':''}>${c}</option>`).join('')}</select></div></div>
+      <div class="field"><label>Category</label><select id="pe_cat_${i}">${['Service','Youth','Outreach','Meeting','Birthday','Anniversary','Holiday','Other'].map(c=>`<option ${c===e.cat?'selected':''}>${c}</option>`).join('')}</select></div></div>
     <div class="two"><div class="field"><label>Start</label><input type="time" id="pe_start_${i}" value="${esc(e.start)}"></div>
       <div class="field"><label>End</label><input type="time" id="pe_end_${i}" value="${esc(e.end)}"></div></div>
     <div class="field"><label>Location</label><input id="pe_loc_${i}" value="${esc(e.loc)}"></div>
