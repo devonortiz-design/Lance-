@@ -1036,7 +1036,7 @@ export default function App(){
         const cleanMessages=apiMessages.map(({role,content})=>({role,content}));
         raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile,activeProject);
       }
-      const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
+      const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=(intent==="sermon"||intent==="exam")?true:detectDocumentContent(clean,recentUserIntent(next));
       const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw)}];setMessages(finalMsgs);
       const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}autosaveChat(finalMsgs);msgCount.current+=2;
       saveMessage("assistant",clean).catch(()=>{});
