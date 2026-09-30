@@ -496,6 +496,18 @@ textarea::placeholder{color:var(--text-lo)}
 .lance-ring-cyan{position:absolute;inset:-7px;border-radius:50%;pointer-events:none;opacity:0.55}
 .lance-ring-cyan::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 180deg,transparent 0%,var(--cyan) 18%,transparent 40%,transparent 100%);mask:radial-gradient(circle,transparent 62%,black 63%,black 66%,transparent 67%);-webkit-mask:radial-gradient(circle,transparent 62%,black 63%,black 66%,transparent 67%);animation:ringRotate 5s linear infinite reverse}
 .hud-tick{position:absolute;background:var(--line)}
+.hud-panel{clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.hud-panel-user{clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.hud-corner{position:absolute;width:11px;height:11px;pointer-events:none}
+.hud-corner-tl{top:-1px;left:-1px;border-top:1.5px solid var(--cyan);border-left:1.5px solid var(--cyan)}
+.hud-corner-tr{top:-1px;right:-1px;border-top:1.5px solid var(--cyan);border-right:1.5px solid var(--cyan)}
+.hud-corner-bl{bottom:-1px;left:-1px;border-bottom:1.5px solid var(--cyan);border-left:1.5px solid var(--cyan)}
+.hud-corner-br{bottom:-1px;right:-1px;border-bottom:1.5px solid var(--cyan);border-right:1.5px solid var(--cyan)}
+@keyframes scanSweep{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.scan-line{position:absolute;top:0;left:0;right:0;height:1px;overflow:hidden;opacity:0.5}
+.scan-line::after{content:'';position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,var(--cyan),transparent);animation:scanSweep 3.5s ease-in-out infinite}
+.hud-gauge-track{fill:none;stroke:var(--line);stroke-width:2.5}
+.hud-gauge-fill{fill:none;stroke:var(--gold);stroke-width:2.5;stroke-linecap:round;transition:stroke-dashoffset 400ms cubic-bezier(0.22,1,0.36,1)}
 .wave{display:flex;align-items:center;gap:3px;height:24px;justify-content:center}
 .wave span{width:3px;background:var(--gold);border-radius:2px;animation:waveBar 1.2s ease-in-out infinite}
 .wave span:nth-child(1){height:8px;animation-delay:0s}
@@ -1182,7 +1194,8 @@ export default function App(){
     </div>)}
 
     {/* Header */}
-<div style={{paddingTop:"env(safe-area-inset-top,0px)",background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",borderBottom:"1px solid var(--line)",flexShrink:0}}>
+<div style={{position:"relative",paddingTop:"env(safe-area-inset-top,0px)",background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",borderBottom:"1px solid rgba(58,219,232,0.16)",flexShrink:0}}>
+<span className="hud-corner hud-corner-bl" style={{bottom:"2px"}}/><span className="hud-corner hud-corner-br" style={{bottom:"2px"}}/>
 <div style={{height:"54px",padding:"0 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:"12px"}}>
   <div style={{display:"flex",alignItems:"center",gap:"10px",flexShrink:0}}>
     <div style={{position:"relative",width:"40px",height:"40px",flexShrink:0}}>
@@ -1201,9 +1214,12 @@ export default function App(){
   <div style={{display:"flex",alignItems:"center",gap:"8px",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none",msOverflowStyle:"none",flexShrink:1}}>
         {pinnedConvos.map((c,i)=>(<button key={c.id} onClick={()=>handleLoadConvo(c)} style={{background:activeConvoId===c.id?"rgba(255,122,41,0.18)":"var(--glass)",border:`1px solid ${activeConvoId===c.id?"var(--gold)":"var(--line)"}`,borderRadius:"10px",padding:"6px 10px",cursor:"pointer",fontSize:"13px",color:activeConvoId===c.id?"var(--gold-hi)":"var(--text-mid)",fontFamily:"inherit",maxWidth:"90px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minHeight:"36px",display:"flex",alignItems:"center",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}} title={c.title}>{c.title.slice(0,12)}</button>))}
     <button onClick={()=>setShowSaved(s=>!s)} style={{background:showSaved?"rgba(255,122,41,0.18)":"var(--glass)",border:`1px solid ${showSaved?"var(--gold)":"var(--line)"}`,borderRadius:"10px",padding:"6px 10px",cursor:"pointer",color:showSaved?"var(--gold-hi)":"var(--text-mid)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}><SaveIcon/><span style={{fontSize:"13px",fontWeight:600}}>{allSaved.length}</span></button>
-    <button onClick={()=>setShowTasks(true)} style={{background:openTasks.length>0?"rgba(31,78,150,0.12)":"rgba(255,255,255,0.08)",border:"none",borderRadius:"20px",padding:"5px 10px",color:openTasks.length>0?"#1F4E96":"rgba(255,255,255,0.6)",fontSize:"11px",fontWeight:600,fontFamily:"inherit",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"}}>
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2v8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
-      Tasks{openTasks.length>0?` (${openTasks.length})`:""}
+    <button onClick={()=>setShowTasks(true)} title="Open tasks" style={{background:"var(--glass)",border:"1px solid var(--line)",borderRadius:"50%",width:"34px",height:"34px",padding:0,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",position:"relative",flexShrink:0}}>
+      <svg width="34" height="34" viewBox="0 0 34 34" style={{position:"absolute",inset:0,transform:"rotate(-90deg)"}}>
+        <circle cx="17" cy="17" r="13.5" className="hud-gauge-track"/>
+        <circle cx="17" cy="17" r="13.5" className="hud-gauge-fill" strokeDasharray={2*Math.PI*13.5} strokeDashoffset={2*Math.PI*13.5*(1-Math.min(openTasks.length,5)/5)}/>
+      </svg>
+      <span style={{fontSize:"12px",fontWeight:700,color:openTasks.length>0?"var(--gold-hi)":"var(--text-lo)",fontFamily:"ui-monospace,Menlo,monospace",zIndex:1}}>{openTasks.length}</span>
     </button>
     <button className="teach-toggle" onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} style={{background:teachMode?"rgba(255,122,41,0.18)":"var(--glass)",border:`1px solid ${teachMode?"var(--gold)":"var(--line)"}`,borderRadius:"10px",color:teachMode?"var(--gold-hi)":"var(--text-mid)",padding:"6px 11px",fontFamily:"inherit",fontSize:"13px",fontWeight:600,cursor:"pointer",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>{teachMode?"On":"Off"}</button>
     {speakingIdx!==null&&(<button onClick={stopSpeaking} style={{background:"rgba(255,80,80,0.15)",border:"1px solid rgba(255,80,80,0.4)",borderRadius:"10px",padding:"6px 10px",cursor:"pointer",color:"rgba(255,120,120,0.9)",fontSize:"13px",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}><StopIcon/></button>)}
@@ -1230,7 +1246,8 @@ export default function App(){
   {messages.map((m,i)=>(<div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",animation:"fadeUp 0.2s cubic-bezier(0.22,1,0.36,1) both",marginBottom:"4px"}}>
     {m.role==="assistant"&&(<div style={{flexShrink:0,marginRight:"9px",alignSelf:"flex-end"}}><LanceLogo size={22}/></div>)}
     <div style={{maxWidth:"82%",display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start",gap:"5px"}}>
-      <div style={{padding:"12px 16px",borderRadius:m.role==="user"?"20px 20px 6px 20px":"6px 20px 20px 20px",background:m.role==="user"?"linear-gradient(135deg,#FF8C42,#D4611C)":"var(--glass)",backdropFilter:m.role==="user"?"none":"blur(24px) saturate(1.5)",WebkitBackdropFilter:m.role==="user"?"none":"blur(24px) saturate(1.5)",color:m.role==="user"?"#140A04":"var(--text-hi)",fontSize:"17px",lineHeight:"1.5",whiteSpace:"pre-wrap",fontWeight:400,letterSpacing:"-0.012em",border:m.role==="user"?"none":`1px solid rgba(58,219,232,0.14)`,boxShadow:m.role==="user"?"0 4px 18px rgba(255,122,41,0.22), inset 0 1px 0 rgba(255,255,255,0.18)":"inset 0 1px 0 rgba(255,255,255,0.05), 0 0 20px rgba(58,219,232,0.03)"}}>
+      <div className={m.role==="user"?"hud-panel-user":"hud-panel"} style={{position:"relative",padding:"12px 17px",background:m.role==="user"?"linear-gradient(135deg,#FF8C42,#D4611C)":"var(--glass)",backdropFilter:m.role==="user"?"none":"blur(24px) saturate(1.5)",WebkitBackdropFilter:m.role==="user"?"none":"blur(24px) saturate(1.5)",color:m.role==="user"?"#140A04":"var(--text-hi)",fontSize:"17px",lineHeight:"1.5",whiteSpace:"pre-wrap",fontWeight:400,letterSpacing:"-0.012em",border:m.role==="user"?"none":`1px solid rgba(58,219,232,0.14)`,boxShadow:m.role==="user"?"0 4px 18px rgba(255,122,41,0.22)":"0 0 20px rgba(58,219,232,0.03)"}}>
+        {m.role==="assistant"&&(<><span className="hud-corner hud-corner-tl"/><span className="hud-corner hud-corner-br"/></>)}
         {m.imagePreview&&(<img src={m.imagePreview} alt="screenshot" style={{maxWidth:"100%",borderRadius:"10px",marginBottom:"10px",display:"block"}}/>)}
         {renderText(m.content)}
       </div>
@@ -1270,14 +1287,16 @@ export default function App(){
 </div>
 
     {/* Input */}
-    <div style={{paddingTop:"10px",paddingLeft:"16px",paddingRight:"16px",paddingBottom:"max(16px,env(safe-area-inset-bottom,16px))",background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",borderTop:"1px solid var(--line)",flexShrink:0}}>
+    <div style={{position:"relative",paddingTop:"10px",paddingLeft:"16px",paddingRight:"16px",paddingBottom:"max(16px,env(safe-area-inset-bottom,16px))",background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",borderTop:"1px solid var(--line)",flexShrink:0}}>
+      <div className="scan-line"/>
       {pendingFiles.length>0&&(<div style={{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"8px"}}>
         {pendingFiles.map((f,i)=>(<div key={i} className="file-chip">
           <span>{f.name.length>20?f.name.slice(0,17)+"…":f.name}</span>
           <button onClick={()=>removeFile(i)} title="Remove"><CloseIcon/></button>
         </div>))}
       </div>)}
-      <div style={{display:"flex",alignItems:"flex-end",gap:"8px",background:"rgba(255,255,255,0.07)",borderRadius:"20px",border:"1px solid var(--line)",padding:"9px 10px 9px 14px",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06)"}}>
+      <div className="hud-panel" style={{position:"relative",display:"flex",alignItems:"flex-end",gap:"8px",background:"rgba(255,255,255,0.055)",border:"1px solid rgba(58,219,232,0.16)",padding:"9px 10px 9px 14px",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.05)"}}>
+        <span className="hud-corner hud-corner-tl"/><span className="hud-corner hud-corner-br"/>
         <button onClick={()=>fileRef.current?.click()} style={{background:"none",border:"none",cursor:"pointer",color:"var(--text-lo)",display:"flex",alignItems:"center",padding:"4px",borderRadius:"6px",transition:"color 0.14s",flexShrink:0,minWidth:"36px",minHeight:"36px",justifyContent:"center"}} title="Attach file or screenshot" onMouseEnter={e=>e.currentTarget.style.color="var(--gold)"} onMouseLeave={e=>e.currentTarget.style.color="var(--text-lo)"}><AttachIcon/></button>
         <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.doc,.txt,.xlsx,.xls,.csv,.png,.jpg,.jpeg,.webp,.heic,.heif,.gif,.bmp,image/*" style={{display:"none"}} onChange={e=>{handleFiles(e.target.files);e.target.value=""}}/>
         <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData?.items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder="Message Lance" rows={1} style={{flex:1,border:"none",background:"transparent",fontSize:"17px",color:"var(--text-hi)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:400,letterSpacing:"-0.012em",fontFamily:"inherit"}}/>
