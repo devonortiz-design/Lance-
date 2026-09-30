@@ -177,7 +177,7 @@ function FlyerCard({ onGenerate, generating }) {
     >
       <div
         className="doc-glyph"
-        style={{ background: 'linear-gradient(160deg, #C9A84C, #8A6E2A)' }}
+        style={{ background: 'linear-gradient(160deg, #FF7A29, #8A6E2A)' }}
       >
         <svg
           width="14"
@@ -472,19 +472,20 @@ function PencilIcon(){return(<svg width="12" height="12" viewBox="0 0 12 12" fil
 
 function renderText(t){try{if(!t)return "";return t.replace(/#{1,6} /g,"").replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1").replace(/__(.*?)__/g,"$1").replace(/`(.*?)`/g,"$1").replace(/^[-*] /gm,"\u2022 ").replace(/^---+$/gm,"").replace(/\n\n\n+/g,"\n\n").trim()}catch(e){return String(t||"")}}
 
-const CSS=`:root{--bg0:#06080F;--bg1:#0B111D;--gold:#C9A84C;--gold-hi:#E8C96A;--gold-lo:#8A6E2A;--glass:rgba(255,255,255,0.055);--glass-hi:rgba(255,255,255,0.09);--line:rgba(255,255,255,0.08);--text-hi:#F5F6F8;--text-mid:rgba(245,246,248,0.62);--text-lo:rgba(245,246,248,0.38)}
+const CSS=`:root{--bg0:#050709;--bg1:#0A0D12;--gold:#FF7A29;--gold-hi:#FFA057;--gold-lo:#B85A1F;--cyan:#3ADBE8;--cyan-hi:#7EEAF2;--cyan-lo:#1F8A94;--glass:rgba(255,255,255,0.045);--glass-hi:rgba(255,255,255,0.08);--line:rgba(255,255,255,0.09);--text-hi:#F2F5F7;--text-mid:rgba(242,245,247,0.6);--text-lo:rgba(242,245,247,0.36)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body,#root{height:100%;-webkit-text-size-adjust:100%}
-body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;background:linear-gradient(175deg,#0A0E18 0%,#06080F 60%);position:relative}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 120% 60% at 50% -10%,rgba(201,168,76,0.10),transparent 60%);pointer-events:none;z-index:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;background:linear-gradient(175deg,#080B10 0%,#050709 55%);position:relative}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 130% 55% at 50% -12%,rgba(255,122,41,0.09),transparent 62%),radial-gradient(ellipse 100% 40% at 100% 110%,rgba(58,219,232,0.06),transparent 60%);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:38px 38px;pointer-events:none;z-index:0;mask-image:radial-gradient(ellipse 90% 70% at 50% 20%,black,transparent 75%);-webkit-mask-image:radial-gradient(ellipse 90% 70% at 50% 20%,black,transparent 75%)}
 textarea:focus,button:focus{outline:none}
 textarea::placeholder{color:var(--text-lo)}
 ::-webkit-scrollbar{width:0}
 .glass{background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);border:1px solid var(--line)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulseGlow{0%,100%{filter:drop-shadow(0 0 8px rgba(201,168,76,0.3))}50%{filter:drop-shadow(0 0 18px rgba(201,168,76,0.6))}}
+@keyframes pulseGlow{0%,100%{filter:drop-shadow(0 0 8px rgba(255,122,41,0.3))}50%{filter:drop-shadow(0 0 18px rgba(255,122,41,0.6))}}
 @keyframes dot{0%,80%,100%{transform:scale(0.5);opacity:0.25}40%{transform:scale(1);opacity:1}}
-@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,0.4),0 0 12px rgba(201,168,76,0.2)}50%{box-shadow:0 0 0 6px rgba(201,168,76,0),0 0 20px rgba(201,168,76,0.4)}}
+@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,122,41,0.4),0 0 12px rgba(255,122,41,0.2)}50%{box-shadow:0 0 0 6px rgba(255,122,41,0),0 0 20px rgba(255,122,41,0.4)}}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -492,6 +493,9 @@ textarea::placeholder{color:var(--text-lo)}
 .lance-ring{position:absolute;inset:-4px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity 280ms cubic-bezier(0.22,1,0.36,1)}
 .lance-ring::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0%,var(--gold) 25%,transparent 50%,transparent 100%);mask:radial-gradient(circle,transparent 50%,black 51%,black 54%,transparent 55%);-webkit-mask:radial-gradient(circle,transparent 50%,black 51%,black 54%,transparent 55%);animation:ringRotate 2.4s linear infinite}
 .lance-ring.active{opacity:1}
+.lance-ring-cyan{position:absolute;inset:-7px;border-radius:50%;pointer-events:none;opacity:0.55}
+.lance-ring-cyan::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 180deg,transparent 0%,var(--cyan) 18%,transparent 40%,transparent 100%);mask:radial-gradient(circle,transparent 62%,black 63%,black 66%,transparent 67%);-webkit-mask:radial-gradient(circle,transparent 62%,black 63%,black 66%,transparent 67%);animation:ringRotate 5s linear infinite reverse}
+.hud-tick{position:absolute;background:var(--line)}
 .wave{display:flex;align-items:center;gap:3px;height:24px;justify-content:center}
 .wave span{width:3px;background:var(--gold);border-radius:2px;animation:waveBar 1.2s ease-in-out infinite}
 .wave span:nth-child(1){height:8px;animation-delay:0s}
@@ -501,7 +505,7 @@ textarea::placeholder{color:var(--text-lo)}
 .wave span:nth-child(5){height:10px;animation-delay:0.4s}
 @keyframes waveBar{0%,100%{transform:scaleY(0.5);opacity:0.4}50%{transform:scaleY(1);opacity:1}}
 .speak-btn{border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:6px;border-radius:10px;transition:all 200ms cubic-bezier(0.22,1,0.36,1);opacity:0.5;color:var(--text-mid);min-width:36px;min-height:36px}
-.speak-btn:hover{opacity:1;background:rgba(201,168,76,0.08)}
+.speak-btn:hover{opacity:1;background:rgba(255,122,41,0.08)}
 .speak-btn:active{transform:scale(0.96)}
 .speak-btn.active{opacity:1;color:var(--gold)}
 .teach-toggle{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--line);background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);transition:all 200ms cubic-bezier(0.22,1,0.36,1);color:var(--text-mid);letter-spacing:0.01em;min-height:36px}
@@ -512,7 +516,7 @@ textarea::placeholder{color:var(--text-lo)}
 .file-chip button:hover{color:var(--text-hi)}
 .file-chip button:active{transform:scale(0.96)}
 .copy-btn{border:none;background:none;cursor:pointer;padding:4px 8px;border-radius:10px;font-size:11px;font-weight:600;font-family:inherit;transition:all 200ms cubic-bezier(0.22,1,0.36,1);opacity:0.5;color:var(--text-mid);letter-spacing:0.08em;text-transform:uppercase;min-height:28px}
-.copy-btn:hover{opacity:1;background:rgba(201,168,76,0.08)}
+.copy-btn:hover{opacity:1;background:rgba(255,122,41,0.08)}
 .copy-btn:active{transform:scale(0.96)}
 .copy-btn.copied{opacity:1;color:var(--gold)}
 .mic-btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;transition:all 200ms cubic-bezier(0.22,1,0.36,1);flex-shrink:0}
@@ -524,7 +528,7 @@ textarea::placeholder{color:var(--text-lo)}
 .saved-item{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:background 180ms cubic-bezier(0.22,1,0.36,1);color:var(--text-mid);font-size:15px;letter-spacing:-0.01em}
 .saved-item:hover{background:rgba(255,255,255,0.04)}
 .saved-item:active{transform:scale(0.99)}
-.saved-item.active{background:rgba(201,168,76,0.08);color:var(--text-hi);border-left:2px solid var(--gold)}
+.saved-item.active{background:rgba(255,122,41,0.08);color:var(--text-hi);border-left:2px solid var(--gold)}
 /* HUD Grid Overlay */
 body::after {
   content: '';
@@ -534,8 +538,8 @@ body::after {
   width: 100%;
   height: 100%;
   background-image: 
-    repeating-linear-gradient(0deg, transparent, transparent 55px, rgba(201,168,76,0.028) 55px, rgba(201,168,76,0.028) 56px),
-    repeating-linear-gradient(90deg, transparent, transparent 55px, rgba(201,168,76,0.028) 55px, rgba(201,168,76,0.028) 56px);
+    repeating-linear-gradient(0deg, transparent, transparent 55px, rgba(255,122,41,0.028) 55px, rgba(255,122,41,0.028) 56px),
+    repeating-linear-gradient(90deg, transparent, transparent 55px, rgba(255,122,41,0.028) 55px, rgba(255,122,41,0.028) 56px);
   mask-image: radial-gradient(ellipse 100% 70% at 50% 0%, black, transparent 85%);
   -webkit-mask-image: radial-gradient(ellipse 100% 70% at 50% 0%, black, transparent 85%);
   pointer-events: none;
@@ -599,7 +603,7 @@ body::after {
 }
 
 .file-tile:hover {
-  box-shadow: 0 0 0 1px rgba(201,168,76,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+  box-shadow: 0 0 0 1px rgba(255,122,41,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
 /* Document Glyph */
@@ -639,7 +643,7 @@ body::after {
 }
 
 .hist-item.current {
-  background: rgba(201,168,76,0.10);
+  background: rgba(255,122,41,0.10);
   color: var(--text-hi);
 }
 
@@ -700,7 +704,7 @@ body::after {
 .file-tile:disabled{opacity:0.7}
 .app-icon{font-family:inherit}
 .ghost-btn{font-family:inherit}
-.proj-row.current{background:rgba(201,168,76,0.10);color:var(--text-hi)}
+.proj-row.current{background:rgba(255,122,41,0.10);color:var(--text-hi)}
 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}}`;
 
@@ -1086,7 +1090,7 @@ export default function App(){
   <div style={{height:"100%",display:"flex",flexDirection:"column",background:"transparent",position:"relative",zIndex:1}} onDragOver={e=>{e.preventDefault();setDragOver(true)}} onDragLeave={()=>setDragOver(false)} onDrop={onDrop}>
 
     {/* Drag overlay */}
-    {dragOver&&(<div style={{position:"fixed",inset:0,background:"rgba(201,168,76,0.10)",border:"2px dashed rgba(201,168,76,0.5)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><div style={{color:"#fff",fontSize:"18px",fontWeight:600}}>Drop file or screenshot</div></div>)}
+    {dragOver&&(<div style={{position:"fixed",inset:0,background:"rgba(255,122,41,0.10)",border:"2px dashed rgba(255,122,41,0.5)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><div style={{color:"#fff",fontSize:"18px",fontWeight:600}}>Drop file or screenshot</div></div>)}
 
     {showTasks&&(<TasksPanel tasks={openTasks} onClose={()=>setShowTasks(false)} onComplete={handleCompleteTask} onDelete={handleDeleteTask}/>)}
 
@@ -1181,23 +1185,27 @@ export default function App(){
 <div style={{paddingTop:"env(safe-area-inset-top,0px)",background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",borderBottom:"1px solid var(--line)",flexShrink:0}}>
 <div style={{height:"54px",padding:"0 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:"12px"}}>
   <div style={{display:"flex",alignItems:"center",gap:"10px",flexShrink:0}}>
-    <div style={{position:"relative",width:"28px",height:"28px",flexShrink:0}}>
-      <LanceLogo size={28}/>
+    <div style={{position:"relative",width:"40px",height:"40px",flexShrink:0}}>
+      <div className="lance-ring-cyan"/>
+      <LanceLogo size={40}/>
       <div className={`lance-ring${(listening||teachMode||speakingIdx!==null)?" active":""}`}/>
     </div>
     <div>
-      <div style={{fontSize:"17px",fontWeight:600,color:"var(--text-hi)",letterSpacing:"-0.02em",lineHeight:1.1}}>Lance</div>
-      <div style={{fontSize:"11px",color:"var(--text-lo)",fontWeight:600,letterSpacing:"0.08em",textTransform:"uppercase",lineHeight:1.2}}>{activeProject?activeProject.name:"Personal Agent"}</div>
+      <div style={{display:"flex",alignItems:"center",gap:"7px"}}>
+        <div style={{fontSize:"17px",fontWeight:700,color:"var(--text-hi)",letterSpacing:"0.01em",lineHeight:1.1}}>LANCE</div>
+        <div style={{width:"5px",height:"5px",borderRadius:"50%",background:"var(--cyan)",boxShadow:"0 0 6px var(--cyan)",animation:"pulseGlow 2.2s ease-in-out infinite"}}/>
+      </div>
+      <div style={{fontSize:"10.5px",color:"var(--text-lo)",fontWeight:600,letterSpacing:"0.12em",textTransform:"uppercase",lineHeight:1.2,fontFamily:"ui-monospace,Menlo,monospace"}}>{activeProject?activeProject.name:"Personal Agent · Online"}</div>
     </div>
   </div>
   <div style={{display:"flex",alignItems:"center",gap:"8px",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none",msOverflowStyle:"none",flexShrink:1}}>
-        {pinnedConvos.map((c,i)=>(<button key={c.id} onClick={()=>handleLoadConvo(c)} style={{background:activeConvoId===c.id?"rgba(201,168,76,0.18)":"var(--glass)",border:`1px solid ${activeConvoId===c.id?"var(--gold)":"var(--line)"}`,borderRadius:"10px",padding:"6px 10px",cursor:"pointer",fontSize:"13px",color:activeConvoId===c.id?"var(--gold-hi)":"var(--text-mid)",fontFamily:"inherit",maxWidth:"90px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minHeight:"36px",display:"flex",alignItems:"center",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}} title={c.title}>{c.title.slice(0,12)}</button>))}
-    <button onClick={()=>setShowSaved(s=>!s)} style={{background:showSaved?"rgba(201,168,76,0.18)":"var(--glass)",border:`1px solid ${showSaved?"var(--gold)":"var(--line)"}`,borderRadius:"10px",padding:"6px 10px",cursor:"pointer",color:showSaved?"var(--gold-hi)":"var(--text-mid)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}><SaveIcon/><span style={{fontSize:"13px",fontWeight:600}}>{allSaved.length}</span></button>
+        {pinnedConvos.map((c,i)=>(<button key={c.id} onClick={()=>handleLoadConvo(c)} style={{background:activeConvoId===c.id?"rgba(255,122,41,0.18)":"var(--glass)",border:`1px solid ${activeConvoId===c.id?"var(--gold)":"var(--line)"}`,borderRadius:"10px",padding:"6px 10px",cursor:"pointer",fontSize:"13px",color:activeConvoId===c.id?"var(--gold-hi)":"var(--text-mid)",fontFamily:"inherit",maxWidth:"90px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minHeight:"36px",display:"flex",alignItems:"center",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}} title={c.title}>{c.title.slice(0,12)}</button>))}
+    <button onClick={()=>setShowSaved(s=>!s)} style={{background:showSaved?"rgba(255,122,41,0.18)":"var(--glass)",border:`1px solid ${showSaved?"var(--gold)":"var(--line)"}`,borderRadius:"10px",padding:"6px 10px",cursor:"pointer",color:showSaved?"var(--gold-hi)":"var(--text-mid)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}><SaveIcon/><span style={{fontSize:"13px",fontWeight:600}}>{allSaved.length}</span></button>
     <button onClick={()=>setShowTasks(true)} style={{background:openTasks.length>0?"rgba(31,78,150,0.12)":"rgba(255,255,255,0.08)",border:"none",borderRadius:"20px",padding:"5px 10px",color:openTasks.length>0?"#1F4E96":"rgba(255,255,255,0.6)",fontSize:"11px",fontWeight:600,fontFamily:"inherit",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"}}>
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2v8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
       Tasks{openTasks.length>0?` (${openTasks.length})`:""}
     </button>
-    <button className="teach-toggle" onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} style={{background:teachMode?"rgba(201,168,76,0.18)":"var(--glass)",border:`1px solid ${teachMode?"var(--gold)":"var(--line)"}`,borderRadius:"10px",color:teachMode?"var(--gold-hi)":"var(--text-mid)",padding:"6px 11px",fontFamily:"inherit",fontSize:"13px",fontWeight:600,cursor:"pointer",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>{teachMode?"On":"Off"}</button>
+    <button className="teach-toggle" onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} style={{background:teachMode?"rgba(255,122,41,0.18)":"var(--glass)",border:`1px solid ${teachMode?"var(--gold)":"var(--line)"}`,borderRadius:"10px",color:teachMode?"var(--gold-hi)":"var(--text-mid)",padding:"6px 11px",fontFamily:"inherit",fontSize:"13px",fontWeight:600,cursor:"pointer",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>{teachMode?"On":"Off"}</button>
     {speakingIdx!==null&&(<button onClick={stopSpeaking} style={{background:"rgba(255,80,80,0.15)",border:"1px solid rgba(255,80,80,0.4)",borderRadius:"10px",padding:"6px 10px",cursor:"pointer",color:"rgba(255,120,120,0.9)",fontSize:"13px",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}><StopIcon/></button>)}
     {messages.length>0&&(<button onClick={clearChat} style={{background:"var(--glass)",border:"1px solid var(--line)",borderRadius:"10px",cursor:"pointer",fontSize:"13px",color:"var(--text-mid)",fontFamily:"inherit",padding:"6px 11px",fontWeight:600,minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>New</button>)}
   </div>
@@ -1222,7 +1230,7 @@ export default function App(){
   {messages.map((m,i)=>(<div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",animation:"fadeUp 0.2s cubic-bezier(0.22,1,0.36,1) both",marginBottom:"4px"}}>
     {m.role==="assistant"&&(<div style={{flexShrink:0,marginRight:"9px",alignSelf:"flex-end"}}><LanceLogo size={22}/></div>)}
     <div style={{maxWidth:"82%",display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start",gap:"5px"}}>
-      <div style={{padding:"12px 16px",borderRadius:m.role==="user"?"20px 20px 6px 20px":"6px 20px 20px 20px",background:m.role==="user"?"linear-gradient(135deg,#D4B45C,#A8863A)":"var(--glass)",backdropFilter:m.role==="user"?"none":"blur(24px) saturate(1.5)",WebkitBackdropFilter:m.role==="user"?"none":"blur(24px) saturate(1.5)",color:m.role==="user"?"#0B0E16":"var(--text-hi)",fontSize:"17px",lineHeight:"1.5",whiteSpace:"pre-wrap",fontWeight:400,letterSpacing:"-0.012em",border:m.role==="user"?"none":`1px solid var(--line)`,boxShadow:m.role==="user"?"0 4px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.18)":"inset 0 1px 0 rgba(255,255,255,0.06)"}}>
+      <div style={{padding:"12px 16px",borderRadius:m.role==="user"?"20px 20px 6px 20px":"6px 20px 20px 20px",background:m.role==="user"?"linear-gradient(135deg,#FF8C42,#D4611C)":"var(--glass)",backdropFilter:m.role==="user"?"none":"blur(24px) saturate(1.5)",WebkitBackdropFilter:m.role==="user"?"none":"blur(24px) saturate(1.5)",color:m.role==="user"?"#140A04":"var(--text-hi)",fontSize:"17px",lineHeight:"1.5",whiteSpace:"pre-wrap",fontWeight:400,letterSpacing:"-0.012em",border:m.role==="user"?"none":`1px solid rgba(58,219,232,0.14)`,boxShadow:m.role==="user"?"0 4px 18px rgba(255,122,41,0.22), inset 0 1px 0 rgba(255,255,255,0.18)":"inset 0 1px 0 rgba(255,255,255,0.05), 0 0 20px rgba(58,219,232,0.03)"}}>
         {m.imagePreview&&(<img src={m.imagePreview} alt="screenshot" style={{maxWidth:"100%",borderRadius:"10px",marginBottom:"10px",display:"block"}}/>)}
         {renderText(m.content)}
       </div>
@@ -1255,7 +1263,7 @@ export default function App(){
   {loading&&(<div style={{display:"flex",alignItems:"flex-end",gap:"9px",animation:"fadeUp 0.18s cubic-bezier(0.22,1,0.36,1) both"}}>
     <div style={{flexShrink:0}}><LanceLogo size={22}/></div>
     <div style={{padding:"12px 18px",borderRadius:"6px 20px 20px 20px",background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",border:"1px solid var(--line)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06)",display:"flex",gap:"6px",alignItems:"center"}}>
-      {[0,1,2].map(i=>(<div key={i} style={{width:"6px",height:"6px",borderRadius:"50%",background:"var(--gold)",filter:"drop-shadow(0 0 4px rgba(201,168,76,0.6))",animation:`dot 1.2s ease-in-out ${i*0.2}s infinite`}}/>))}
+      {[0,1,2].map(i=>(<div key={i} style={{width:"6px",height:"6px",borderRadius:"50%",background:"var(--gold)",filter:"drop-shadow(0 0 4px rgba(255,122,41,0.6))",animation:`dot 1.2s ease-in-out ${i*0.2}s infinite`}}/>))}
     </div>
   </div>)}
   <div ref={bottomRef}/>
@@ -1279,7 +1287,7 @@ export default function App(){
         <button className={`mic-btn${listening?" listening":" idle"}`} onClick={toggleMic} title={listening?"Stop":"Talk to Lance"}>
           <MicIcon/>
         </button>
-        <button onClick={()=>send()} disabled={(!input.trim()&&pendingFiles.length===0)||loading} style={{width:"36px",height:"36px",borderRadius:"50%",background:(input.trim()||pendingFiles.length>0)&&!loading?"linear-gradient(135deg,#D4B45C,#A8863A)":"var(--glass)",border:"none",cursor:(input.trim()||pendingFiles.length>0)&&!loading?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:(input.trim()||pendingFiles.length>0)&&!loading?"#0B0E16":"var(--text-lo)",boxShadow:(input.trim()||pendingFiles.length>0)&&!loading?"0 3px 12px rgba(201,168,76,0.4)":"none",transition:"all 200ms cubic-bezier(0.22,1,0.36,1)",transform:"scale(1)"}} onMouseDown={e=>e.currentTarget.style.transform="scale(0.96)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"} onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}><SendIcon/></button>
+        <button onClick={()=>send()} disabled={(!input.trim()&&pendingFiles.length===0)||loading} style={{width:"36px",height:"36px",borderRadius:"50%",background:(input.trim()||pendingFiles.length>0)&&!loading?"linear-gradient(135deg,#D4B45C,#A8863A)":"var(--glass)",border:"none",cursor:(input.trim()||pendingFiles.length>0)&&!loading?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:(input.trim()||pendingFiles.length>0)&&!loading?"#0B0E16":"var(--text-lo)",boxShadow:(input.trim()||pendingFiles.length>0)&&!loading?"0 3px 12px rgba(255,122,41,0.4)":"none",transition:"all 200ms cubic-bezier(0.22,1,0.36,1)",transform:"scale(1)"}} onMouseDown={e=>e.currentTarget.style.transform="scale(0.96)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"} onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}><SendIcon/></button>
       </div>
     </div>
   </div></>);
