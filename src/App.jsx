@@ -750,6 +750,7 @@ export default function App(){
   const[videoStateByIdx,setVideoStateByIdx]=useState({});
   const[micLevels,setMicLevels]=useState([0,0,0,0,0]);
   const micCtxRef=useRef(null);const micStreamRef=useRef(null);const micAnalyserRef=useRef(null);const micAnimRef=useRef(null);
+  const interruptRecRef=useRef(null);
   const[staffEventStatusByIdx,setStaffEventStatusByIdx]=useState({});
   const[staffNoteStatusByIdx,setStaffNoteStatusByIdx]=useState({});
   const[openTasks,setOpenTasks]=useState([]);
@@ -800,9 +801,36 @@ export default function App(){
 
   const stopSpeaking=useCallback(()=>{
     if(audioRef.current){audioRef.current.pause();audioRef.current=null}
+    if(interruptRecRef.current){try{interruptRecRef.current.abort()}catch(e){}interruptRecRef.current=null}
     setSpeakingIdx(null);setLoadingIdx(null);
   },[]);
 
+  const stopInterruptListener=useCallback(()=>{
+    if(interruptRecRef.current){
+      try{interruptRecRef.current.onspeechstart=null;interruptRecRef.current.onresult=null;interruptRecRef.current.onerror=null;interruptRecRef.current.onend=null;interruptRecRef.current.abort()}catch(e){}
+      interruptRecRef.current=null;
+    }
+  },[]);
+  const startInterruptListener=useCallback(()=>{
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR)return;
+    try{
+      const rec=new SR();rec.lang="en-US";rec.continuous=true;rec.interimResults=true;
+      const barge=()=>{
+        if(!interruptRecRef.current)return; // already torn down, ignore stray events
+        stopInterruptListener();
+        if(audioRef.current){try{audioRef.current.pause()}catch(e){}}
+        setSpeakingIdx(null);setLoadingIdx(null);
+        startListening();
+      };
+      rec.onspeechstart=barge;
+      rec.onresult=barge; // fallback for browsers that skip onspeechstart
+      rec.onerror=()=>{interruptRecRef.current=null};
+      rec.onend=()=>{interruptRecRef.current=null};
+      interruptRecRef.current=rec;
+      rec.start();
+    }catch(e){/* barge-in is a nice-to-have, voice still works without it */}
+  },[stopInterruptListener]);
   const speakText=useCallback(async(text,idx)=>{
     stopSpeaking();setLoadingIdx(idx);
     try{
@@ -810,19 +838,20 @@ export default function App(){
       if(res.ok&&res.headers.get("content-type")?.includes("audio")){
         const blob=await res.blob();const url=URL.createObjectURL(blob);
         const audio=new Audio(url);
-        audio.onplay=()=>{setLoadingIdx(null);setSpeakingIdx(idx)};
-        audio.onended=()=>{setSpeakingIdx(null);audioRef.current=null;URL.revokeObjectURL(url);if(voiceModeRef.current){setTimeout(()=>startListening(),700)}};
-        audio.onerror=()=>{setSpeakingIdx(null);audioRef.current=null};
+        audio.onplay=()=>{setLoadingIdx(null);setSpeakingIdx(idx);if(voiceModeRef.current)startInterruptListener()};
+        audio.onended=()=>{stopInterruptListener();setSpeakingIdx(null);audioRef.current=null;URL.revokeObjectURL(url);if(voiceModeRef.current){setTimeout(()=>startListening(),700)}};
+        audio.onerror=()=>{stopInterruptListener();setSpeakingIdx(null);audioRef.current=null};
         audioRef.current=audio;audio.play();
       }else{
         setLoadingIdx(null);setSpeakingIdx(idx);
+        if(voiceModeRef.current)startInterruptListener();
         const utt=new SpeechSynthesisUtterance(text.slice(0,2000));
-        utt.rate=0.95;utt.onend=()=>{setSpeakingIdx(null);if(voiceModeRef.current){setTimeout(()=>startListening(),700)}};
+        utt.rate=0.95;utt.onend=()=>{stopInterruptListener();setSpeakingIdx(null);if(voiceModeRef.current){setTimeout(()=>startListening(),700)}};
         window.speechSynthesis.speak(utt);
         audioRef.current={pause:()=>window.speechSynthesis.cancel()};
       }
     }catch(e){setLoadingIdx(null);setSpeakingIdx(null)}
-  },[stopSpeaking]);
+  },[stopSpeaking,startInterruptListener,stopInterruptListener]);
 
   const stopMicMeter=useCallback(()=>{
     if(micAnimRef.current)cancelAnimationFrame(micAnimRef.current);
