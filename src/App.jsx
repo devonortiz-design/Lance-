@@ -751,6 +751,7 @@ export default function App(){
   const[micLevels,setMicLevels]=useState([0,0,0,0,0]);
   const micCtxRef=useRef(null);const micStreamRef=useRef(null);const micAnalyserRef=useRef(null);const micAnimRef=useRef(null);
   const interruptRecRef=useRef(null);
+  const voiceAudioUnlockRef=useRef(null);
   const[micMuted,setMicMuted]=useState(false);
   const micMutedRef=useRef(false);
   useEffect(()=>{micMutedRef.current=micMuted},[micMuted]);
@@ -841,11 +842,14 @@ export default function App(){
       const res=await fetch(TTS_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
       if(res.ok&&res.headers.get("content-type")?.includes("audio")){
         const blob=await res.blob();const url=URL.createObjectURL(blob);
-        const audio=new Audio(url);
+        // Reuse the gesture-unlocked element from voice mode if we have one -- a fresh
+        // Audio() here has no tie to any user gesture and iOS will silently refuse to play it.
+        const audio=voiceModeRef.current&&voiceAudioUnlockRef.current?voiceAudioUnlockRef.current:new Audio();
+        audio.src=url;
         audio.onplay=()=>{setLoadingIdx(null);setSpeakingIdx(idx);if(voiceModeRef.current)startInterruptListener()};
-        audio.onended=()=>{stopInterruptListener();setSpeakingIdx(null);audioRef.current=null;URL.revokeObjectURL(url);if(voiceModeRef.current){setTimeout(()=>startListening(),700)}};
-        audio.onerror=()=>{stopInterruptListener();setSpeakingIdx(null);audioRef.current=null};
-        audioRef.current=audio;audio.play();
+        audio.onended=()=>{stopInterruptListener();setSpeakingIdx(null);if(audioRef.current===audio)audioRef.current=null;URL.revokeObjectURL(url);if(voiceModeRef.current){setTimeout(()=>startListening(),700)}};
+        audio.onerror=()=>{stopInterruptListener();setSpeakingIdx(null);if(audioRef.current===audio)audioRef.current=null};
+        audioRef.current=audio;audio.play().catch(()=>{setSpeakingIdx(null);setLoadingIdx(null)});
       }else{
         setLoadingIdx(null);setSpeakingIdx(idx);
         if(voiceModeRef.current)startInterruptListener();
@@ -912,6 +916,18 @@ export default function App(){
     }
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!SR){alert("Try Safari on iPhone for voice conversation.");return}
+    // Unlock audio playback for the whole voice session right here, inside the real tap.
+    // iOS only allows autoplay-free audio on elements that were played during an actual
+    // user gesture -- a brand new Audio() built later when a reply comes back is not tied
+    // to any gesture and gets silently blocked. Playing a silent clip on THIS element, right
+    // now, and reusing this same element for every reply in the session keeps it unlocked.
+    if(!voiceAudioUnlockRef.current){
+      const a=new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAAAAAAAA");
+      a.play().catch(()=>{});
+      voiceAudioUnlockRef.current=a;
+    }else{
+      voiceAudioUnlockRef.current.play().catch(()=>{});
+    }
     setTeachMode(true);startListening();
   },[teachMode,listening,startListening,stopSpeaking]);
 
