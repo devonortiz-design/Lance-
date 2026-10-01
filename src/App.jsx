@@ -73,6 +73,15 @@ function chatGroupLabel(d){
   return "Earlier";
 }
 
+function greeting(){
+  const h=new Date().getHours();
+  if(h<5)return "Still up";
+  if(h<12)return "Good morning";
+  if(h<17)return "Good afternoon";
+  if(h<21)return "Good evening";
+  return "Good evening";
+}
+
 function recentUserIntent(msgs){
   try{
     const userTexts=msgs.filter(m=>m.role==="user").slice(-3).map(m=>typeof m.content==="string"?m.content:"");
@@ -293,7 +302,7 @@ function TextSentCard({status,onSend,scheduled}){
     }}>
       <div style={{
         width:"36px",height:"36px",borderRadius:"10px",flexShrink:0,
-        background:status==="sent"?"linear-gradient(160deg,#2E9E5B,#1F7A44)":"linear-gradient(160deg,#1F4E96,#0F2A52)",
+        background:status==="sent"?"linear-gradient(160deg,#2E9E5B,#1F7A44)":"linear-gradient(160deg,#FF8C42,#D4611C)",
         display:"flex",alignItems:"center",justifyContent:"center",
       }}>
         {status==="sent"?(
@@ -377,7 +386,7 @@ function StaffNoteCard({note,status,onAdd}){
 function TaskAddedCard({title,due}){
   return(
     <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",marginTop:"6px",background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",maxWidth:"280px",boxShadow:"0 2px 12px rgba(0,0,0,0.1)"}}>
-      <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"linear-gradient(160deg,#1F4E96,#0F2A52)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+      <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"linear-gradient(160deg,#FF8C42,#D4611C)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5h9M7.5 3v9" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>
       </div>
       <div><div style={{fontSize:"13px",fontWeight:600,color:"#1a2340"}}>Added to your list</div><div style={{fontSize:"11px",color:"#6B7280"}}>{title}{due?` -- due ${due}`:""}</div></div>
@@ -477,7 +486,6 @@ const CSS=`:root{--bg0:#050709;--bg1:#0A0D12;--gold:#FF7A29;--gold-hi:#FFA057;--
 html,body,#root{height:100%;-webkit-text-size-adjust:100%}
 body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;background:linear-gradient(175deg,#080B10 0%,#050709 55%);position:relative}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 130% 55% at 50% -12%,rgba(255,122,41,0.09),transparent 62%),radial-gradient(ellipse 100% 40% at 100% 110%,rgba(58,219,232,0.06),transparent 60%);pointer-events:none;z-index:0}
-body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:38px 38px;pointer-events:none;z-index:0;mask-image:radial-gradient(ellipse 90% 70% at 50% 20%,black,transparent 75%);-webkit-mask-image:radial-gradient(ellipse 90% 70% at 50% 20%,black,transparent 75%)}
 textarea:focus,button:focus{outline:none}
 textarea::placeholder{color:var(--text-lo)}
 ::-webkit-scrollbar{width:0}
@@ -496,16 +504,13 @@ textarea::placeholder{color:var(--text-lo)}
 .lance-ring-cyan{position:absolute;inset:-7px;border-radius:50%;pointer-events:none;opacity:0.55}
 .lance-ring-cyan::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 180deg,transparent 0%,var(--cyan) 18%,transparent 40%,transparent 100%);mask:radial-gradient(circle,transparent 62%,black 63%,black 66%,transparent 67%);-webkit-mask:radial-gradient(circle,transparent 62%,black 63%,black 66%,transparent 67%);animation:ringRotate 5s linear infinite reverse}
 .hud-tick{position:absolute;background:var(--line)}
-.hud-panel{clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
-.hud-panel-user{clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.hud-panel{clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%)}
+.hud-panel-user{clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%)}
 .hud-corner{position:absolute;width:11px;height:11px;pointer-events:none}
 .hud-corner-tl{top:-1px;left:-1px;border-top:1.5px solid var(--cyan);border-left:1.5px solid var(--cyan)}
 .hud-corner-tr{top:-1px;right:-1px;border-top:1.5px solid var(--cyan);border-right:1.5px solid var(--cyan)}
 .hud-corner-bl{bottom:-1px;left:-1px;border-bottom:1.5px solid var(--cyan);border-left:1.5px solid var(--cyan)}
 .hud-corner-br{bottom:-1px;right:-1px;border-bottom:1.5px solid var(--cyan);border-right:1.5px solid var(--cyan)}
-@keyframes scanSweep{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-.scan-line{position:absolute;top:0;left:0;right:0;height:1px;overflow:hidden;opacity:0.5}
-.scan-line::after{content:'';position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,var(--cyan),transparent);animation:scanSweep 3.5s ease-in-out infinite}
 .hud-gauge-track{fill:none;stroke:var(--line);stroke-width:2.5}
 .hud-gauge-fill{fill:none;stroke:var(--gold);stroke-width:2.5;stroke-linecap:round;transition:stroke-dashoffset 400ms cubic-bezier(0.22,1,0.36,1)}
 .wave{display:flex;align-items:center;gap:3px;height:24px;justify-content:center}
@@ -534,7 +539,7 @@ textarea::placeholder{color:var(--text-lo)}
 .mic-btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;transition:all 200ms cubic-bezier(0.22,1,0.36,1);flex-shrink:0}
 .mic-btn:active{transform:scale(0.96)}
 .mic-btn.idle{background:var(--glass);color:var(--text-lo);border:1px solid var(--line);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5)}
-.mic-btn.listening{background:linear-gradient(135deg,#D4B45C,#A8863A);color:#0B0E16;border:1px solid var(--gold-hi);animation:micPulse 1.4s ease-in-out infinite}
+.mic-btn.listening{background:linear-gradient(135deg,#FF8C42,#D4611C);color:#0B0E16;border:1px solid var(--gold-hi);animation:micPulse 1.4s ease-in-out infinite}
 .saved-backdrop{position:fixed;inset:0;background:rgba(6,8,15,0.7);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);z-index:390;animation:fadeIn 280ms cubic-bezier(0.22,1,0.36,1)}
 .saved-panel{position:fixed;right:0;top:0;bottom:0;width:320px;background:var(--bg1);border-left:1px solid var(--line);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);z-index:400;display:flex;flex-direction:column;animation:slideIn 300ms cubic-bezier(0.22,1,0.36,1);border-top-left-radius:28px;border-bottom-left-radius:28px;box-shadow:inset 1px 0 0 rgba(255,255,255,0.06),-8px 0 32px rgba(0,0,0,0.3)}
 .saved-item{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:background 180ms cubic-bezier(0.22,1,0.36,1);color:var(--text-mid);font-size:15px;letter-spacing:-0.01em}
@@ -742,9 +747,9 @@ export default function App(){
   const[editingId,setEditingId]=useState(null);
   const[smsStatusByIdx,setSmsStatusByIdx]=useState({});
   const[previewDoc,setPreviewDoc]=useState(null);
-  const[emailStatusByIdx,setEmailStatusByIdx]=useState({});
   const[videoStateByIdx,setVideoStateByIdx]=useState({});
-  const[calendarStatusByIdx,setCalendarStatusByIdx]=useState({});
+  const[micLevels,setMicLevels]=useState([0,0,0,0,0]);
+  const micCtxRef=useRef(null);const micStreamRef=useRef(null);const micAnalyserRef=useRef(null);const micAnimRef=useRef(null);
   const[staffEventStatusByIdx,setStaffEventStatusByIdx]=useState({});
   const[staffNoteStatusByIdx,setStaffNoteStatusByIdx]=useState({});
   const[openTasks,setOpenTasks]=useState([]);
@@ -819,15 +824,46 @@ export default function App(){
     }catch(e){setLoadingIdx(null);setSpeakingIdx(null)}
   },[stopSpeaking]);
 
+  const stopMicMeter=useCallback(()=>{
+    if(micAnimRef.current)cancelAnimationFrame(micAnimRef.current);
+    micAnimRef.current=null;
+    if(micStreamRef.current){micStreamRef.current.getTracks().forEach(t=>t.stop());micStreamRef.current=null}
+    if(micCtxRef.current){micCtxRef.current.close().catch(()=>{});micCtxRef.current=null}
+    micAnalyserRef.current=null;
+    setMicLevels([0,0,0,0,0]);
+  },[]);
+  const startMicMeter=useCallback(async()=>{
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      micStreamRef.current=stream;
+      const ctx=new(window.AudioContext||window.webkitAudioContext)();
+      micCtxRef.current=ctx;
+      const source=ctx.createMediaStreamSource(stream);
+      const analyser=ctx.createAnalyser();analyser.fftSize=256;
+      source.connect(analyser);
+      micAnalyserRef.current=analyser;
+      const data=new Uint8Array(analyser.frequencyBinCount);
+      const weights=[0.5,0.8,1,0.8,0.5];
+      const tick=()=>{
+        analyser.getByteTimeDomainData(data);
+        let sum=0;for(let i=0;i<data.length;i++){const v=(data[i]-128)/128;sum+=v*v}
+        const rms=Math.sqrt(sum/data.length);
+        const level=Math.min(1,rms*4.5);
+        setMicLevels(weights.map(w=>Math.min(1,level*w*(0.85+Math.random()*0.3))));
+        micAnimRef.current=requestAnimationFrame(tick);
+      };
+      tick();
+    }catch(e){/* mic level meter is optional, recognition still works without it */}
+  },[]);
   const startListening=useCallback(()=>{
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!SR)return;
     const rec=new SR();rec.lang="en-US";rec.continuous=false;rec.interimResults=false;
-    rec.onstart=()=>setListening(true);
-    rec.onresult=(e)=>{const t=e.results[0][0].transcript;setListening(false);if(t.trim())setTimeout(()=>sendText(t.trim()),100)};
-    rec.onerror=()=>setListening(false);rec.onend=()=>setListening(false);
+    rec.onstart=()=>{setListening(true);startMicMeter()};
+    rec.onresult=(e)=>{const t=e.results[0][0].transcript;setListening(false);stopMicMeter();if(t.trim())setTimeout(()=>sendText(t.trim()),100)};
+    rec.onerror=()=>{setListening(false);stopMicMeter()};rec.onend=()=>{setListening(false);stopMicMeter()};
     recognitionRef.current=rec;rec.start();
-  },[]);
+  },[startMicMeter,stopMicMeter]);
   const toggleMic=useCallback(()=>{
     if(listening){recognitionRef.current?.stop();setListening(false);return}
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -1091,7 +1127,6 @@ export default function App(){
   },[input,loading,messages,memoryFacts,profile,recentSessions,pendingFiles,teachMode,stopSpeaking,speakText,sendText,activeProject,autosaveChat]);
 
   const handleKeyDown=e=>{};
-  const sendPreset=t=>{setInput(t);setTimeout(()=>send(t),0)};
   const clearChat=()=>{stopSpeaking();setMessages([]);setPendingFiles([]);setDocxIdx(null);setActiveConvoId(null);chatIdRef.current=null;msgCount.current=0};
 
   const pinnedConvos=savedConvos.filter(c=>c.pinned&&c.active!==false);
@@ -1117,7 +1152,9 @@ export default function App(){
     />)}
 
     {/* Listening overlay */}
-    {listening&&(<div style={{position:"fixed",inset:0,background:"rgba(6,8,15,0.8)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",zIndex:300,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",animation:"fadeIn 200ms cubic-bezier(0.22,1,0.36,1)"}} onClick={toggleMic}><div className="wave" style={{transform:"scale(2)",marginBottom:"32px"}}><span/><span/><span/><span/><span/></div><div style={{color:"var(--text-hi)",fontSize:"20px",fontWeight:600,marginBottom:"8px",letterSpacing:"-0.02em"}}>Listening</div><div style={{color:"var(--text-lo)",fontSize:"14px"}}>Tap anywhere to cancel</div></div>)}
+    {listening&&(<div style={{position:"fixed",inset:0,background:"rgba(6,8,15,0.8)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",zIndex:300,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",animation:"fadeIn 200ms cubic-bezier(0.22,1,0.36,1)"}} onClick={toggleMic}><div className="wave" style={{transform:"scale(2)",marginBottom:"32px"}}>
+      {micLevels.map((lvl,i)=>(<span key={i} style={{height:`${8+lvl*26}px`,transition:"height 60ms linear",animation:"none"}}/>))}
+    </div><div style={{color:"var(--text-hi)",fontSize:"20px",fontWeight:600,marginBottom:"8px",letterSpacing:"-0.02em"}}>Listening</div><div style={{color:"var(--text-lo)",fontSize:"14px"}}>Tap anywhere to cancel</div></div>)}
 
     {/* Library panel: projects + full chat history */}
     {showSaved&&(<div className="saved-backdrop" onClick={()=>setShowSaved(false)}/>)}
@@ -1134,7 +1171,7 @@ export default function App(){
         <input autoFocus value={projName} onChange={e=>setProjName(e.target.value)} placeholder="Project name" style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid var(--line)",borderRadius:"10px",color:"var(--text-hi)",fontSize:"15px",padding:"9px 11px",marginBottom:"8px",outline:"none",fontFamily:"inherit"}}/>
         <textarea value={projDesc} onChange={e=>setProjDesc(e.target.value)} placeholder="Describe this folder. Every chat inside follows these instructions." rows={3} style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid var(--line)",borderRadius:"10px",color:"var(--text-hi)",fontSize:"14px",padding:"9px 11px",marginBottom:"8px",outline:"none",resize:"vertical",fontFamily:"inherit",lineHeight:1.5}}/>
         <div style={{display:"flex",gap:"8px"}}>
-          <button className="ghost-btn" style={{flex:1,background:"linear-gradient(135deg,#D4B45C,#A8863A)",color:"#0B0E16",border:"none"}} onClick={handleProjSubmit}>{projFormMode==="edit"?"Save project":"Create project"}</button>
+          <button className="ghost-btn" style={{flex:1,background:"linear-gradient(135deg,#FF8C42,#D4611C)",color:"#0B0E16",border:"none"}} onClick={handleProjSubmit}>{projFormMode==="edit"?"Save project":"Create project"}</button>
           <button className="ghost-btn" onClick={()=>{setProjFormMode(null);setProjEditId(null)}}>Cancel</button>
         </div>
       </div>)}
@@ -1229,17 +1266,12 @@ export default function App(){
 {/* Chat body */}
 <div style={{flex:1,overflowY:"auto",padding:"16px 16px 8px",display:"flex",flexDirection:"column",gap:"6px"}}>
   {isEmpty&&(<div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",animation:"fadeUp 0.35s cubic-bezier(0.22,1,0.36,1) both"}}>
-    <div style={{textAlign:"center",maxWidth:"360px"}}>
-      <div style={{display:"inline-block",marginBottom:"24px",animation:"pulseGlow 4s ease-in-out infinite"}}><LanceLogo size={72}/></div>
-      <div style={{fontSize:"32px",fontWeight:600,color:"var(--text-hi)",letterSpacing:"-0.03em",marginBottom:"10px",lineHeight:1.2}}>Good to see you, Pastor.</div>
-      <div style={{fontSize:"16px",color:"var(--text-mid)",fontWeight:400,lineHeight:1.5,marginBottom:"28px"}}>Type, talk, or drop a screenshot.</div>
-      <div style={{display:"flex",justifyContent:"center",gap:"14px"}}>
-        <AppIcon label="Sermon" onTap={()=>sendPreset("Prep a sermon")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h5v18H6a2 2 0 01-2-2V5zM20 5a2 2 0 00-2-2h-5v18h5a2 2 0 002-2V5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M13 3v18" stroke="currentColor" strokeWidth="1.6"/></svg></AppIcon>
-        <AppIcon label="Devotion" onTap={()=>sendPreset("Give me today's devotion")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.6"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg></AppIcon>
-        <AppIcon label="Letter" onTap={()=>sendPreset("Draft a letter")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M16.5 3.5l4 4L8 20H4v-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M14 6l4 4" stroke="currentColor" strokeWidth="1.6"/></svg></AppIcon>
-        <AppIcon label="Flyer" onTap={()=>sendPreset("Design me a flyer")}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg></AppIcon>
-        <AppIcon label="Video" onTap={()=>{setInput("Break down this video: ");setTimeout(()=>inputRef.current?.focus(),0)}}><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" strokeWidth="1.6"/><path d="M10 9l5 3-5 3V9z" fill="currentColor"/></svg></AppIcon>
+    <div style={{textAlign:"center"}}>
+      <div style={{position:"relative",display:"inline-block",marginBottom:"22px"}}>
+        <div className="lance-ring-cyan" style={{inset:"-10px"}}/>
+        <div style={{animation:"pulseGlow 4s ease-in-out infinite"}}><LanceLogo size={72}/></div>
       </div>
+      <div style={{fontSize:"30px",fontWeight:600,color:"var(--text-hi)",letterSpacing:"-0.03em",lineHeight:1.2}}>{greeting()}, Pastor.</div>
     </div>
   </div>)}
 
@@ -1247,7 +1279,6 @@ export default function App(){
     {m.role==="assistant"&&(<div style={{flexShrink:0,marginRight:"9px",alignSelf:"flex-end"}}><LanceLogo size={22}/></div>)}
     <div style={{maxWidth:"82%",display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start",gap:"5px"}}>
       <div className={m.role==="user"?"hud-panel-user":"hud-panel"} style={{position:"relative",padding:"12px 17px",background:m.role==="user"?"linear-gradient(135deg,#FF8C42,#D4611C)":"var(--glass)",backdropFilter:m.role==="user"?"none":"blur(24px) saturate(1.5)",WebkitBackdropFilter:m.role==="user"?"none":"blur(24px) saturate(1.5)",color:m.role==="user"?"#140A04":"var(--text-hi)",fontSize:"17px",lineHeight:"1.5",whiteSpace:"pre-wrap",fontWeight:400,letterSpacing:"-0.012em",border:m.role==="user"?"none":`1px solid rgba(58,219,232,0.14)`,boxShadow:m.role==="user"?"0 4px 18px rgba(255,122,41,0.22)":"0 0 20px rgba(58,219,232,0.03)"}}>
-        {m.role==="assistant"&&(<><span className="hud-corner hud-corner-tl"/><span className="hud-corner hud-corner-br"/></>)}
         {m.imagePreview&&(<img src={m.imagePreview} alt="screenshot" style={{maxWidth:"100%",borderRadius:"10px",marginBottom:"10px",display:"block"}}/>)}
         {renderText(m.content)}
       </div>
@@ -1288,15 +1319,13 @@ export default function App(){
 
     {/* Input */}
     <div style={{position:"relative",paddingTop:"10px",paddingLeft:"16px",paddingRight:"16px",paddingBottom:"max(16px,env(safe-area-inset-bottom,16px))",background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",borderTop:"1px solid var(--line)",flexShrink:0}}>
-      <div className="scan-line"/>
       {pendingFiles.length>0&&(<div style={{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"8px"}}>
         {pendingFiles.map((f,i)=>(<div key={i} className="file-chip">
           <span>{f.name.length>20?f.name.slice(0,17)+"…":f.name}</span>
           <button onClick={()=>removeFile(i)} title="Remove"><CloseIcon/></button>
         </div>))}
       </div>)}
-      <div className="hud-panel" style={{position:"relative",display:"flex",alignItems:"flex-end",gap:"8px",background:"rgba(255,255,255,0.055)",border:"1px solid rgba(58,219,232,0.16)",padding:"9px 10px 9px 14px",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.05)"}}>
-        <span className="hud-corner hud-corner-tl"/><span className="hud-corner hud-corner-br"/>
+      <div className="hud-panel" style={{position:"relative",display:"flex",alignItems:"flex-end",gap:"8px",background:"rgba(255,255,255,0.055)",border:"1px solid rgba(255,122,41,0.18)",padding:"9px 10px 9px 14px",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.05)"}}>
         <button onClick={()=>fileRef.current?.click()} style={{background:"none",border:"none",cursor:"pointer",color:"var(--text-lo)",display:"flex",alignItems:"center",padding:"4px",borderRadius:"6px",transition:"color 0.14s",flexShrink:0,minWidth:"36px",minHeight:"36px",justifyContent:"center"}} title="Attach file or screenshot" onMouseEnter={e=>e.currentTarget.style.color="var(--gold)"} onMouseLeave={e=>e.currentTarget.style.color="var(--text-lo)"}><AttachIcon/></button>
         <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.doc,.txt,.xlsx,.xls,.csv,.png,.jpg,.jpeg,.webp,.heic,.heif,.gif,.bmp,image/*" style={{display:"none"}} onChange={e=>{handleFiles(e.target.files);e.target.value=""}}/>
         <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData?.items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder="Message Lance" rows={1} style={{flex:1,border:"none",background:"transparent",fontSize:"17px",color:"var(--text-hi)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:400,letterSpacing:"-0.012em",fontFamily:"inherit"}}/>
@@ -1306,7 +1335,7 @@ export default function App(){
         <button className={`mic-btn${listening?" listening":" idle"}`} onClick={toggleMic} title={listening?"Stop":"Talk to Lance"}>
           <MicIcon/>
         </button>
-        <button onClick={()=>send()} disabled={(!input.trim()&&pendingFiles.length===0)||loading} style={{width:"36px",height:"36px",borderRadius:"50%",background:(input.trim()||pendingFiles.length>0)&&!loading?"linear-gradient(135deg,#D4B45C,#A8863A)":"var(--glass)",border:"none",cursor:(input.trim()||pendingFiles.length>0)&&!loading?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:(input.trim()||pendingFiles.length>0)&&!loading?"#0B0E16":"var(--text-lo)",boxShadow:(input.trim()||pendingFiles.length>0)&&!loading?"0 3px 12px rgba(255,122,41,0.4)":"none",transition:"all 200ms cubic-bezier(0.22,1,0.36,1)",transform:"scale(1)"}} onMouseDown={e=>e.currentTarget.style.transform="scale(0.96)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"} onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}><SendIcon/></button>
+        <button onClick={()=>send()} disabled={(!input.trim()&&pendingFiles.length===0)||loading} style={{width:"36px",height:"36px",borderRadius:"50%",background:(input.trim()||pendingFiles.length>0)&&!loading?"linear-gradient(135deg,#FF8C42,#D4611C)":"var(--glass)",border:"none",cursor:(input.trim()||pendingFiles.length>0)&&!loading?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:(input.trim()||pendingFiles.length>0)&&!loading?"#0B0E16":"var(--text-lo)",boxShadow:(input.trim()||pendingFiles.length>0)&&!loading?"0 3px 12px rgba(255,122,41,0.4)":"none",transition:"all 200ms cubic-bezier(0.22,1,0.36,1)",transform:"scale(1)"}} onMouseDown={e=>e.currentTarget.style.transform="scale(0.96)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"} onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}><SendIcon/></button>
       </div>
     </div>
   </div></>);
