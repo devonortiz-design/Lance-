@@ -751,6 +751,9 @@ export default function App(){
   const[micLevels,setMicLevels]=useState([0,0,0,0,0]);
   const micCtxRef=useRef(null);const micStreamRef=useRef(null);const micAnalyserRef=useRef(null);const micAnimRef=useRef(null);
   const interruptRecRef=useRef(null);
+  const[micMuted,setMicMuted]=useState(false);
+  const micMutedRef=useRef(false);
+  useEffect(()=>{micMutedRef.current=micMuted},[micMuted]);
   const[staffEventStatusByIdx,setStaffEventStatusByIdx]=useState({});
   const[staffNoteStatusByIdx,setStaffNoteStatusByIdx]=useState({});
   const[openTasks,setOpenTasks]=useState([]);
@@ -812,6 +815,7 @@ export default function App(){
     }
   },[]);
   const startInterruptListener=useCallback(()=>{
+    if(micMutedRef.current)return;
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!SR)return;
     try{
@@ -885,11 +889,12 @@ export default function App(){
     }catch(e){/* mic level meter is optional, recognition still works without it */}
   },[]);
   const startListening=useCallback(()=>{
+    if(micMutedRef.current)return;
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!SR)return;
     const rec=new SR();rec.lang="en-US";rec.continuous=false;rec.interimResults=false;
     rec.onstart=()=>{setListening(true);startMicMeter()};
-    rec.onresult=(e)=>{const t=e.results[0][0].transcript;setListening(false);stopMicMeter();if(t.trim())setTimeout(()=>sendText(t.trim()),100)};
+    rec.onresult=(e)=>{const t=e.results[0][0].transcript;setListening(false);stopMicMeter();if(t.trim())setTimeout(()=>sendText(t.trim(),true),100)};
     rec.onerror=()=>{setListening(false);stopMicMeter()};rec.onend=()=>{setListening(false);stopMicMeter()};
     recognitionRef.current=rec;rec.start();
   },[startMicMeter,stopMicMeter]);
@@ -1097,7 +1102,7 @@ export default function App(){
     return null;
   };
 
-  const sendText=useCallback(async(t)=>{
+  const sendText=useCallback(async(t,viaVoice=false)=>{
     if(!t||loading)return;
     stopSpeaking();
     const next=[...messages,{role:"user",content:t}];
@@ -1127,7 +1132,7 @@ export default function App(){
       }
       if(tags.some(t=>t.type==="memory")){loadMemory().then(f=>{if(Array.isArray(f))setMemoryFacts(f)}).catch(()=>{});}
       if(msgCount.current%4===0){saveSession("general",`${t.slice(0,90)}${t.length>90?"…":""}`,msgCount.current).catch(()=>{});}
-      if(teachMode)speakText(clean,idx);if(isDoc)setDocxIdx(idx);
+      if(teachMode||viaVoice)speakText(clean,idx);if(isDoc)setDocxIdx(idx);
     }catch(e){setMessages([...next,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);}
     setLoading(false);
   },[loading,messages,memoryFacts,profile,recentSessions,teachMode,stopSpeaking,speakText,activeProject,autosaveChat]);
@@ -1358,6 +1363,23 @@ export default function App(){
         <button onClick={()=>fileRef.current?.click()} style={{background:"none",border:"none",cursor:"pointer",color:"var(--text-lo)",display:"flex",alignItems:"center",padding:"4px",borderRadius:"6px",transition:"color 0.14s",flexShrink:0,minWidth:"36px",minHeight:"36px",justifyContent:"center"}} title="Attach file or screenshot" onMouseEnter={e=>e.currentTarget.style.color="var(--gold)"} onMouseLeave={e=>e.currentTarget.style.color="var(--text-lo)"}><AttachIcon/></button>
         <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.doc,.txt,.xlsx,.xls,.csv,.png,.jpg,.jpeg,.webp,.heic,.heif,.gif,.bmp,image/*" style={{display:"none"}} onChange={e=>{handleFiles(e.target.files);e.target.value=""}}/>
         <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData?.items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder="Message Lance" rows={1} style={{flex:1,border:"none",background:"transparent",fontSize:"17px",color:"var(--text-hi)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:400,letterSpacing:"-0.012em",fontFamily:"inherit"}}/>
+        <button onClick={()=>{
+          setMicMuted(m=>{
+            const next=!m;
+            if(next){
+              if(recognitionRef.current){try{recognitionRef.current.abort()}catch(e){}}
+              if(interruptRecRef.current){try{interruptRecRef.current.abort()}catch(e){}interruptRecRef.current=null}
+              setListening(false);
+            }
+            return next;
+          });
+        }} title={micMuted?"Unmute microphone":"Mute microphone"} style={{width:"33px",height:"33px",borderRadius:"50%",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginRight:"2px",background:micMuted?"rgba(255,80,80,0.18)":"rgba(255,255,255,0.08)",color:micMuted?"#FF6B6B":"rgba(255,255,255,0.55)"}}>
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+            <path d="M5 2.5a2.5 2.5 0 015 0v4a2.5 2.5 0 01-5 0v-4z" stroke="currentColor" strokeWidth="1.3"/>
+            <path d="M3 7.5a4.5 4.5 0 009 0M7.5 12v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            {micMuted&&(<path d="M2 2l11 11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>)}
+          </svg>
+        </button>
         <button className={`mic-btn${teachMode?" listening":" idle"}`} onClick={toggleVoiceConversation} title={teachMode?"End voice conversation":"Start voice conversation"} style={{marginRight:"2px"}}>
           <VoiceChatIcon/>
         </button>
