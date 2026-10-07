@@ -1,7 +1,7 @@
 import React,{useState,useRef,useEffect,useCallback}from"react";
 import{callClaude,speak,readFile,detectDocumentContent,webSearch,formatSearchResults}from"./api";
-import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseVideoTag,parseTaskTag,saveTask,loadOpenTasks,completeTask,deleteTask,parseStaffEventTags,parseStaffNoteTags,saveStaffEvent,saveStaffNote}from"./memory";
-import{SESSION_ID,SUPABASE_URL,SB_HEADERS,STAFF_CALENDAR_CODE}from"./config";
+import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseVideoTag,parseTaskTag,saveTask,loadOpenTasks,completeTask,deleteTask,parseStaffEventTags,parseStaffNoteTags,saveStaffEvent,saveStaffNote,loadBrainNotes,parseBrainTags,saveBrainNote}from"./memory";
+import{SESSION_ID,SUPABASE_URL,SB_HEADERS,STAFF_CALENDAR_CODE,DB_URL}from"./config";
 import{LanceLogo,SendIcon,SpeakerIcon,StopIcon,DownloadIcon,AttachIcon,CloseIcon}from"./icons";
 
 const DOCX_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-docx";
@@ -16,20 +16,20 @@ const DEVOTION_URL=`${SUPABASE_URL}/functions/v1/lance-devotion`;
 
 // Chat + Project DB (lance_chats / lance_projects)
 async function loadPinned(){
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_chats?active=eq.true&order=updated_at.desc&limit=300`,{headers:SB_HEADERS});
+  const r=await fetch(`${DB_URL}/lance_chats?active=eq.true&order=updated_at.desc&limit=300`,{headers:SB_HEADERS});
   return r.ok?r.json():[];
 }
 async function saveConversation(title,summary,messages,projectId){
   const body={title,summary,messages,active:true};
   if(projectId)body.project_id=projectId;
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_chats`,{
+  const r=await fetch(`${DB_URL}/lance_chats`,{
     method:"POST",headers:{...SB_HEADERS,"Prefer":"return=representation"},
     body:JSON.stringify(body)
   });
   return r.ok?r.json():null;
 }
 async function updateChatRow(id,patch){
-  await fetch(`${SUPABASE_URL}/rest/v1/lance_chats?id=eq.${id}`,{
+  await fetch(`${DB_URL}/lance_chats?id=eq.${id}`,{
     method:"PATCH",headers:SB_HEADERS,
     body:JSON.stringify({...patch,updated_at:new Date().toISOString()})
   });
@@ -44,18 +44,18 @@ async function renameConversation(id,title){
   await updateChatRow(id,{title});
 }
 async function loadProjectsDb(){
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_projects?active=eq.true&order=created_at.asc`,{headers:SB_HEADERS});
+  const r=await fetch(`${DB_URL}/lance_projects?active=eq.true&order=created_at.asc`,{headers:SB_HEADERS});
   return r.ok?r.json():[];
 }
 async function createProjectRow(name,description){
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_projects`,{
+  const r=await fetch(`${DB_URL}/lance_projects`,{
     method:"POST",headers:{...SB_HEADERS,"Prefer":"return=representation"},
     body:JSON.stringify({name,description,active:true})
   });
   return r.ok?r.json():null;
 }
 async function updateProjectRow(id,patch){
-  await fetch(`${SUPABASE_URL}/rest/v1/lance_projects?id=eq.${id}`,{
+  await fetch(`${DB_URL}/lance_projects?id=eq.${id}`,{
     method:"PATCH",headers:SB_HEADERS,
     body:JSON.stringify({...patch,updated_at:new Date().toISOString()})
   });
@@ -758,6 +758,9 @@ export default function App(){
   const[staffEventStatusByIdx,setStaffEventStatusByIdx]=useState({});
   const[staffNoteStatusByIdx,setStaffNoteStatusByIdx]=useState({});
   const[openTasks,setOpenTasks]=useState([]);
+  const[brainNotes,setBrainNotes]=useState([]);
+  const refreshBrain=useCallback(()=>{loadBrainNotes().then(n=>{if(Array.isArray(n))setBrainNotes(n)}).catch(()=>{})},[]);
+  const handleBrainTags=useCallback((raw)=>{const notes=parseBrainTags(raw);if(!notes.length)return;Promise.all(notes.map(n=>saveBrainNote(n).catch(e=>console.error(e)))).then(refreshBrain)},[refreshBrain]);
   const[showTasks,setShowTasks]=useState(false);
     const[editTitle,setEditTitle]=useState("");
   const[savedConvos,setSavedConvos]=useState([]);
@@ -799,6 +802,7 @@ export default function App(){
     (async()=>{
       try{const t=await loadOpenTasks();setOpenTasks(Array.isArray(t)?t:[])}catch(e){}
     })();
+    refreshBrain();
   },[]);
 
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"})},[messages,loading]);
@@ -1050,7 +1054,7 @@ export default function App(){
     setSmsStatusByIdx(p=>({...p,[idx]:"sending"}));
     try{
       if(smsData.sendAt){
-        const r=await fetch(`${SUPABASE_URL}/rest/v1/lance_notifications`,{
+        const r=await fetch(`${DB_URL}/lance_notifications`,{
           method:"POST",headers:SB_HEADERS,
           body:JSON.stringify({channel:"sms",message:smsData.message,send_at:smsData.sendAt})
         });
@@ -1136,11 +1140,11 @@ export default function App(){
         let apiMessages=next;
         if(searchContext){const last=next[next.length-1];const lc=typeof last.content==="string"?last.content:t;apiMessages=[...next.slice(0,-1),{role:"user",content:lc+searchContext}];}
         const cleanMessages=apiMessages.map(({role,content})=>({role,content}));
-        raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile,activeProject);
+        raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile,activeProject,brainNotes);
       }
       const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=(intent==="sermon"||intent==="exam")?true:detectDocumentContent(clean,recentUserIntent(next));
       const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw)}];setMessages(finalMsgs);
-      const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}autosaveChat(finalMsgs);msgCount.current+=2;
+      const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}handleBrainTags(raw);autosaveChat(finalMsgs);msgCount.current+=2;
       saveMessage("assistant",clean).catch(()=>{});
       for(const tag of tags){
         if(tag.type==="memory"){saveMemoryFact(tag.category,tag.fact,tag.confidence,SESSION_ID).catch(()=>{});}
@@ -1151,7 +1155,7 @@ export default function App(){
       if(teachMode||viaVoice)speakText(clean,idx);if(isDoc)setDocxIdx(idx);
     }catch(e){setMessages([...next,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);}
     setLoading(false);
-  },[loading,messages,memoryFacts,profile,recentSessions,teachMode,stopSpeaking,speakText,activeProject,autosaveChat]);
+  },[loading,messages,memoryFacts,profile,recentSessions,teachMode,stopSpeaking,speakText,activeProject,autosaveChat,brainNotes,handleBrainTags]);
 
   const send=useCallback(async(textOverride)=>{
     const t=(textOverride||input).trim();
@@ -1165,16 +1169,16 @@ export default function App(){
       if(t)saveMessage("user",t).catch(()=>{});
       try{
         const cleanMessages=next.map(({role,content})=>({role,content}));
-        const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile,activeProject);
+        const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile,activeProject,brainNotes);
         const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
         const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw)}];setMessages(finalMsgs);
-      const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}autosaveChat(finalMsgs);msgCount.current+=2;
+      const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}handleBrainTags(raw);autosaveChat(finalMsgs);msgCount.current+=2;
         saveMessage("assistant",clean).catch(()=>{});
         if(teachMode)speakText(clean,idx);
       }catch(e){setMessages(prev=>[...prev,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);}
       setLoading(false);
     }else{sendText(t);}
-  },[input,loading,messages,memoryFacts,profile,recentSessions,pendingFiles,teachMode,stopSpeaking,speakText,sendText,activeProject,autosaveChat]);
+  },[input,loading,messages,memoryFacts,profile,recentSessions,pendingFiles,teachMode,stopSpeaking,speakText,sendText,activeProject,autosaveChat,brainNotes,handleBrainTags]);
 
   const handleKeyDown=e=>{};
   const clearChat=()=>{stopSpeaking();setMessages([]);setPendingFiles([]);setDocxIdx(null);setActiveConvoId(null);chatIdRef.current=null;msgCount.current=0};

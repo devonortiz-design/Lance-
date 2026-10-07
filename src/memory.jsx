@@ -1,12 +1,18 @@
-import { SUPABASE_URL, SB_HEADERS, SESSION_ID } from "./config";
+import { SUPABASE_URL, SB_HEADERS, SESSION_ID, DB_URL } from "./config";
+
+// Staff calendar RPCs use their own code check and talk to Supabase directly.
+function publicHeaders() {
+  const { ["x-lance-key"]: _k, ...rest } = SB_HEADERS;
+  return rest;
+}
 
 async function sbGet(table, params = "") {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, { headers: SB_HEADERS });
+  const r = await fetch(`${DB_URL}/${table}?${params}`, { headers: SB_HEADERS });
   return r.ok ? r.json() : [];
 }
 
 async function sbPost(table, data, extra = {}) {
-  await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+  await fetch(`${DB_URL}/${table}`, {
     method: "POST",
     headers: { ...SB_HEADERS, ...extra },
     body: JSON.stringify(data),
@@ -14,7 +20,7 @@ async function sbPost(table, data, extra = {}) {
 }
 
 async function sbUpsert(table, data) {
-  await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+  await fetch(`${DB_URL}/${table}`, {
     method: "POST",
     headers: { ...SB_HEADERS, "Prefer": "resolution=merge-duplicates" },
     body: JSON.stringify(data),
@@ -68,7 +74,7 @@ export function parseMemoryTags(text) {
 }
 
 export function stripMemoryTags(t) {
-  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[VIDEO:[^\]]+\]/gi, "").replace(/\[TASK:[^\]]+\]/gi, "").replace(/\[STAFF_EVENT:[^\]]+\]/gi, "").replace(/\[STAFF_NOTE:[^\]]+\]/gi, "").trim();
+  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[VIDEO:[^\]]+\]/gi, "").replace(/\[TASK:[^\]]+\]/gi, "").replace(/\[STAFF_EVENT:[^\]]+\]/gi, "").replace(/\[STAFF_NOTE:[^\]]+\]/gi, "").replace(/\[BRAIN:[^\]]+\]/gi, "").trim();
 }
 
 export function parseVideoTag(text) {
@@ -200,7 +206,7 @@ export function parseStaffNoteTags(text) {
 export async function saveStaffEvent(code, ev) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/staff_event_save`, {
     method: "POST",
-    headers: SB_HEADERS,
+    headers: publicHeaders(),
     body: JSON.stringify({ p_code: code, p: ev }),
   });
   if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || `HTTP ${r.status}`); }
@@ -210,7 +216,7 @@ export async function saveStaffEvent(code, ev) {
 export async function saveStaffNote(code, note) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/staff_note_save`, {
     method: "POST",
-    headers: SB_HEADERS,
+    headers: publicHeaders(),
     body: JSON.stringify({ p_code: code, p: note }),
   });
   if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || `HTTP ${r.status}`); }
@@ -226,7 +232,7 @@ export async function loadOpenTasks() {
 }
 
 export async function completeTask(id) {
-  await fetch(`${SUPABASE_URL}/rest/v1/lance_tasks?id=eq.${id}`, {
+  await fetch(`${DB_URL}/lance_tasks?id=eq.${id}`, {
     method: "PATCH",
     headers: SB_HEADERS,
     body: JSON.stringify({ status: "done", completed_at: new Date().toISOString() }),
@@ -234,8 +240,75 @@ export async function completeTask(id) {
 }
 
 export async function deleteTask(id) {
-  await fetch(`${SUPABASE_URL}/rest/v1/lance_tasks?id=eq.${id}`, {
+  await fetch(`${DB_URL}/lance_tasks?id=eq.${id}`, {
     method: "DELETE",
     headers: SB_HEADERS,
   });
+}
+// ─── Second Brain notebook (brain_notes) ─────────────────────────────
+// Shared with the Second Brain page on claude.ai. Lance reads pinned and
+// recent entries before answering and saves new ones from [BRAIN: ...] tags.
+const BRAIN_BOOKS = ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"];
+const BRAIN_NAMES = {};
+BRAIN_BOOKS.forEach(b => { BRAIN_NAMES[b.toLowerCase()] = b; });
+Object.assign(BRAIN_NAMES, { psalm: "Psalms", ps: "Psalms", prov: "Proverbs", gen: "Genesis", ex: "Exodus", rom: "Romans", matt: "Matthew", rev: "Revelation", heb: "Hebrews", eph: "Ephesians", phil: "Philippians", col: "Colossians", gal: "Galatians", isa: "Isaiah", jer: "Jeremiah", deut: "Deuteronomy", eccl: "Ecclesiastes", jas: "James" });
+const BRAIN_REF_RE = new RegExp("\\b(" + Object.keys(BRAIN_NAMES).sort((a, b) => b.length - a.length).map(s => s.replace(/ /g, "\\s+")).join("|") + ")\\.?\\s+(\\d{1,3})(?::(\\d{1,3})(?:\\s*[-–]\\s*(\\d{1,3}))?)?\\b", "gi");
+
+export function parseScriptureRefs(text) {
+  const out = []; const seen = new Set(); let m;
+  BRAIN_REF_RE.lastIndex = 0;
+  while ((m = BRAIN_REF_RE.exec(text || ""))) {
+    const book = BRAIN_NAMES[m[1].toLowerCase().replace(/\s+/g, " ")];
+    if (!book) continue;
+    const r = book + " " + m[2] + (m[3] ? ":" + m[3] + (m[4] ? "-" + m[4] : "") : "");
+    if (!seen.has(r)) { seen.add(r); out.push(r); }
+  }
+  return out;
+}
+
+export async function loadBrainNotes() {
+  const cols = "select=id,title,body,kind,tags,refs,pinned,done,example,updated_at";
+  const [pinned, recent] = await Promise.all([
+    sbGet("brain_notes", `${cols}&pinned=eq.true&order=updated_at.desc&limit=20`),
+    sbGet("brain_notes", `${cols}&order=updated_at.desc&limit=40`),
+  ]);
+  const seen = new Set(); const out = [];
+  for (const n of [...(Array.isArray(pinned) ? pinned : []), ...(Array.isArray(recent) ? recent : [])]) {
+    if (!seen.has(n.id)) { seen.add(n.id); out.push(n); }
+  }
+  return out;
+}
+
+const BRAIN_KINDS = ["sermon", "study", "idea", "task", "prayer"];
+export function parseBrainTags(text) {
+  const re = /\[BRAIN:\s*([^\]]+)\]/gi;
+  const out = []; let m;
+  while ((m = re.exec(text || "")) !== null) {
+    const raw = m[1];
+    const bodyAt = raw.search(/\|\s*body\s*=/i);
+    const head = bodyAt === -1 ? raw : raw.slice(0, bodyAt);
+    const body = bodyAt === -1 ? "" : raw.slice(bodyAt).replace(/^\|\s*body\s*=/i, "").trim();
+    const f = {};
+    head.split("|").forEach(pair => {
+      const eq = pair.indexOf("=");
+      if (eq === -1) return;
+      f[pair.slice(0, eq).trim().toLowerCase()] = pair.slice(eq + 1).trim();
+    });
+    const title = (f.title || "").slice(0, 200);
+    if (!title && !body) continue;
+    const kind = BRAIN_KINDS.includes((f.kind || "").toLowerCase()) ? f.kind.toLowerCase() : "idea";
+    const tags = (f.tags || "").split(",").map(t => t.trim()).filter(Boolean);
+    out.push({ title, body, kind, tags, refs: parseScriptureRefs(title + "\n" + body), pinned: /^(true|yes)$/i.test(f.pinned || ""), source: "lance" });
+  }
+  return out;
+}
+
+export async function saveBrainNote(note) {
+  const r = await fetch(`${DB_URL}/brain_notes`, {
+    method: "POST",
+    headers: SB_HEADERS,
+    body: JSON.stringify(note),
+  });
+  if (!r.ok) throw new Error(`Notebook save failed (${r.status})`);
+  return r.json();
 }
