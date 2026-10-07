@@ -186,7 +186,7 @@ function FlyerCard({ onGenerate, generating }) {
     >
       <div
         className="doc-glyph"
-        style={{ background: 'linear-gradient(160deg, #FF7A29, #8A6E2A)' }}
+        style={{ background: 'linear-gradient(160deg, #D4AF5A, #8A6E2A)' }}
       >
         <svg
           width="14"
@@ -302,7 +302,7 @@ function TextSentCard({status,onSend,scheduled}){
     }}>
       <div style={{
         width:"36px",height:"36px",borderRadius:"10px",flexShrink:0,
-        background:status==="sent"?"linear-gradient(160deg,#2E9E5B,#1F7A44)":"linear-gradient(160deg,#FF8C42,#D4611C)",
+        background:status==="sent"?"linear-gradient(160deg,#2E9E5B,#1F7A44)":"linear-gradient(160deg,#D4AF5A,#A8823A)",
         display:"flex",alignItems:"center",justifyContent:"center",
       }}>
         {status==="sent"?(
@@ -386,7 +386,7 @@ function StaffNoteCard({note,status,onAdd}){
 function TaskAddedCard({title,due}){
   return(
     <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",marginTop:"6px",background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",maxWidth:"280px",boxShadow:"0 2px 12px rgba(0,0,0,0.1)"}}>
-      <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"linear-gradient(160deg,#FF8C42,#D4611C)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+      <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"linear-gradient(160deg,#D4AF5A,#A8823A)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5h9M7.5 3v9" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>
       </div>
       <div><div style={{fontSize:"13px",fontWeight:600,color:"#1a2340"}}>Added to your list</div><div style={{fontSize:"11px",color:"#6B7280"}}>{title}{due?` -- due ${due}`:""}</div></div>
@@ -481,19 +481,23 @@ function PencilIcon(){return(<svg width="12" height="12" viewBox="0 0 12 12" fil
 
 function renderText(t){try{if(!t)return "";return t.replace(/#{1,6} /g,"").replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1").replace(/__(.*?)__/g,"$1").replace(/`(.*?)`/g,"$1").replace(/^[-*] /gm,"\u2022 ").replace(/^---+$/gm,"").replace(/\n\n\n+/g,"\n\n").trim()}catch(e){return String(t||"")}}
 
-const CSS=`:root{--bg0:#050709;--bg1:#0A0D12;--gold:#FF7A29;--gold-hi:#FFA057;--gold-lo:#B85A1F;--cyan:#3ADBE8;--cyan-hi:#7EEAF2;--cyan-lo:#1F8A94;--glass:rgba(255,255,255,0.045);--glass-hi:rgba(255,255,255,0.08);--line:rgba(255,255,255,0.09);--text-hi:#F2F5F7;--text-mid:rgba(242,245,247,0.6);--text-lo:rgba(242,245,247,0.36)}
+const CSS=`:root{--bg0:#0A101A;--bg1:#0D1420;--surface:#151E2D;--surface-hi:#1B2436;--gold:#D4AF5A;--gold-hi:#E3C574;--gold-lo:#A8823A;--cyan:#6F86B0;--cyan-hi:#9AA9C8;--cyan-lo:#3B4A66;--glass:#151E2D;--glass-hi:#1B2436;--line:#24304A;--line-hi:#2E3B57;--text-hi:#ECE7DC;--text-mid:rgba(236,231,220,0.72);--text-lo:#8D97AA;--serif:"Newsreader",Georgia,"Times New Roman",serif;--sans:"Instrument Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body,#root{height:100%;-webkit-text-size-adjust:100%}
-body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;background:linear-gradient(175deg,#080B10 0%,#050709 55%);position:relative}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 130% 55% at 50% -12%,rgba(255,122,41,0.09),transparent 62%),radial-gradient(ellipse 100% 40% at 100% 110%,rgba(58,219,232,0.06),transparent 60%);pointer-events:none;z-index:0}
+body{font-family:var(--sans);-webkit-font-smoothing:antialiased;background:var(--bg1);color:var(--text-hi);position:relative}
+.serif{font-family:var(--serif)}
+.eyebrow2{font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-lo)}
+button,input,textarea{font-family:inherit}
+button:focus-visible,a:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+body::before{content:none}
 textarea:focus,button:focus{outline:none}
 textarea::placeholder{color:var(--text-lo)}
 ::-webkit-scrollbar{width:0}
 .glass{background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);border:1px solid var(--line)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulseGlow{0%,100%{filter:drop-shadow(0 0 8px rgba(255,122,41,0.3))}50%{filter:drop-shadow(0 0 18px rgba(255,122,41,0.6))}}
+@keyframes pulseGlow{0%,100%{filter:drop-shadow(0 0 8px rgba(212,175,90,0.3))}50%{filter:drop-shadow(0 0 18px rgba(212,175,90,0.6))}}
 @keyframes dot{0%,80%,100%{transform:scale(0.5);opacity:0.25}40%{transform:scale(1);opacity:1}}
-@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,122,41,0.4),0 0 12px rgba(255,122,41,0.2)}50%{box-shadow:0 0 0 6px rgba(255,122,41,0),0 0 20px rgba(255,122,41,0.4)}}
+@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(212,175,90,0.4),0 0 12px rgba(212,175,90,0.2)}50%{box-shadow:0 0 0 6px rgba(212,175,90,0),0 0 20px rgba(212,175,90,0.4)}}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -501,12 +505,12 @@ textarea::placeholder{color:var(--text-lo)}
 .lance-ring{position:absolute;inset:-4px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity 280ms cubic-bezier(0.22,1,0.36,1)}
 .lance-ring::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0%,var(--gold) 25%,transparent 50%,transparent 100%);mask:radial-gradient(circle,transparent 50%,black 51%,black 54%,transparent 55%);-webkit-mask:radial-gradient(circle,transparent 50%,black 51%,black 54%,transparent 55%);animation:ringRotate 2.4s linear infinite}
 .lance-ring.active{opacity:1}
-.lance-ring-cyan{position:absolute;inset:-7px;border-radius:50%;pointer-events:none;opacity:0.55}
+.lance-ring-cyan{display:none}
 .lance-ring-cyan::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 180deg,transparent 0%,var(--cyan) 18%,transparent 40%,transparent 100%);mask:radial-gradient(circle,transparent 62%,black 63%,black 66%,transparent 67%);-webkit-mask:radial-gradient(circle,transparent 62%,black 63%,black 66%,transparent 67%);animation:ringRotate 5s linear infinite reverse}
 .hud-tick{position:absolute;background:var(--line)}
-.hud-panel{clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%)}
-.hud-panel-user{clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%)}
-.hud-corner{position:absolute;width:11px;height:11px;pointer-events:none}
+.hud-panel{clip-path:none}
+.hud-panel-user{clip-path:none}
+.hud-corner{display:none}
 .hud-corner-tl{top:-1px;left:-1px;border-top:1.5px solid var(--cyan);border-left:1.5px solid var(--cyan)}
 .hud-corner-tr{top:-1px;right:-1px;border-top:1.5px solid var(--cyan);border-right:1.5px solid var(--cyan)}
 .hud-corner-bl{bottom:-1px;left:-1px;border-bottom:1.5px solid var(--cyan);border-left:1.5px solid var(--cyan)}
@@ -522,7 +526,7 @@ textarea::placeholder{color:var(--text-lo)}
 .wave span:nth-child(5){height:10px;animation-delay:0.4s}
 @keyframes waveBar{0%,100%{transform:scaleY(0.5);opacity:0.4}50%{transform:scaleY(1);opacity:1}}
 .speak-btn{border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:6px;border-radius:10px;transition:all 200ms cubic-bezier(0.22,1,0.36,1);opacity:0.5;color:var(--text-mid);min-width:36px;min-height:36px}
-.speak-btn:hover{opacity:1;background:rgba(255,122,41,0.08)}
+.speak-btn:hover{opacity:1;background:rgba(212,175,90,0.08)}
 .speak-btn:active{transform:scale(0.96)}
 .speak-btn.active{opacity:1;color:var(--gold)}
 .teach-toggle{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--line);background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);transition:all 200ms cubic-bezier(0.22,1,0.36,1);color:var(--text-mid);letter-spacing:0.01em;min-height:36px}
@@ -533,35 +537,19 @@ textarea::placeholder{color:var(--text-lo)}
 .file-chip button:hover{color:var(--text-hi)}
 .file-chip button:active{transform:scale(0.96)}
 .copy-btn{border:none;background:none;cursor:pointer;padding:4px 8px;border-radius:10px;font-size:11px;font-weight:600;font-family:inherit;transition:all 200ms cubic-bezier(0.22,1,0.36,1);opacity:0.5;color:var(--text-mid);letter-spacing:0.08em;text-transform:uppercase;min-height:28px}
-.copy-btn:hover{opacity:1;background:rgba(255,122,41,0.08)}
+.copy-btn:hover{opacity:1;background:rgba(212,175,90,0.08)}
 .copy-btn:active{transform:scale(0.96)}
 .copy-btn.copied{opacity:1;color:var(--gold)}
 .mic-btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;transition:all 200ms cubic-bezier(0.22,1,0.36,1);flex-shrink:0}
 .mic-btn:active{transform:scale(0.96)}
 .mic-btn.idle{background:var(--glass);color:var(--text-lo);border:1px solid var(--line);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5)}
-.mic-btn.listening{background:linear-gradient(135deg,#FF8C42,#D4611C);color:#0B0E16;border:1px solid var(--gold-hi);animation:micPulse 1.4s ease-in-out infinite}
+.mic-btn.listening{background:#D4AF5A;color:#0D1420;border:1px solid var(--gold-hi);animation:micPulse 1.4s ease-in-out infinite}
 .saved-backdrop{position:fixed;inset:0;background:rgba(6,8,15,0.7);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);z-index:390;animation:fadeIn 280ms cubic-bezier(0.22,1,0.36,1)}
-.saved-panel{position:fixed;right:0;top:0;bottom:0;width:320px;background:var(--bg1);border-left:1px solid var(--line);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);z-index:400;display:flex;flex-direction:column;animation:slideIn 300ms cubic-bezier(0.22,1,0.36,1);border-top-left-radius:28px;border-bottom-left-radius:28px;box-shadow:inset 1px 0 0 rgba(255,255,255,0.06),-8px 0 32px rgba(0,0,0,0.3)}
+.saved-panel{position:fixed;right:0;top:0;bottom:0;width:min(360px,100vw);background:var(--bg1);border-left:1px solid var(--line);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);z-index:400;display:flex;flex-direction:column;animation:slideIn 300ms cubic-bezier(0.22,1,0.36,1);border-top-left-radius:28px;border-bottom-left-radius:28px;box-shadow:inset 1px 0 0 rgba(255,255,255,0.06),-8px 0 32px rgba(0,0,0,0.3)}
 .saved-item{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:background 180ms cubic-bezier(0.22,1,0.36,1);color:var(--text-mid);font-size:15px;letter-spacing:-0.01em}
 .saved-item:hover{background:rgba(255,255,255,0.04)}
 .saved-item:active{transform:scale(0.99)}
-.saved-item.active{background:rgba(255,122,41,0.08);color:var(--text-hi);border-left:2px solid var(--gold)}
-/* HUD Grid Overlay */
-body::after {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    repeating-linear-gradient(0deg, transparent, transparent 55px, rgba(255,122,41,0.028) 55px, rgba(255,122,41,0.028) 56px),
-    repeating-linear-gradient(90deg, transparent, transparent 55px, rgba(255,122,41,0.028) 55px, rgba(255,122,41,0.028) 56px);
-  mask-image: radial-gradient(ellipse 100% 70% at 50% 0%, black, transparent 85%);
-  -webkit-mask-image: radial-gradient(ellipse 100% 70% at 50% 0%, black, transparent 85%);
-  pointer-events: none;
-  z-index: 0;
-}
+.saved-item.active{background:rgba(212,175,90,0.08);color:var(--text-hi);border-left:2px solid var(--gold)}
 
 /* App Icon Tile */
 .app-icon {
@@ -571,8 +559,8 @@ body::after {
   background: var(--glass-hi);
   border: 1px solid var(--line);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
-  backdrop-filter: blur(24px) saturate(1.5);
-  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  
+  -webkit-
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -609,8 +597,8 @@ body::after {
   background: var(--glass-hi);
   border: 1px solid var(--line);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
-  backdrop-filter: blur(24px) saturate(1.5);
-  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  
+  -webkit-
   cursor: pointer;
   transition: all 200ms cubic-bezier(0.22,1,0.36,1);
 }
@@ -620,7 +608,7 @@ body::after {
 }
 
 .file-tile:hover {
-  box-shadow: 0 0 0 1px rgba(255,122,41,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+  box-shadow: 0 0 0 1px rgba(212,175,90,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
 /* Document Glyph */
@@ -660,15 +648,15 @@ body::after {
 }
 
 .hist-item.current {
-  background: rgba(255,122,41,0.10);
+  background: rgba(212,175,90,0.10);
   color: var(--text-hi);
 }
 
 /* Eyebrow Label */
 .eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-lo);
   padding: 14px 16px 6px;
@@ -679,7 +667,6 @@ body::after {
   padding: 11px 14px;
   border-radius: 12px;
   margin: 2px 8px;
-  border-left: 3px solid var(--gold);
   transition: background 160ms cubic-bezier(0.22,1,0.36,1);
   cursor: pointer;
   color: var(--text-mid);
@@ -692,18 +679,18 @@ body::after {
 
 /* Ghost Button */
 .ghost-btn {
-  padding: 7px 12px;
-  border-radius: 10px;
+  padding: 9px 14px;
+  border-radius: 14px;
   background: var(--glass);
   border: 1px solid var(--line);
   color: var(--text-mid);
   font-size: 13px;
   font-weight: 600;
-  min-height: 36px;
+  min-height: 44px;
   cursor: pointer;
   transition: transform 120ms cubic-bezier(0.22,1,0.36,1);
-  backdrop-filter: blur(24px) saturate(1.5);
-  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  
+  -webkit-
 }
 
 .ghost-btn:active {
@@ -721,9 +708,66 @@ body::after {
 .file-tile:disabled{opacity:0.7}
 .app-icon{font-family:inherit}
 .ghost-btn{font-family:inherit}
-.proj-row.current{background:rgba(255,122,41,0.10);color:var(--text-hi)}
+.proj-row.current{background:rgba(212,175,90,0.10);color:var(--text-hi)}
 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}}`;
+
+// ─── Home: the day at a glance ───────────────────────────────────────
+const NOTEBOOK_URL="https://claude.ai/artifact/78TbzRawKv5XNu2UsXHsD9";
+function fmtTime(t){if(!t)return"";const[h,m]=t.split(":").map(Number);const ap=h>=12?"PM":"AM";const hh=h%12||12;return m?`${hh}:${String(m).padStart(2,"0")} ${ap}`:`${hh} ${ap}`}
+function dayLabel(iso,today){if(iso===today)return"Today";const d=new Date(iso+"T12:00:00");const t=new Date(today+"T12:00:00");const diff=Math.round((d-t)/86400000);if(diff===1)return"Tomorrow";return d.toLocaleDateString("en-US",{weekday:"short"})}
+function HomeCard({children,style,onClick,label}){const base={background:"var(--surface)",border:"1px solid var(--line)",borderRadius:"18px",padding:"16px",textAlign:"left",color:"inherit",display:"flex",flexDirection:"column",gap:"10px",minWidth:0,...style};return onClick?(<button onClick={onClick} aria-label={label} style={{...base,cursor:"pointer",font:"inherit"}}>{children}</button>):(<div style={base}>{children}</div>)}
+function HomeView({upcoming,tasks,notes,onOpenTasks,onStart}){
+  const today=upcoming?.today||new Date().toLocaleDateString("en-CA");
+  const events=upcoming?.events||[];
+  const todays=events.filter(e=>e.date===today);
+  const later=events.filter(e=>e.date>today).slice(0,3);
+  const note=(notes||[]).find(n=>n.pinned&&!n.example)||(notes||[]).find(n=>!n.example)||(notes||[])[0];
+  const dateLine=new Date(today+"T12:00:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+  const row=(e,i,showDay)=>(<div key={i} style={{display:"flex",gap:"14px",alignItems:"baseline"}}>
+    <span style={{width:"64px",flexShrink:0,fontSize:"14px",fontWeight:600,fontVariantNumeric:"tabular-nums",color:showDay?"var(--text-mid)":"var(--text-hi)"}}>{showDay?dayLabel(e.date,today):(e.start?fmtTime(e.start):"All day")}</span>
+    <div style={{minWidth:0}}><div style={{fontSize:"16px",fontWeight:500,lineHeight:1.3}}>{e.title}</div>{(showDay&&e.start)||e.loc?(<div style={{fontSize:"13px",color:"var(--text-lo)",marginTop:"1px"}}>{[showDay&&e.start?fmtTime(e.start):"",e.loc].filter(Boolean).join(" · ")}</div>):null}</div>
+  </div>);
+  const starts=[["Sermon prep","Help me prep a sermon on "],["Save to notebook","Put this in my notebook: "],["Midweek devotional","Write this week's midweek devotional on "],["Add to staff calendar","Add to the staff calendar: "]];
+  return(<div style={{display:"flex",flexDirection:"column",gap:"18px",padding:"8px 4px 12px",animation:"fadeUp 0.35s cubic-bezier(0.22,1,0.36,1) both"}}>
+    <div>
+      <div className="eyebrow2">{dateLine}</div>
+      <h1 className="serif" style={{fontWeight:500,fontSize:"36px",lineHeight:1.08,letterSpacing:"-0.01em",marginTop:"6px",color:"var(--text-hi)"}}>{greeting()},<br/>Pastor.</h1>
+    </div>
+    <HomeCard>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <span className="eyebrow2" style={{color:"var(--gold)"}}>Today</span>
+        <a href="/staff-calendar.html" style={{fontSize:"13px",color:"var(--gold)",textDecoration:"none",minHeight:"28px",display:"flex",alignItems:"center"}}>Staff calendar</a>
+      </div>
+      {!upcoming?(<div style={{fontSize:"14px",color:"var(--text-lo)"}}>Checking the calendar…</div>)
+        :todays.length?todays.map((e,i)=>row(e,i,false))
+        :(<div style={{fontSize:"15px",color:"var(--text-mid)"}}>Nothing on the calendar today.</div>)}
+      {later.length>0&&(<><div style={{height:"1px",background:"var(--line)"}}/><span className="eyebrow2">Coming up</span>{later.map((e,i)=>row(e,"l"+i,true))}</>)}
+    </HomeCard>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:"12px"}}>
+      <HomeCard onClick={onOpenTasks} label="Open tasks" style={{minHeight:"118px"}}>
+        <span className="eyebrow2">Open tasks</span>
+        <span style={{fontSize:"15px",lineHeight:1.35,color:"var(--text-hi)"}}>{tasks.length?tasks[0].title:"Nothing open. Tell Lance what needs doing."}</span>
+        {tasks.length>1&&(<span style={{fontSize:"13px",color:"var(--gold)",marginTop:"auto"}}>+{tasks.length-1} more</span>)}
+      </HomeCard>
+      <a href={NOTEBOOK_URL} target="_blank" rel="noreferrer" style={{textDecoration:"none",color:"inherit",display:"flex"}}>
+        <HomeCard style={{minHeight:"118px",flex:1}}>
+          <span className="eyebrow2">Notebook</span>
+          <span className="serif" style={{fontSize:"16px",lineHeight:1.3,color:"var(--text-hi)"}}>{note?note.title:"Your notebook is empty."}</span>
+          {note?.refs?.length>0&&(<span style={{fontSize:"13px",color:"var(--gold)",marginTop:"auto"}}>{note.refs[0]}</span>)}
+        </HomeCard>
+      </a>
+    </div>
+    <div>
+      <div className="eyebrow2" style={{marginBottom:"10px"}}>Start with</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:"8px"}}>
+        {starts.map(([label,prompt])=>(<button key={label} onClick={()=>onStart(prompt)} style={{minHeight:"40px",padding:"0 14px",borderRadius:"20px",border:"1px solid var(--line)",background:"transparent",color:"var(--text-hi)",fontSize:"14px",cursor:"pointer"}}>{label}</button>))}
+      </div>
+    </div>
+  </div>);
+}
+function IconBtn({onClick,label,children,active,badge,style}){return(<button onClick={onClick} aria-label={label} title={label} style={{position:"relative",width:"44px",height:"44px",borderRadius:"14px",border:`1px solid ${active?"var(--gold)":"var(--line)"}`,background:active?"rgba(212,175,90,0.14)":"var(--surface)",color:active?"var(--gold-hi)":"var(--text-hi)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,...style}}>{children}{badge?(<span style={{position:"absolute",top:"-5px",right:"-5px",minWidth:"20px",height:"20px",padding:"0 5px",borderRadius:"10px",background:"var(--gold)",color:"#0D1420",fontSize:"12px",fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center"}}>{badge}</span>):null}</button>)}
+const ArrowMark=({size=26})=>(<svg width={size} height={size*30/26} viewBox="0 0 26 30" aria-hidden="true"><path d="M13 1 L24 28 L13 22 Z" fill="#D4AF5A"/><path d="M13 1 L2 28 L13 22 Z" fill="#A8823A"/></svg>);
 
 export default function App(){
   const[messages,setMessages]=useState([]);
@@ -759,6 +803,9 @@ export default function App(){
   const[staffNoteStatusByIdx,setStaffNoteStatusByIdx]=useState({});
   const[openTasks,setOpenTasks]=useState([]);
   const[brainNotes,setBrainNotes]=useState([]);
+  const[upcoming,setUpcoming]=useState(null);
+  const[voiceSession,setVoiceSession]=useState(false);
+  useEffect(()=>{if(!teachMode)setVoiceSession(false)},[teachMode]);
   const refreshBrain=useCallback(()=>{loadBrainNotes().then(n=>{if(Array.isArray(n))setBrainNotes(n)}).catch(()=>{})},[]);
   const handleBrainTags=useCallback((raw)=>{const notes=parseBrainTags(raw);if(!notes.length)return;Promise.all(notes.map(n=>saveBrainNote(n).catch(e=>console.error(e)))).then(refreshBrain)},[refreshBrain]);
   const[showTasks,setShowTasks]=useState(false);
@@ -803,6 +850,7 @@ export default function App(){
       try{const t=await loadOpenTasks();setOpenTasks(Array.isArray(t)?t:[])}catch(e){}
     })();
     refreshBrain();
+    fetch(`${DB_URL}/upcoming?days=7`,{headers:SB_HEADERS}).then(r=>r.ok?r.json():null).then(d=>{if(d&&Array.isArray(d.events))setUpcoming(d);else setUpcoming({events:[]})}).catch(()=>setUpcoming({events:[]}));
   },[]);
 
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"})},[messages,loading]);
@@ -912,8 +960,8 @@ export default function App(){
     if(!SR){alert("Try Safari on iPhone for voice input.");return}
     startListening();
   },[listening,startListening]);
-  const toggleVoiceConversation=useCallback(()=>{
-    if(teachMode){
+  const toggleVoiceConversation=useCallback((forceStart)=>{
+    if(teachMode&&forceStart!==true){
       setTeachMode(false);stopSpeaking();
       if(listening){recognitionRef.current?.stop();setListening(false)}
       return;
@@ -1116,8 +1164,12 @@ export default function App(){
   };
 
   const detectIntent=(t)=>{
-    if(/\b(sermon prep|preach on|sermon on|exegete|exposition of|[1-3]?\s?[A-Z][a-z]+ \d+:\d+)\b/.test(t))return"sermon";
-    if(/\b(exam|quiz|test|fill.in|questions for)\b/i.test(t))return"exam";
+    // Notes, saves, calendar and task requests go to Lance himself, even when they quote Scripture.
+    if(/\b(notebook|jot|save this|remember|staff calendar|calendar|remind|task)\b/i.test(t))return null;
+    // Sermon prep: asked for by name, or the message is nothing but a passage reference.
+    if(/\b(sermon prep|preach on|sermon on|exegete|exposition of)\b/i.test(t))return"sermon";
+    if(/^\s*(prep\s+)?[1-3]?\s?[A-Z][a-z]+\.?\s+\d+(:\d+(\s*[-–]\s*\d+)?)?\s*$/.test(t))return"sermon";
+    if(/\b(exam|quiz|fill.in)\b/i.test(t))return"exam";
     if(/\b(devotion|devos|daily word|morning word)\b/i.test(t))return"devotion";
     return null;
   };
@@ -1143,7 +1195,7 @@ export default function App(){
         raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile,activeProject,brainNotes);
       }
       const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=(intent==="sermon"||intent==="exam")?true:detectDocumentContent(clean,recentUserIntent(next));
-      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw)}];setMessages(finalMsgs);
+      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw),brainData:parseBrainTags(raw)}];setMessages(finalMsgs);
       const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}handleBrainTags(raw);autosaveChat(finalMsgs);msgCount.current+=2;
       saveMessage("assistant",clean).catch(()=>{});
       for(const tag of tags){
@@ -1171,7 +1223,7 @@ export default function App(){
         const cleanMessages=next.map(({role,content})=>({role,content}));
         const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile,activeProject,brainNotes);
         const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw)}];setMessages(finalMsgs);
+        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw),brainData:parseBrainTags(raw)}];setMessages(finalMsgs);
       const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}handleBrainTags(raw);autosaveChat(finalMsgs);msgCount.current+=2;
         saveMessage("assistant",clean).catch(()=>{});
         if(teachMode)speakText(clean,idx);
@@ -1191,7 +1243,7 @@ export default function App(){
   <div style={{height:"100%",display:"flex",flexDirection:"column",background:"transparent",position:"relative",zIndex:1}} onDragOver={e=>{e.preventDefault();setDragOver(true)}} onDragLeave={()=>setDragOver(false)} onDrop={onDrop}>
 
     {/* Drag overlay */}
-    {dragOver&&(<div style={{position:"fixed",inset:0,background:"rgba(255,122,41,0.10)",border:"2px dashed rgba(255,122,41,0.5)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><div style={{color:"#fff",fontSize:"18px",fontWeight:600}}>Drop file or screenshot</div></div>)}
+    {dragOver&&(<div style={{position:"fixed",inset:0,background:"rgba(212,175,90,0.10)",border:"2px dashed rgba(212,175,90,0.5)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><div style={{color:"#fff",fontSize:"18px",fontWeight:600}}>Drop file or screenshot</div></div>)}
 
     {showTasks&&(<TasksPanel tasks={openTasks} onClose={()=>setShowTasks(false)} onComplete={handleCompleteTask} onDelete={handleDeleteTask}/>)}
 
@@ -1205,8 +1257,55 @@ export default function App(){
       onDownloadPptx={()=>handleDownloadPptx(previewDoc.text,previewDoc.idx)}
     />)}
 
+
+    {/* Voice mode */}
+    {voiceSession&&teachMode&&(()=>{
+      const lastUser=[...messages].reverse().find(m=>m.role==="user");
+      const lastLance=[...messages].reverse().find(m=>m.role==="assistant");
+      const state=micMuted?"Muted":listening?"Listening":loading?"Thinking":speakingIdx!==null?"Speaking":"Your turn";
+      const hint=micMuted?"Tap Mute again to let Lance hear you.":state==="Speaking"?"Talk over Lance anytime to cut in.":"Lance answers out loud when you pause.";
+      const quote=state==="Speaking"&&lastLance?lastLance.content:(lastUser?.content||"");
+      const endVoice=()=>{setVoiceSession(false);toggleVoiceConversation()};
+      const toggleMute=()=>setMicMuted(m=>{const next=!m;if(next){if(recognitionRef.current){try{recognitionRef.current.abort()}catch(e){}}if(interruptRecRef.current){try{interruptRecRef.current.abort()}catch(e){}interruptRecRef.current=null}setListening(false)}return next});
+      const bars=listening?micLevels:[0.25,0.5,0.8,0.45,0.65,0.3,0.5];
+      return(<div role="dialog" aria-label="Voice conversation with Lance" style={{position:"fixed",inset:0,zIndex:350,background:"var(--bg0)",display:"flex",flexDirection:"column",alignItems:"center",padding:"calc(16px + env(safe-area-inset-top,0px)) 20px calc(28px + env(safe-area-inset-bottom,0px))",animation:"fadeIn 200ms cubic-bezier(0.22,1,0.36,1)"}}>
+        <div style={{alignSelf:"stretch",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span className="eyebrow2">{activeProject?`Voice · ${activeProject.name}`:"Voice"}</span>
+          <button onClick={endVoice} aria-label="Switch to typing" title="Switch to typing" style={{width:"44px",height:"44px",borderRadius:"14px",border:"1px solid var(--line)",background:"transparent",color:"var(--text-hi)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="2.5" y="5" width="15" height="10" rx="2"/><path d="M5.5 8h1M9.5 8h1M13.5 8h1M6.5 12h7"/></svg>
+          </button>
+        </div>
+        <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"0",width:"100%",maxWidth:"420px"}}>
+          <div style={{width:"220px",height:"220px",borderRadius:"50%",border:"1px solid var(--line)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <div style={{width:"172px",height:"172px",borderRadius:"50%",border:`1px solid ${listening?"rgba(212,175,90,0.55)":"rgba(212,175,90,0.22)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"border-color 200ms"}}>
+              <div style={{width:"126px",height:"126px",borderRadius:"50%",background:"var(--surface)",border:"2px solid var(--gold)",display:"flex",alignItems:"center",justifyContent:"center",animation:state==="Speaking"?"breathe 1.6s ease-in-out infinite":"none"}}><ArrowMark size={48}/></div>
+            </div>
+          </div>
+          <div aria-hidden="true" style={{marginTop:"26px",display:"flex",alignItems:"center",gap:"5px",height:"34px"}}>
+            {bars.map((lvl,i)=>(<span key={i} style={{width:"4px",height:`${8+lvl*26}px`,borderRadius:"2px",background:micMuted?"var(--line-hi)":"var(--gold)",transition:"height 60ms linear"}}/>))}
+          </div>
+          <div aria-live="polite" style={{marginTop:"10px",fontSize:"20px",fontWeight:600,color:"var(--text-hi)"}}>{state}</div>
+          {quote&&(<div className="serif" style={{marginTop:"22px",padding:"0 12px",textAlign:"center",fontSize:"21px",lineHeight:1.4,color:"var(--text-hi)",display:"-webkit-box",WebkitLineClamp:4,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{state==="Speaking"?quote:`“${quote}”`}</div>)}
+          <div style={{marginTop:"12px",textAlign:"center",fontSize:"14px",lineHeight:1.5,color:"var(--text-lo)"}}>{hint}</div>
+        </div>
+        <div style={{display:"flex",gap:"28px",alignItems:"flex-start"}}>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"8px"}}>
+            <button onClick={toggleMute} aria-pressed={micMuted} aria-label={micMuted?"Unmute microphone":"Mute microphone"} style={{width:"64px",height:"64px",borderRadius:"32px",border:`1px solid ${micMuted?"var(--gold)":"var(--line-hi)"}`,background:micMuted?"rgba(212,175,90,0.16)":"var(--surface)",color:micMuted?"var(--gold-hi)":"var(--text-hi)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+              <svg width="24" height="24" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><rect x="7" y="2.5" width="6" height="10" rx="3"/><path d="M4.5 9.5a5.5 5.5 0 0011 0M10 15v2.5"/>{micMuted&&(<path d="M3 3l14 14"/>)}</svg>
+            </button>
+            <span style={{fontSize:"13px",color:"var(--text-lo)"}}>{micMuted?"Unmute":"Mute"}</span>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"8px"}}>
+            <button onClick={endVoice} aria-label="End voice conversation" style={{width:"64px",height:"64px",borderRadius:"32px",border:"none",background:"#C2502E",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+              <svg width="24" height="24" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>
+            </button>
+            <span style={{fontSize:"13px",color:"var(--text-lo)"}}>End</span>
+          </div>
+        </div>
+      </div>);
+    })()}
     {/* Listening overlay */}
-    {listening&&(<div style={{position:"fixed",inset:0,background:"rgba(6,8,15,0.8)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",zIndex:300,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",animation:"fadeIn 200ms cubic-bezier(0.22,1,0.36,1)"}} onClick={toggleMic}><div className="wave" style={{transform:"scale(2)",marginBottom:"32px"}}>
+    {listening&&!voiceSession&&(<div style={{position:"fixed",inset:0,background:"rgba(10,16,26,0.9)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",zIndex:300,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",animation:"fadeIn 200ms cubic-bezier(0.22,1,0.36,1)"}} onClick={toggleMic}><div className="wave" style={{transform:"scale(2)",marginBottom:"32px"}}>
       {micLevels.map((lvl,i)=>(<span key={i} style={{height:`${8+lvl*26}px`,transition:"height 60ms linear",animation:"none"}}/>))}
     </div><div style={{color:"var(--text-hi)",fontSize:"20px",fontWeight:600,marginBottom:"8px",letterSpacing:"-0.02em"}}>Listening</div><div style={{color:"var(--text-lo)",fontSize:"14px"}}>Tap anywhere to cancel</div></div>)}
 
@@ -1225,7 +1324,7 @@ export default function App(){
         <input autoFocus value={projName} onChange={e=>setProjName(e.target.value)} placeholder="Project name" style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid var(--line)",borderRadius:"10px",color:"var(--text-hi)",fontSize:"15px",padding:"9px 11px",marginBottom:"8px",outline:"none",fontFamily:"inherit"}}/>
         <textarea value={projDesc} onChange={e=>setProjDesc(e.target.value)} placeholder="Describe this folder. Every chat inside follows these instructions." rows={3} style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid var(--line)",borderRadius:"10px",color:"var(--text-hi)",fontSize:"14px",padding:"9px 11px",marginBottom:"8px",outline:"none",resize:"vertical",fontFamily:"inherit",lineHeight:1.5}}/>
         <div style={{display:"flex",gap:"8px"}}>
-          <button className="ghost-btn" style={{flex:1,background:"linear-gradient(135deg,#FF8C42,#D4611C)",color:"#0B0E16",border:"none"}} onClick={handleProjSubmit}>{projFormMode==="edit"?"Save project":"Create project"}</button>
+          <button className="ghost-btn" style={{flex:1,background:"#D4AF5A",color:"#0D1420",border:"none"}} onClick={handleProjSubmit}>{projFormMode==="edit"?"Save project":"Create project"}</button>
           <button className="ghost-btn" onClick={()=>{setProjFormMode(null);setProjEditId(null)}}>Cancel</button>
         </div>
       </div>)}
@@ -1285,54 +1384,36 @@ export default function App(){
     </div>)}
 
     {/* Header */}
-<div style={{position:"relative",paddingTop:"env(safe-area-inset-top,0px)",background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",borderBottom:"1px solid rgba(58,219,232,0.16)",flexShrink:0}}>
-<span className="hud-corner hud-corner-bl" style={{bottom:"2px"}}/><span className="hud-corner hud-corner-br" style={{bottom:"2px"}}/>
-<div style={{height:"54px",padding:"0 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:"12px"}}>
-  <div style={{display:"flex",alignItems:"center",gap:"10px",flexShrink:0}}>
-    <div style={{position:"relative",width:"40px",height:"40px",flexShrink:0}}>
-      <div className="lance-ring-cyan"/>
-      <LanceLogo size={40}/>
-      <div className={`lance-ring${(listening||teachMode||speakingIdx!==null)?" active":""}`}/>
-    </div>
-    <div>
-      <div style={{display:"flex",alignItems:"center",gap:"7px"}}>
-        <div style={{fontSize:"17px",fontWeight:700,color:"var(--text-hi)",letterSpacing:"0.01em",lineHeight:1.1}}>LANCE</div>
-        <div style={{width:"5px",height:"5px",borderRadius:"50%",background:"var(--cyan)",boxShadow:"0 0 6px var(--cyan)",animation:"pulseGlow 2.2s ease-in-out infinite"}}/>
-      </div>
-      <div style={{fontSize:"10.5px",color:"var(--text-lo)",fontWeight:600,letterSpacing:"0.12em",textTransform:"uppercase",lineHeight:1.2,fontFamily:"ui-monospace,Menlo,monospace"}}>{activeProject?activeProject.name:"Personal Agent · Online"}</div>
-    </div>
+<header style={{position:"relative",paddingTop:"env(safe-area-inset-top,0px)",background:"var(--bg1)",borderBottom:isEmpty?"1px solid transparent":"1px solid var(--line)",flexShrink:0}}>
+<div style={{minHeight:"64px",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:"10px"}}>
+  <button onClick={()=>{if(!isEmpty)clearChat()}} aria-label={isEmpty?"Lance":"Back to home"} style={{display:"flex",alignItems:"center",gap:"10px",minWidth:0,background:"none",border:"none",color:"inherit",cursor:isEmpty?"default":"pointer",padding:0,textAlign:"left"}}>
+    {!isEmpty&&(<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,color:"var(--text-mid)"}}><path d="M12.5 4L6.5 10l6 6"/></svg>)}
+    <span style={{flexShrink:0,display:"flex"}}><ArrowMark size={isEmpty?26:22}/></span>
+    <span style={{minWidth:0}}>
+      <span className="serif" style={{display:"block",fontSize:isEmpty?"23px":"20px",fontWeight:600,lineHeight:1.1,color:"var(--text-hi)"}}>Lance</span>
+      {activeProject&&(<span style={{display:"block",fontSize:"12px",color:"var(--gold)",marginTop:"2px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"150px"}}>{activeProject.name}</span>)}
+    </span>
+  </button>
+  <div style={{display:"flex",alignItems:"center",gap:"8px",flexShrink:0}}>
+    {speakingIdx!==null&&(<button onClick={stopSpeaking} style={{minHeight:"44px",padding:"0 14px",borderRadius:"14px",border:"1px solid rgba(214,110,80,0.5)",background:"rgba(194,80,46,0.15)",color:"#F0A48C",fontSize:"14px",fontWeight:600,cursor:"pointer"}}>Stop</button>)}
+    {!isEmpty&&(<IconBtn onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} label={teachMode?"Read aloud is on":"Read aloud is off"} active={teachMode}>
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h2.5L9 3v10L5.5 10H3z"/>{teachMode?(<path d="M11.5 5.5a3.5 3.5 0 010 5M13 3.8a6 6 0 010 8.4"/>):(<path d="M11.5 6l3 4M14.5 6l-3 4"/>)}</svg>
+    </IconBtn>)}
+    <IconBtn onClick={()=>setShowTasks(true)} label={`Open tasks, ${openTasks.length} open`} badge={openTasks.length||null}>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10.5l3.5 3.5L16 5.5"/></svg>
+    </IconBtn>
+    <IconBtn onClick={()=>setShowSaved(s=>!s)} label="Open library" active={showSaved}>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M3 5h14M3 10h14M3 15h9"/></svg>
+    </IconBtn>
   </div>
-  <div style={{display:"flex",alignItems:"center",gap:"8px",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none",msOverflowStyle:"none",flexShrink:1}}>
-        {pinnedConvos.map((c,i)=>(<button key={c.id} onClick={()=>handleLoadConvo(c)} style={{background:activeConvoId===c.id?"rgba(255,122,41,0.18)":"var(--glass)",border:`1px solid ${activeConvoId===c.id?"var(--gold)":"var(--line)"}`,borderRadius:"10px",padding:"6px 10px",cursor:"pointer",fontSize:"13px",color:activeConvoId===c.id?"var(--gold-hi)":"var(--text-mid)",fontFamily:"inherit",maxWidth:"90px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minHeight:"36px",display:"flex",alignItems:"center",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}} title={c.title}>{c.title.slice(0,12)}</button>))}
-    <button onClick={()=>setShowSaved(s=>!s)} style={{background:showSaved?"rgba(255,122,41,0.18)":"var(--glass)",border:`1px solid ${showSaved?"var(--gold)":"var(--line)"}`,borderRadius:"10px",padding:"6px 10px",cursor:"pointer",color:showSaved?"var(--gold-hi)":"var(--text-mid)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}><SaveIcon/><span style={{fontSize:"13px",fontWeight:600}}>{allSaved.length}</span></button>
-    <button onClick={()=>setShowTasks(true)} title="Open tasks" style={{background:"var(--glass)",border:"1px solid var(--line)",borderRadius:"50%",width:"34px",height:"34px",padding:0,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",position:"relative",flexShrink:0}}>
-      <svg width="34" height="34" viewBox="0 0 34 34" style={{position:"absolute",inset:0,transform:"rotate(-90deg)"}}>
-        <circle cx="17" cy="17" r="13.5" className="hud-gauge-track"/>
-        <circle cx="17" cy="17" r="13.5" className="hud-gauge-fill" strokeDasharray={2*Math.PI*13.5} strokeDashoffset={2*Math.PI*13.5*(1-Math.min(openTasks.length,5)/5)}/>
-      </svg>
-      <span style={{fontSize:"12px",fontWeight:700,color:openTasks.length>0?"var(--gold-hi)":"var(--text-lo)",fontFamily:"ui-monospace,Menlo,monospace",zIndex:1}}>{openTasks.length}</span>
-    </button>
-    <button className="teach-toggle" onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} style={{background:teachMode?"rgba(255,122,41,0.18)":"var(--glass)",border:`1px solid ${teachMode?"var(--gold)":"var(--line)"}`,borderRadius:"10px",color:teachMode?"var(--gold-hi)":"var(--text-mid)",padding:"6px 11px",fontFamily:"inherit",fontSize:"13px",fontWeight:600,cursor:"pointer",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>{teachMode?"On":"Off"}</button>
-    {speakingIdx!==null&&(<button onClick={stopSpeaking} style={{background:"rgba(255,80,80,0.15)",border:"1px solid rgba(255,80,80,0.4)",borderRadius:"10px",padding:"6px 10px",cursor:"pointer",color:"rgba(255,120,120,0.9)",fontSize:"13px",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"4px",minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}><StopIcon/></button>)}
-    {messages.length>0&&(<button onClick={clearChat} style={{background:"var(--glass)",border:"1px solid var(--line)",borderRadius:"10px",cursor:"pointer",fontSize:"13px",color:"var(--text-mid)",fontFamily:"inherit",padding:"6px 11px",fontWeight:600,minHeight:"36px",transition:"all 120ms cubic-bezier(0.22,1,0.36,1)"}}>New</button>)}
-  </div>
-</div></div>
+</div></header>
 {/* Chat body */}
-<div style={{flex:1,overflowY:"auto",padding:"16px 16px 8px",display:"flex",flexDirection:"column",gap:"6px"}}>
-  {isEmpty&&(<div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",animation:"fadeUp 0.35s cubic-bezier(0.22,1,0.36,1) both"}}>
-    <div style={{textAlign:"center"}}>
-      <div style={{position:"relative",display:"inline-block",marginBottom:"22px"}}>
-        <div className="lance-ring-cyan" style={{inset:"-10px"}}/>
-        <div style={{animation:"pulseGlow 4s ease-in-out infinite"}}><LanceLogo size={72}/></div>
-      </div>
-      <div style={{fontSize:"30px",fontWeight:600,color:"var(--text-hi)",letterSpacing:"-0.03em",lineHeight:1.2}}>{greeting()}, Pastor.</div>
-    </div>
-  </div>)}
+<div style={{flex:1,overflowY:"auto",padding:"16px 16px 8px",display:"flex",flexDirection:"column",gap:"14px",maxWidth:"760px",width:"100%",margin:"0 auto",boxSizing:"border-box"}}>
+  {isEmpty&&(<HomeView upcoming={upcoming} tasks={openTasks} notes={brainNotes} onOpenTasks={()=>setShowTasks(true)} onStart={(p)=>{setInput(p);setTimeout(()=>{const el=inputRef.current;if(el){el.focus();el.setSelectionRange(p.length,p.length)}},0)}}/>)}
 
   {messages.map((m,i)=>(<div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",animation:"fadeUp 0.2s cubic-bezier(0.22,1,0.36,1) both",marginBottom:"4px"}}>
-    {m.role==="assistant"&&(<div style={{flexShrink:0,marginRight:"9px",alignSelf:"flex-end"}}><LanceLogo size={22}/></div>)}
-    <div style={{maxWidth:"82%",display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start",gap:"5px"}}>
-      <div className={m.role==="user"?"hud-panel-user":"hud-panel"} style={{position:"relative",padding:"12px 17px",background:m.role==="user"?"linear-gradient(135deg,#FF8C42,#D4611C)":"var(--glass)",backdropFilter:m.role==="user"?"none":"blur(24px) saturate(1.5)",WebkitBackdropFilter:m.role==="user"?"none":"blur(24px) saturate(1.5)",color:m.role==="user"?"#140A04":"var(--text-hi)",fontSize:"17px",lineHeight:"1.5",whiteSpace:"pre-wrap",fontWeight:400,letterSpacing:"-0.012em",border:m.role==="user"?"none":`1px solid rgba(58,219,232,0.14)`,boxShadow:m.role==="user"?"0 4px 18px rgba(255,122,41,0.22)":"0 0 20px rgba(58,219,232,0.03)"}}>
+    <div style={{maxWidth:m.role==="user"?"84%":"100%",minWidth:0,display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start",gap:"6px"}}>
+      <div style={{position:"relative",padding:m.role==="user"?"11px 15px":"2px 2px",background:m.role==="user"?"var(--line)":"transparent",borderRadius:m.role==="user"?"20px 20px 6px 20px":"0",color:"var(--text-hi)",fontSize:"16px",lineHeight:m.role==="user"?"1.45":"1.6",whiteSpace:"pre-wrap",fontWeight:400,overflowWrap:"anywhere"}}>
         {m.imagePreview&&(<img src={m.imagePreview} alt="screenshot" style={{maxWidth:"100%",borderRadius:"10px",marginBottom:"10px",display:"block"}}/>)}
         {renderText(m.content)}
       </div>
@@ -1342,7 +1423,12 @@ export default function App(){
           <button className="speak-btn" onClick={()=>handleDownload(m.content,i)} style={{color:"var(--text-mid)",minWidth:"36px",minHeight:"36px",display:"flex",alignItems:"center",justifyContent:"center"}} title="Download Word doc"><DownloadIcon/></button>
           <button className={`copy-btn${copiedIdx===i?" copied":""}`} onClick={()=>handleCopy(m.content,i)} style={{minHeight:"36px"}}>{copiedIdx===i?"Copied":"Copy"}</button>
         </div>
-        {m.staffEventsData?.length>0?(
+{m.brainData?.length>0&&m.brainData.map((n,bi)=>(<a key={"b"+bi} href={NOTEBOOK_URL} target="_blank" rel="noreferrer" style={{display:"flex",flexDirection:"column",gap:"8px",marginTop:"6px",padding:"14px",background:"var(--surface)",border:"1px solid var(--line)",borderRadius:"16px",textDecoration:"none",color:"inherit",maxWidth:"340px"}}>
+          <span style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"8px"}}><span className="eyebrow2" style={{color:"var(--gold)",fontSize:"11px"}}>Saved to notebook · {({sermon:"Sermon seed",study:"Study",idea:"Idea",task:"Task",prayer:"Prayer"})[n.kind]||"Note"}</span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#7FBF95" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-label="Saved"><path d="M3.5 8.5l3 3 6-7"/></svg></span>
+          <span className="serif" style={{fontSize:"18px",lineHeight:1.3}}>{n.title||"Untitled"}</span>
+          {n.refs?.length>0&&(<span style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>{n.refs.map(r=>(<span key={r} className="serif" style={{fontSize:"13px",padding:"3px 9px",borderRadius:"8px",background:"#2B2617",color:"#E3C574"}}>{r}</span>))}</span>)}
+        </a>))}
+                {m.staffEventsData?.length>0?(
           <StaffEventsCard events={m.staffEventsData} statusByEventIdx={Object.fromEntries(m.staffEventsData.map((_,ei)=>[ei,staffEventStatusByIdx[`${i}:${ei}`]||"idle"]))} onAdd={(ei)=>handleAddStaffEvent(i,ei,m.staffEventsData[ei])} onAddAll={()=>handleAddAllStaffEvents(i,m.staffEventsData)}/>
         ):m.staffNotesData?.length>0?(
           <StaffNoteCard note={m.staffNotesData[0]} status={staffNoteStatusByIdx[i]||"idle"} onAdd={()=>handleAddStaffNote(i,m.staffNotesData[0])}/>
@@ -1363,50 +1449,39 @@ export default function App(){
   </div>))}
 
   {loading&&(<div style={{display:"flex",alignItems:"flex-end",gap:"9px",animation:"fadeUp 0.18s cubic-bezier(0.22,1,0.36,1) both"}}>
-    <div style={{flexShrink:0}}><LanceLogo size={22}/></div>
-    <div style={{padding:"12px 18px",borderRadius:"6px 20px 20px 20px",background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",border:"1px solid var(--line)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06)",display:"flex",gap:"6px",alignItems:"center"}}>
-      {[0,1,2].map(i=>(<div key={i} style={{width:"6px",height:"6px",borderRadius:"50%",background:"var(--gold)",filter:"drop-shadow(0 0 4px rgba(255,122,41,0.6))",animation:`dot 1.2s ease-in-out ${i*0.2}s infinite`}}/>))}
+    <div aria-label="Lance is thinking" style={{padding:"10px 4px",display:"flex",gap:"6px",alignItems:"center"}}>
+      {[0,1,2].map(i=>(<div key={i} style={{width:"6px",height:"6px",borderRadius:"50%",background:"var(--gold)",animation:`dot 1.2s ease-in-out ${i*0.2}s infinite`}}/>))}
     </div>
   </div>)}
   <div ref={bottomRef}/>
 </div>
 
     {/* Input */}
-    <div style={{position:"relative",paddingTop:"10px",paddingLeft:"16px",paddingRight:"16px",paddingBottom:"max(16px,env(safe-area-inset-bottom,16px))",background:"var(--glass)",backdropFilter:"blur(24px) saturate(1.5)",WebkitBackdropFilter:"blur(24px) saturate(1.5)",borderTop:"1px solid var(--line)",flexShrink:0}}>
+    <div style={{position:"relative",padding:"10px 16px calc(14px + env(safe-area-inset-bottom,0px))",background:"var(--bg1)",flexShrink:0}}>
       {pendingFiles.length>0&&(<div style={{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"8px"}}>
         {pendingFiles.map((f,i)=>(<div key={i} className="file-chip">
           <span>{f.name.length>20?f.name.slice(0,17)+"…":f.name}</span>
-          <button onClick={()=>removeFile(i)} title="Remove"><CloseIcon/></button>
+          <button onClick={()=>removeFile(i)} title="Remove" aria-label={`Remove ${f.name}`}><CloseIcon/></button>
         </div>))}
       </div>)}
-      <div className="hud-panel" style={{position:"relative",display:"flex",alignItems:"flex-end",gap:"8px",background:"rgba(255,255,255,0.055)",border:"1px solid rgba(255,122,41,0.18)",padding:"9px 10px 9px 14px",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.05)"}}>
-        <button onClick={()=>fileRef.current?.click()} style={{background:"none",border:"none",cursor:"pointer",color:"var(--text-lo)",display:"flex",alignItems:"center",padding:"4px",borderRadius:"6px",transition:"color 0.14s",flexShrink:0,minWidth:"36px",minHeight:"36px",justifyContent:"center"}} title="Attach file or screenshot" onMouseEnter={e=>e.currentTarget.style.color="var(--gold)"} onMouseLeave={e=>e.currentTarget.style.color="var(--text-lo)"}><AttachIcon/></button>
+      <div style={{display:"flex",alignItems:"flex-end",gap:"6px",background:"var(--surface)",border:"1px solid var(--line-hi)",borderRadius:"26px",padding:"6px 6px 6px 8px"}}>
+        <button onClick={()=>fileRef.current?.click()} aria-label="Attach a file or photo" title="Attach a file or photo" style={{width:"40px",height:"40px",borderRadius:"20px",border:"none",background:"transparent",color:"var(--text-lo)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M10 4v12M4 10h12"/></svg>
+        </button>
         <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.doc,.txt,.xlsx,.xls,.csv,.png,.jpg,.jpeg,.webp,.heic,.heif,.gif,.bmp,image/*" style={{display:"none"}} onChange={e=>{handleFiles(e.target.files);e.target.value=""}}/>
-        <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData?.items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder="Message Lance" rows={1} style={{flex:1,border:"none",background:"transparent",fontSize:"17px",color:"var(--text-hi)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:400,letterSpacing:"-0.012em",fontFamily:"inherit"}}/>
-        <button onClick={()=>{
-          setMicMuted(m=>{
-            const next=!m;
-            if(next){
-              if(recognitionRef.current){try{recognitionRef.current.abort()}catch(e){}}
-              if(interruptRecRef.current){try{interruptRecRef.current.abort()}catch(e){}interruptRecRef.current=null}
-              setListening(false);
-            }
-            return next;
-          });
-        }} title={micMuted?"Unmute microphone":"Mute microphone"} style={{width:"33px",height:"33px",borderRadius:"50%",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginRight:"2px",background:micMuted?"rgba(255,80,80,0.18)":"rgba(255,255,255,0.08)",color:micMuted?"#FF6B6B":"rgba(255,255,255,0.55)"}}>
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-            <path d="M5 2.5a2.5 2.5 0 015 0v4a2.5 2.5 0 01-5 0v-4z" stroke="currentColor" strokeWidth="1.3"/>
-            <path d="M3 7.5a4.5 4.5 0 009 0M7.5 12v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-            {micMuted&&(<path d="M2 2l11 11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>)}
-          </svg>
+        <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData?.items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder={isEmpty?"Ask Lance anything":"Message Lance"} aria-label="Message Lance" rows={1} style={{flex:1,minWidth:0,border:"none",background:"transparent",fontSize:"16px",color:"var(--text-hi)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:400,fontFamily:"inherit",padding:"8px 0",outline:"none"}}/>
+        <button onClick={toggleMic} aria-label={listening&&!voiceSession?"Stop dictating":"Dictate a message"} title="Dictate a message" style={{width:"40px",height:"40px",borderRadius:"20px",border:"none",background:listening&&!voiceSession?"rgba(212,175,90,0.18)":"transparent",color:listening&&!voiceSession?"var(--gold-hi)":"var(--text-lo)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><rect x="7" y="2.5" width="6" height="10" rx="3"/><path d="M4.5 9.5a5.5 5.5 0 0011 0M10 15v2.5"/></svg>
         </button>
-        <button className={`mic-btn${teachMode?" listening":" idle"}`} onClick={toggleVoiceConversation} title={teachMode?"End voice conversation":"Start voice conversation"} style={{marginRight:"2px"}}>
-          <VoiceChatIcon/>
-        </button>
-        <button className={`mic-btn${listening?" listening":" idle"}`} onClick={toggleMic} title={listening?"Stop":"Talk to Lance"}>
-          <MicIcon/>
-        </button>
-        <button onClick={()=>send()} disabled={(!input.trim()&&pendingFiles.length===0)||loading} style={{width:"36px",height:"36px",borderRadius:"50%",background:(input.trim()||pendingFiles.length>0)&&!loading?"linear-gradient(135deg,#FF8C42,#D4611C)":"var(--glass)",border:"none",cursor:(input.trim()||pendingFiles.length>0)&&!loading?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:(input.trim()||pendingFiles.length>0)&&!loading?"#0B0E16":"var(--text-lo)",boxShadow:(input.trim()||pendingFiles.length>0)&&!loading?"0 3px 12px rgba(255,122,41,0.4)":"none",transition:"all 200ms cubic-bezier(0.22,1,0.36,1)",transform:"scale(1)"}} onMouseDown={e=>e.currentTarget.style.transform="scale(0.96)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"} onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}><SendIcon/></button>
+        {(input.trim()||pendingFiles.length>0)?(
+          <button onClick={()=>send()} disabled={loading} aria-label="Send" title="Send" style={{width:"44px",height:"44px",borderRadius:"22px",border:"none",background:loading?"var(--surface-hi)":"var(--gold)",color:loading?"var(--text-lo)":"#0D1420",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:loading?"default":"pointer"}}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 16V4M5 9l5-5 5 5"/></svg>
+          </button>
+        ):(
+          <button onClick={()=>{setVoiceSession(true);toggleVoiceConversation(true)}} aria-label="Talk with Lance" title="Talk with Lance" style={{width:"44px",height:"44px",borderRadius:"22px",border:"none",background:"var(--gold)",color:"#0D1420",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M3 9v2M6.5 6v8M10 3.5v13M13.5 6v8M17 9v2"/></svg>
+          </button>
+        )}
       </div>
     </div>
   </div></>);
