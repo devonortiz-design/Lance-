@@ -1,4 +1,4 @@
-import { MODEL, VOICE_URL, DOCX_URL, SEARCH_URL } from "./config";
+import { MODEL, VOICE_URL, DOCX_URL, SEARCH_URL, getLanceKey } from "./config";
 import { buildSystem } from "./system";
 
 export async function callClaude(messages, facts, sessions, fileContents = [], profile = [], project = null, brain = []) {
@@ -42,7 +42,7 @@ export async function callClaude(messages, facts, sessions, fileContents = [], p
     try {
       res = await fetch(CLAUDE_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-lance-key": getLanceKey() },
         body,
       });
       d = await res.json();
@@ -53,6 +53,7 @@ export async function callClaude(messages, facts, sessions, fileContents = [], p
     }
 
     if (!d.error && res.ok) return d.content?.[0]?.text || "";
+    if (res.status === 401) throw new Error("Lance needs his unlock passcode again. Close and reopen Lance, then enter it.");
 
     lastMsg = d.error?.message || `Request failed (${res.status}).`;
     if (retryable(res.status, lastMsg) && attempt < MAX_TRIES - 1) {
