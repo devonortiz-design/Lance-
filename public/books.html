@@ -100,6 +100,13 @@ td select{max-width:12rem;padding:5px 6px;font-size:.85rem}
   .split{grid-template-columns:1fr}
   .bar{grid-template-columns:minmax(0,7rem) minmax(0,1fr) 5.5rem}
   th.hide-sm,td.hide-sm{display:none}
+  table.tx thead{display:none}
+  table.tx tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"d a" "desc desc" "c x";gap:6px 10px;padding:12px 6px;border-bottom:1px solid var(--line)}
+  table.tx td{border:0;padding:0}
+  table.tx td.d{grid-area:d;color:var(--muted)} table.tx td.a{grid-area:a;font-weight:600}
+  table.tx td.desc{grid-area:desc;max-width:none} table.tx td.c{grid-area:c} table.tx td.x{grid-area:x}
+  table.tx td.c select{max-width:100%;width:100%}
+  table.tx tr.flag{background:var(--flag-soft)} table.tx tr.flag td{background:none}
 }
 @media print{
   header.band nav,.no-print,.toast{display:none!important}
@@ -241,7 +248,7 @@ function overview(){
   if (!S.rows.length) { $("#view").innerHTML = `<div class="panel empty"><strong>No transactions yet.</strong><br>Start on the Import bank file tab.</div>`; return; }
   const ms = monthsList(); const i = ms.indexOf(S.month); const prev = ms[i + 1];
   const t = totals(inMonth(S.month)), p = prev ? totals(inMonth(prev)) : null;
-  const delta = (a, b) => b == null ? "" : `${a >= b ? "Up" : "Down"} ${money0(Math.abs(a - b))} from ${monthShort(prev)}`;
+  const delta = (a, b) => b == null ? "" : (Math.round(a) === Math.round(b) ? `Same as ${monthShort(prev)}` : `${a > b ? "Up" : "Down"} ${money0(Math.abs(a - b))} from ${monthShort(prev)}`);
   const inc = byCat(inMonth(S.month), "Income"), exp = byCat(inMonth(S.month), "Expense");
   const maxI = Math.max(1, ...inc.map(x => x[1])), maxE = Math.max(1, ...exp.map(x => x[1]));
   const year = S.month.slice(0, 4);
@@ -279,11 +286,11 @@ function catSelect(r){
 }
 function txRow(r, showClear){
   return `<tr data-id="${r.id}" class="${r.review ? "flag" : ""}">
-    <td class="num" style="white-space:nowrap">${fmtDate(r.date)}</td>
+    <td class="num d" style="white-space:nowrap">${fmtDate(r.date)}</td>
     <td class="desc">${esc(r.description)}</td>
-    <td>${catSelect(r)}</td>
-    <td class="r num ${r.type === "Income" ? "amt-in" : "amt-out"}" style="white-space:nowrap">${r.type === "Income" ? "+" : "−"}${money(r.amount).replace("$","$")}</td>
-    <td class="r no-print" style="white-space:nowrap">${S.confirmId === r.id
+    <td class="c">${catSelect(r)}</td>
+    <td class="r num a ${r.type === "Income" ? "amt-in" : "amt-out"}" style="white-space:nowrap">${r.type === "Income" ? "+" : "−"}${money(r.amount)}</td>
+    <td class="r no-print x" style="white-space:nowrap">${S.confirmId === r.id
       ? `<span class="confirm">Delete? <button class="btn danger" data-del-yes="${r.id}">Delete</button><button class="btn ghost" data-del-no>Keep</button></span>`
       : `${showClear ? `<button class="btn ghost" data-ok="${r.id}">Looks right</button> ` : ""}<button class="btn ghost" data-del="${r.id}" aria-label="Delete transaction">Delete</button>`}</td>
   </tr>`;
@@ -314,7 +321,7 @@ function transactions(){
     <div class="row spread"><h2>Transactions</h2>
       <div class="row">${monthPicker("txMonth", S.txMonth, true)}<input type="search" id="txQ" placeholder="Search description or category" value="${esc(S.q)}" aria-label="Search"></div></div>
     <div class="panel" style="padding:4px 8px">
-      ${rows.length ? `<div class="tablewrap"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="r">Amount</th><th class="no-print"></th></tr></thead><tbody>${shown.map(r => txRow(r, r.review)).join("")}</tbody></table></div>
+      ${rows.length ? `<div class="tablewrap"><table class="tx"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="r">Amount</th><th class="no-print"></th></tr></thead><tbody>${shown.map(r => txRow(r, r.review)).join("")}</tbody></table></div>
       ${rows.length > shown.length ? `<p class="small muted" style="padding:8px">Showing the newest 400 of ${rows.length.toLocaleString()}. Pick a month or search to narrow it down.</p>` : ""}` : `<div class="empty">No transactions match.</div>`}
     </div>`;
   $("#txMonth").onchange = e => { S.txMonth = e.target.value; render(); };
@@ -328,7 +335,7 @@ function review(){
   $("#view").innerHTML = `
     <div><h2>Needs review</h2><p class="muted" style="margin:4px 0 0">The auto-sorter wasn't sure about these. Pick the right category, or tap "Looks right."</p></div>
     <div class="panel" style="padding:4px 8px">${rows.length
-      ? `<div class="tablewrap"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="r">Amount</th><th class="no-print"></th></tr></thead><tbody>${rows.map(r => txRow(r, true)).join("")}</tbody></table></div>`
+      ? `<div class="tablewrap"><table class="tx"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="r">Amount</th><th class="no-print"></th></tr></thead><tbody>${rows.map(r => txRow(r, true)).join("")}</tbody></table></div>`
       : `<div class="empty">Nothing waits for review.</div>`}</div>`;
   bindRows();
 }
