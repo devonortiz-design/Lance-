@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>VBC Books</title>
+<meta name="theme-color" content="#0F2A52">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+/* Ledger layout: navy header band, tabs, then one working panel. Church theme from design/tokens.json. */
+:root{
+  --navy:#0F2A52; --navy-deep:#081627; --blue:#1F4E96; --surface:#F7F8FA; --white:#FFFFFF;
+  --ink:#1F2937; --ink-head:#111827; --muted:#5F646B; --line:#E5E7EB;
+  --in:#1F7A4D; --in-soft:#E3F2EA; --out:#9A3412; --out-soft:#FBEAE2; --flag:#B45309; --flag-soft:#FEF3C7;
+  --sans:-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --serif:Georgia, "Times New Roman", serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font:15px/1.5 var(--sans);color:var(--ink);background:var(--surface);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+[hidden]{display:none!important}
+.num{font-variant-numeric:tabular-nums}
+
+header.band{background:var(--navy);color:#fff;padding:18px 16px 0}
+.band-in{max-width:980px;margin:0 auto}
+.band h1{font-family:var(--serif);font-weight:700;font-size:1.6rem;margin:0;letter-spacing:.01em}
+.band .sub{opacity:.72;font-size:.85rem;margin:2px 0 14px}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{background:none;border:0;color:rgba(255,255,255,.72);padding:10px 14px;border-radius:8px 8px 0 0;cursor:pointer;white-space:nowrap;font-weight:500}
+nav.tabs button[aria-selected="true"]{background:var(--surface);color:var(--navy)}
+.tabs .count{display:inline-block;min-width:1.4em;margin-left:6px;padding:0 .4em;border-radius:999px;background:var(--flag);color:#fff;font-size:.72rem;line-height:1.5}
+
+main{max-width:980px;margin:0 auto;padding:20px 16px 48px;display:flex;flex-direction:column;gap:18px}
+h2{font-family:var(--serif);color:var(--ink-head);font-size:1.25rem;margin:0}
+h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px;font-weight:600}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spread{justify-content:space-between}
+.panel{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+
+.btn{border:1px solid var(--navy);background:var(--navy);color:#fff;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500}
+.btn.ghost{background:transparent;color:var(--navy)}
+.btn.danger{background:var(--out);border-color:var(--out)}
+.btn:disabled{opacity:.5;cursor:default}
+select,input[type=text],input[type=search],input[type=password],input[type=month]{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;min-width:0}
+
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.kpi{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi .label{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.kpi .val{font-size:1.6rem;font-weight:600;color:var(--ink-head);margin-top:2px}
+.kpi.in .val{color:var(--in)} .kpi.out .val{color:var(--out)}
+.kpi .delta{font-size:.82rem;color:var(--muted)}
+
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:minmax(0,9.5rem) minmax(0,1fr) 6.5rem;gap:10px;align-items:center;font-size:.88rem}
+.bar .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .track{height:10px;background:var(--surface);border-radius:999px;overflow:hidden}
+.bar .fill{height:100%;border-radius:999px}
+.bar .amt{text-align:right}
+
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;white-space:nowrap}
+td.r,th.r{text-align:right}
+td.desc{max-width:28rem;overflow-wrap:anywhere;font-size:.85rem}
+tr.flag td{background:var(--flag-soft)}
+.pill{display:inline-block;font-size:.72rem;font-weight:600;padding:1px 8px;border-radius:999px}
+.pill.in{background:var(--in-soft);color:var(--in)} .pill.out{background:var(--out-soft);color:var(--out)}
+.pill.flag{background:var(--flag-soft);color:var(--flag)}
+td select{max-width:12rem;padding:5px 6px;font-size:.85rem}
+.amt-in{color:var(--in)} .amt-out{color:var(--out)}
+.confirm{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+.drop{border:2px dashed var(--line);border-radius:12px;padding:28px 16px;text-align:center;background:var(--white);cursor:pointer}
+.drop.over{border-color:var(--blue);background:#EEF3FB}
+.steps{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:4px}
+.summary{white-space:pre-wrap;font-family:var(--serif);font-size:1.02rem;line-height:1.65;max-width:68ch}
+.empty{padding:28px 12px;text-align:center;color:var(--muted)}
+
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy);padding:24px 16px}
+#gate form{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;color:#fff;text-align:center}
+#gate h1{font-family:var(--serif);font-size:2rem;margin:0}
+#gate input{text-align:center;font-size:16px;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff}
+#gate input::placeholder{color:rgba(255,255,255,.45)}
+#gate .btn{background:#fff;color:var(--navy);border-color:#fff;padding:12px}
+#gate .err{color:#FFC9B5;font-size:.9rem;min-height:1.2em}
+
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink-head);color:#fff;padding:9px 16px;border-radius:8px;font-size:.9rem;max-width:calc(100% - 32px);z-index:5}
+
+@media (max-width:720px){
+  .kpis{grid-template-columns:1fr}
+  .split{grid-template-columns:1fr}
+  .bar{grid-template-columns:minmax(0,7rem) minmax(0,1fr) 5.5rem}
+  th.hide-sm,td.hide-sm{display:none}
+}
+@media print{
+  header.band nav,.no-print,.toast{display:none!important}
+  body{background:#fff}
+  header.band{background:#fff;color:var(--ink);padding:0}
+  .panel,.kpi{border-color:#ccc}
+  main{padding:0}
+}
+@media (prefers-reduced-motion:no-preference){.fill{transition:width .3s ease}}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <form id="gateForm" autocomplete="on">
+    <h1>VBC Books</h1>
+    <div style="opacity:.75">Victory Baptist Church bookkeeping. Enter the bookkeeping passcode. This device remembers it.</div>
+    <input id="gateCode" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="word-word-word-1234" aria-label="Passcode">
+    <div class="err" id="gateErr" role="alert"></div>
+    <button class="btn" id="gateBtn" type="submit">Unlock</button>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <header class="band">
+    <div class="band-in">
+      <div class="row spread">
+        <div>
+          <h1>VBC Books</h1>
+          <div class="sub" id="rangeNote">Victory Baptist Church</div>
+        </div>
+        <button class="btn ghost no-print" id="lockBtn" style="color:#fff;border-color:rgba(255,255,255,.4)">Lock</button>
+      </div>
+      <nav class="tabs" role="tablist" aria-label="Sections">
+        <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+        <button role="tab" data-tab="transactions" aria-selected="false">Transactions</button>
+        <button role="tab" data-tab="review" aria-selected="false">Needs review<span class="count" id="flagCount" hidden></span></button>
+        <button role="tab" data-tab="import" aria-selected="false">Import bank file</button>
+        <button role="tab" data-tab="report" aria-selected="false">Board report</button>
+      </nav>
+    </div>
+  </header>
+  <main id="view" aria-live="polite"></main>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const API = "https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/vbc-books";
+const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0cW16ZHRlb21nanJlc2pmcm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MTU1NDYsImV4cCI6MjA4NzQ5MTU0Nn0.C6PQfoGgx4Y6g0f26qlI6WwAaY46Mde6SUmMIUfBjSw";
+const KEY_STORE = "vbc_books_key";
+
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money = n => (n < 0 ? "−$" : "$") + Math.abs(n).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const money0 = n => (n < 0 ? "−$" : "$") + Math.round(Math.abs(n)).toLocaleString("en-US");
+const monthLabel = ym => { const [y, m] = ym.split("-").map(Number); return new Date(y, m - 1, 1).toLocaleString("en-US", {month: "long", year: "numeric"}); };
+const monthShort = ym => { const [y, m] = ym.split("-").map(Number); return new Date(y, m - 1, 1).toLocaleString("en-US", {month: "short"}); };
+const fmtDate = d => { const [y, m, dd] = d.split("-").map(Number); return new Date(y, m - 1, dd).toLocaleDateString("en-US", {month: "short", day: "numeric"}); };
+function toast(t){ const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => el.hidden = true, 3200); }
+
+let key = ""; try { key = localStorage.getItem(KEY_STORE) || ""; } catch {}
+const S = { rows: [], cats: { income: [], expense: [] }, tab: "overview", month: null, txMonth: "all", q: "", confirmId: null, pending: null, summary: {} };
+
+async function call(action, extra = {}, k = key){
+  const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", apikey: ANON, Authorization: "Bearer " + ANON, "x-books-key": k }, body: JSON.stringify({ action, ...extra }) });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) { const e = new Error(d.message || "Locked"); e.locked = true; throw e; }
+  if (!r.ok) throw new Error(d.error || ("Request failed (" + r.status + ")"));
+  return d;
+}
+
+/* ---------- gate ---------- */
+$("#gateForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const code = $("#gateCode").value.trim().toLowerCase();
+  if (!code) return;
+  $("#gateBtn").disabled = true; $("#gateBtn").textContent = "Checking…"; $("#gateErr").textContent = "";
+  try { await unlock(code); }
+  catch (err) { $("#gateErr").textContent = err.locked ? "That passcode didn't match. Check the spelling and dashes." : "Can't reach the books right now. Check your connection and try again."; }
+  $("#gateBtn").disabled = false; $("#gateBtn").textContent = "Unlock";
+});
+async function unlock(code){
+  const d = await call("check", {}, code);
+  key = code; try { localStorage.setItem(KEY_STORE, code); } catch {}
+  S.cats = d.categories;
+  $("#gate").hidden = true; $("#app").hidden = false;
+  await load();
+}
+$("#lockBtn").onclick = () => { key = ""; try { localStorage.removeItem(KEY_STORE); } catch {} S.rows = []; $("#app").hidden = true; $("#gate").hidden = false; $("#gateCode").value = ""; };
+
+async function load(){
+  $("#view").innerHTML = `<div class="empty">Opening the books…</div>`;
+  try {
+    const d = await call("list");
+    S.rows = (d.rows || []).map(r => ({ ...r, amount: Number(r.amount) }));
+  } catch (err) {
+    if (err.locked) return $("#lockBtn").click();
+    $("#view").innerHTML = `<div class="panel empty">Couldn't load the books. ${esc(err.message)} <div style="margin-top:10px"><button class="btn" onclick="load()">Try again</button></div></div>`;
+    return;
+  }
+  const months = monthsList();
+  if (!S.month || !months.includes(S.month)) S.month = months[0] || new Date().toISOString().slice(0, 7);
+  const first = S.rows.length ? S.rows[S.rows.length - 1].date : null, last = S.rows.length ? S.rows[0].date : null;
+  $("#rangeNote").textContent = S.rows.length ? `${S.rows.length.toLocaleString()} transactions · ${fmtDate(first)}, ${first.slice(0,4)} to ${fmtDate(last)}, ${last.slice(0,4)}` : "No transactions yet";
+  render();
+}
+const monthsList = () => [...new Set(S.rows.map(r => r.date.slice(0, 7)))].sort().reverse();
+const inMonth = ym => S.rows.filter(r => r.date.startsWith(ym));
+function totals(rows){
+  let inc = 0, exp = 0, xin = 0, xout = 0;
+  for (const r of rows){
+    if (r.category === "Transfer In") xin += r.amount;
+    else if (r.category === "Transfer Out") xout += r.amount;
+    else if (r.type === "Income") inc += r.amount; else exp += r.amount;
+  }
+  return { inc, exp, net: inc - exp, xin, xout };
+}
+function byCat(rows, type){
+  const m = {};
+  rows.filter(r => r.type === type && !/^Transfer/.test(r.category)).forEach(r => m[r.category] = (m[r.category] || 0) + r.amount);
+  return Object.entries(m).sort((a, b) => b[1] - a[1]);
+}
+
+/* ---------- tabs ---------- */
+document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => { S.tab = b.dataset.tab; S.confirmId = null; render(); });
+function render(){
+  document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === S.tab));
+  const flagged = S.rows.filter(r => r.review).length;
+  $("#flagCount").hidden = !flagged; $("#flagCount").textContent = flagged;
+  ({ overview, transactions, review, importView, report })[S.tab === "import" ? "importView" : S.tab]();
+}
+function monthPicker(id, val, withAll){
+  const ms = monthsList();
+  return `<select id="${id}" aria-label="Month">${withAll ? `<option value="all" ${val==="all"?"selected":""}>All months</option>` : ""}${ms.map(m => `<option value="${m}" ${m===val?"selected":""}>${monthLabel(m)}</option>`).join("")}</select>`;
+}
+
+/* ---------- overview ---------- */
+function overview(){
+  if (!S.rows.length) { $("#view").innerHTML = `<div class="panel empty"><strong>No transactions yet.</strong><br>Start on the Import bank file tab.</div>`; return; }
+  const ms = monthsList(); const i = ms.indexOf(S.month); const prev = ms[i + 1];
+  const t = totals(inMonth(S.month)), p = prev ? totals(inMonth(prev)) : null;
+  const delta = (a, b) => b == null ? "" : `${a >= b ? "Up" : "Down"} ${money0(Math.abs(a - b))} from ${monthShort(prev)}`;
+  const inc = byCat(inMonth(S.month), "Income"), exp = byCat(inMonth(S.month), "Expense");
+  const maxI = Math.max(1, ...inc.map(x => x[1])), maxE = Math.max(1, ...exp.map(x => x[1]));
+  const year = S.month.slice(0, 4);
+  const yearMonths = ms.filter(m => m.startsWith(year)).sort();
+  const yt = totals(S.rows.filter(r => r.date.startsWith(year)));
+  $("#view").innerHTML = `
+    <div class="row spread"><h2>${monthLabel(S.month)}</h2><div class="row no-print">${monthPicker("ovMonth", S.month)}</div></div>
+    <div class="kpis">
+      <div class="kpi in"><div class="label">Income</div><div class="val num">${money0(t.inc)}</div><div class="delta">${p ? delta(t.inc, p.inc) : "&nbsp;"}</div></div>
+      <div class="kpi out"><div class="label">Expenses</div><div class="val num">${money0(t.exp)}</div><div class="delta">${p ? delta(t.exp, p.exp) : "&nbsp;"}</div></div>
+      <div class="kpi"><div class="label">Net</div><div class="val num" style="color:${t.net >= 0 ? "var(--in)" : "var(--out)"}">${money0(t.net)}</div><div class="delta">${t.xin || t.xout ? `Transfers left out: ${money0(t.xin)} in, ${money0(t.xout)} out` : "&nbsp;"}</div></div>
+    </div>
+    <div class="split">
+      <section class="panel"><h3>Where income came from</h3><div class="bars">${inc.length ? inc.map(([c, v]) => barRow(c, v, maxI, "var(--in)")).join("") : `<div class="muted small">No income this month.</div>`}</div></section>
+      <section class="panel"><h3>Where money went</h3><div class="bars">${exp.length ? exp.map(([c, v]) => barRow(c, v, maxE, "var(--out)")).join("") : `<div class="muted small">No expenses this month.</div>`}</div></section>
+    </div>
+    <section class="panel">
+      <div class="row spread"><h3 style="margin:0">${year} month by month</h3><span class="small muted num">Year to date: ${money0(yt.inc)} in · ${money0(yt.exp)} out · net ${money0(yt.net)}</span></div>
+      <div class="tablewrap" style="margin-top:8px"><table class="num">
+        <thead><tr><th>Month</th><th class="r">Income</th><th class="r">Expenses</th><th class="r">Net</th><th class="r hide-sm">Tithes & Offerings</th></tr></thead>
+        <tbody>${yearMonths.map(m => { const x = totals(inMonth(m)); const to = inMonth(m).filter(r => r.category === "Tithes & Offerings").reduce((s, r) => s + r.amount, 0);
+          return `<tr><td>${monthLabel(m).split(" ")[0]}</td><td class="r amt-in">${money0(x.inc)}</td><td class="r amt-out">${money0(x.exp)}</td><td class="r" style="font-weight:600;color:${x.net >= 0 ? "var(--in)" : "var(--out)"}">${money0(x.net)}</td><td class="r hide-sm">${money0(to)}</td></tr>`; }).join("")}</tbody>
+      </table></div>
+      <p class="small muted" style="margin:10px 0 0">Transfers between your own accounts don't count as income or spending.</p>
+    </section>`;
+  $("#ovMonth").onchange = e => { S.month = e.target.value; render(); };
+}
+const barRow = (c, v, max, color) => `<div class="bar"><span class="name" title="${esc(c)}">${esc(c)}</span><span class="track"><span class="fill" style="display:block;width:${Math.max(2, v / max * 100)}%;background:${color}"></span></span><span class="amt num">${money0(v)}</span></div>`;
+
+/* ---------- transactions ---------- */
+function catSelect(r){
+  const opts = (list, label) => `<optgroup label="${label}">${list.map(c => `<option ${c === r.category ? "selected" : ""}>${esc(c)}</option>`).join("")}</optgroup>`;
+  const known = [...S.cats.income, ...S.cats.expense].includes(r.category);
+  return `<select data-cat="${r.id}" aria-label="Category">${known ? "" : `<option selected>${esc(r.category)}</option>`}${opts(S.cats.income, "Income")}${opts(S.cats.expense, "Expense")}</select>`;
+}
+function txRow(r, showClear){
+  return `<tr data-id="${r.id}" class="${r.review ? "flag" : ""}">
+    <td class="num" style="white-space:nowrap">${fmtDate(r.date)}</td>
+    <td class="desc">${esc(r.description)}</td>
+    <td>${catSelect(r)}</td>
+    <td class="r num ${r.type === "Income" ? "amt-in" : "amt-out"}" style="white-space:nowrap">${r.type === "Income" ? "+" : "−"}${money(r.amount).replace("$","$")}</td>
+    <td class="r no-print" style="white-space:nowrap">${S.confirmId === r.id
+      ? `<span class="confirm">Delete? <button class="btn danger" data-del-yes="${r.id}">Delete</button><button class="btn ghost" data-del-no>Keep</button></span>`
+      : `${showClear ? `<button class="btn ghost" data-ok="${r.id}">Looks right</button> ` : ""}<button class="btn ghost" data-del="${r.id}" aria-label="Delete transaction">Delete</button>`}</td>
+  </tr>`;
+}
+function bindRows(){
+  document.querySelectorAll("[data-cat]").forEach(s => s.onchange = async () => {
+    const id = s.dataset.cat;
+    try { const d = await call("update", { id, category: s.value, review: false }); Object.assign(S.rows.find(r => r.id === id), { ...d.row, amount: Number(d.row.amount) }); toast("Saved: " + s.value); render(); }
+    catch (e) { toast(e.message); }
+  });
+  document.querySelectorAll("[data-ok]").forEach(b => b.onclick = async () => {
+    const id = b.dataset.ok;
+    try { await call("update", { id, review: false }); S.rows.find(r => r.id === id).review = false; toast("Marked as reviewed"); render(); } catch (e) { toast(e.message); }
+  });
+  document.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { S.confirmId = b.dataset.del; render(); });
+  document.querySelectorAll("[data-del-no]").forEach(b => b.onclick = () => { S.confirmId = null; render(); });
+  document.querySelectorAll("[data-del-yes]").forEach(b => b.onclick = async () => {
+    const id = b.dataset.delYes;
+    try { await call("delete", { id }); S.rows = S.rows.filter(r => r.id !== id); S.confirmId = null; toast("Deleted"); render(); } catch (e) { toast(e.message); }
+  });
+}
+function transactions(){
+  const q = S.q.toLowerCase();
+  let rows = S.txMonth === "all" ? S.rows : inMonth(S.txMonth);
+  if (q) rows = rows.filter(r => (r.description + " " + r.category).toLowerCase().includes(q) || money(r.amount).includes(q));
+  const shown = rows.slice(0, 400);
+  $("#view").innerHTML = `
+    <div class="row spread"><h2>Transactions</h2>
+      <div class="row">${monthPicker("txMonth", S.txMonth, true)}<input type="search" id="txQ" placeholder="Search description or category" value="${esc(S.q)}" aria-label="Search"></div></div>
+    <div class="panel" style="padding:4px 8px">
+      ${rows.length ? `<div class="tablewrap"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="r">Amount</th><th class="no-print"></th></tr></thead><tbody>${shown.map(r => txRow(r, r.review)).join("")}</tbody></table></div>
+      ${rows.length > shown.length ? `<p class="small muted" style="padding:8px">Showing the newest 400 of ${rows.length.toLocaleString()}. Pick a month or search to narrow it down.</p>` : ""}` : `<div class="empty">No transactions match.</div>`}
+    </div>`;
+  $("#txMonth").onchange = e => { S.txMonth = e.target.value; render(); };
+  const qi = $("#txQ"); qi.oninput = () => { clearTimeout(qi.t); qi.t = setTimeout(() => { S.q = qi.value; render(); const n = $("#txQ"); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); };
+  bindRows();
+}
+
+/* ---------- review ---------- */
+function review(){
+  const rows = S.rows.filter(r => r.review);
+  $("#view").innerHTML = `
+    <div><h2>Needs review</h2><p class="muted" style="margin:4px 0 0">The auto-sorter wasn't sure about these. Pick the right category, or tap "Looks right."</p></div>
+    <div class="panel" style="padding:4px 8px">${rows.length
+      ? `<div class="tablewrap"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="r">Amount</th><th class="no-print"></th></tr></thead><tbody>${rows.map(r => txRow(r, true)).join("")}</tbody></table></div>`
+      : `<div class="empty">Nothing waits for review.</div>`}</div>`;
+  bindRows();
+}
+
+/* ---------- import ---------- */
+function parseCSV(text){
+  const rows = []; let row = [], f = "", q = false;
+  for (let i = 0; i < text.length; i++){
+    const c = text[i];
+    if (q){ if (c === '"'){ if (text[i + 1] === '"'){ f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(f); f = ""; }
+    else if (c === "\n" || c === "\r"){ if (c === "\r" && text[i + 1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
+    else f += c;
+  }
+  if (f || row.length){ row.push(f); rows.push(row); }
+  return rows.filter(r => r.some(x => x.trim() !== ""));
+}
+function toISO(s){
+  s = String(s).trim();
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (m){ let y = +m[3]; if (y < 100) y += 2000; return `${y}-${String(m[1]).padStart(2,"0")}-${String(m[2]).padStart(2,"0")}`; }
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  return null;
+}
+const toNum = s => { const t = String(s).replace(/[$,\s]/g, ""); const neg = /^\(.*\)$/.test(t); const n = parseFloat(t.replace(/[()]/g, "")); return isFinite(n) ? (neg ? -n : n) : NaN; };
+function bankRows(text){
+  const rows = parseCSV(text); if (!rows.length) return [];
+  const head = rows[0].map(h => h.trim().toLowerCase());
+  const hasHeader = head.some(h => /date/.test(h)) && head.some(h => /amount|debit|credit/.test(h));
+  if (hasHeader){
+    const ix = n => head.findIndex(h => n.test(h));
+    const d = ix(/date/), a = ix(/^amount$|amount/), desc = ix(/desc|memo|payee|name/), deb = ix(/debit|withdraw/), cred = ix(/credit|deposit/);
+    return rows.slice(1).map(r => {
+      let amt = a >= 0 ? toNum(r[a]) : (toNum(r[cred] || 0) || 0) - Math.abs(toNum(r[deb] || 0) || 0);
+      return { date: toISO(r[d]), amount: amt, description: (r[desc] || "").trim() };
+    }).filter(r => r.date && isFinite(r.amount) && r.amount !== 0);
+  }
+  // Wells Fargo download: "date","amount","*","check #","description" with no header row
+  return rows.map(r => ({ date: toISO(r[0]), amount: toNum(r[1]), description: (r[4] ?? r[r.length - 1] ?? "").trim() }))
+    .filter(r => r.date && isFinite(r.amount) && r.amount !== 0);
+}
+function importView(){
+  const p = S.pending;
+  $("#view").innerHTML = `
+    <div><h2>Import bank file</h2><p class="muted" style="margin:4px 0 0">Bring in new Wells Fargo transactions. Anything already in the books gets skipped, so a file that overlaps last month causes no double counting.</p></div>
+    <section class="panel">
+      <h3>Get the file from Wells Fargo</h3>
+      <ol class="steps small">
+        <li>Sign in at wellsfargo.com on a computer and open the church checking account.</li>
+        <li>Choose <strong>Download Account Activity</strong>.</li>
+        <li>Pick the dates since your last import${S.rows.length ? ` (the books currently run through <strong>${fmtDate(S.rows[0].date)}, ${S.rows[0].date.slice(0,4)}</strong>)` : ""}.</li>
+        <li>Choose the <strong>Comma Delimited</strong> format and download.</li>
+      </ol>
+    </section>
+    <label class="drop" id="drop" for="file"><strong>Choose the downloaded file</strong><br><span class="small muted">or drag it here · .csv</span><input type="file" id="file" accept=".csv,text/csv" hidden></label>
+    ${p ? `<section class="panel">
+      <div class="row spread"><h3 style="margin:0">${esc(p.name)}</h3><span class="small muted">${p.total} rows read</span></div>
+      <p style="margin:10px 0"><strong>${p.added}</strong> new transaction${p.added === 1 ? "" : "s"} to add · ${p.duplicates} already in the books</p>
+      ${p.added ? `<div class="tablewrap" style="max-height:320px;overflow:auto"><table><thead><tr><th>Date</th><th>Description</th><th class="r">Amount</th></tr></thead><tbody>${p.newRows.slice(0, 200).map(r => `<tr><td class="num">${fmtDate(r.date)}</td><td class="desc">${esc(r.description)}</td><td class="r num ${r.amount > 0 ? "amt-in" : "amt-out"}">${r.amount > 0 ? "+" : "−"}${money(Math.abs(r.amount))}</td></tr>`).join("")}</tbody></table></div>
+      <div class="row" style="margin-top:12px"><button class="btn" id="doImport">Add ${p.added} and sort them</button><button class="btn ghost" id="cancelImport">Cancel</button></div>
+      <p class="small muted" id="importNote" style="margin:8px 0 0">Sorting takes about a minute per 200 transactions. Keep this page open.</p>`
+      : `<div class="row"><button class="btn ghost" id="cancelImport">Done</button></div>`}
+    </section>` : ""}`;
+  const drop = $("#drop"), file = $("#file");
+  file.onchange = () => file.files[0] && readFile(file.files[0]);
+  ["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => e.dataTransfer.files[0] && readFile(e.dataTransfer.files[0]));
+  if ($("#cancelImport")) $("#cancelImport").onclick = () => { S.pending = null; render(); };
+  if ($("#doImport")) $("#doImport").onclick = doImport;
+}
+async function readFile(f){
+  try {
+    const rows = bankRows(await f.text());
+    if (!rows.length) return toast("Couldn't find transactions in that file. Download it again as Comma Delimited.");
+    const d = await call("preview", { rows });
+    S.pending = { name: f.name, rows, total: rows.length, added: d.added, duplicates: d.duplicates, newRows: d.newRows || [] };
+    render();
+  } catch (e) { toast(e.locked ? "The passcode changed. Lock and unlock again." : e.message); }
+}
+async function doImport(){
+  const b = $("#doImport"); b.disabled = true; b.textContent = "Adding and sorting…";
+  try {
+    const d = await call("import", { rows: S.pending.rows });
+    S.pending = null;
+    toast(`Added ${d.added}. ${d.flagged ? d.flagged + " need a quick review." : "All sorted."}`);
+    S.tab = d.flagged ? "review" : "overview"; S.month = null;
+    await load();
+  } catch (e) { b.disabled = false; b.textContent = "Try again"; $("#importNote").textContent = "That didn't finish: " + e.message + " Nothing doubles if you try again, because the books skip anything already added."; }
+}
+
+/* ---------- board report ---------- */
+function report(){
+  const m = S.month || monthsList()[0];
+  if (!m){ $("#view").innerHTML = `<div class="panel empty">No transactions yet.</div>`; return; }
+  const rows = inMonth(m), t = totals(rows), inc = byCat(rows, "Income"), exp = byCat(rows, "Expense");
+  const sum = S.summary[m];
+  $("#view").innerHTML = `
+    <div class="row spread no-print"><h2>Board report</h2><div class="row">${monthPicker("rpMonth", m)}<button class="btn ghost" id="printBtn">Print or save PDF</button></div></div>
+    <section class="panel">
+      <div class="small muted">Victory Baptist Church</div>
+      <h2 style="margin:2px 0 14px">Financial Report: ${monthLabel(m)}</h2>
+      <div class="kpis" style="margin-bottom:16px">
+        <div class="kpi in"><div class="label">Income</div><div class="val num">${money(t.inc)}</div></div>
+        <div class="kpi out"><div class="label">Expenses</div><div class="val num">${money(t.exp)}</div></div>
+        <div class="kpi"><div class="label">Net</div><div class="val num" style="color:${t.net >= 0 ? "var(--in)" : "var(--out)"}">${money(t.net)}</div></div>
+      </div>
+      <h3>Summary</h3>
+      <div id="sumBox">${sum ? `<div class="summary">${esc(sum)}</div>` : `<p class="muted no-print" style="margin:0 0 8px">Get a written summary for the board, drawn from this month's numbers.</p><button class="btn no-print" id="sumBtn">Write the summary</button>`}</div>
+      <div class="split" style="margin-top:18px">
+        <div><h3>Income by category</h3><table class="num"><tbody>${inc.map(([c, v]) => `<tr><td>${esc(c)}</td><td class="r">${money(v)}</td></tr>`).join("") || `<tr><td class="muted">None</td><td></td></tr>`}<tr><td><strong>Total</strong></td><td class="r"><strong>${money(t.inc)}</strong></td></tr></tbody></table></div>
+        <div><h3>Expenses by category</h3><table class="num"><tbody>${exp.map(([c, v]) => `<tr><td>${esc(c)}</td><td class="r">${money(v)}</td></tr>`).join("") || `<tr><td class="muted">None</td><td></td></tr>`}<tr><td><strong>Total</strong></td><td class="r"><strong>${money(t.exp)}</strong></td></tr></tbody></table></div>
+      </div>
+      ${t.xin || t.xout ? `<p class="small muted" style="margin:12px 0 0">Transfers between church accounts, left out of the totals above: ${money(t.xin)} in, ${money(t.xout)} out.</p>` : ""}
+      ${rows.some(r => r.review) ? `<p class="small" style="margin:8px 0 0;color:var(--flag)">${rows.filter(r => r.review).length} transaction(s) this month still need review, so these totals may shift.</p>` : ""}
+    </section>`;
+  $("#rpMonth").onchange = e => { S.month = e.target.value; render(); };
+  $("#printBtn").onclick = () => window.print();
+  if ($("#sumBtn")) $("#sumBtn").onclick = async () => {
+    $("#sumBox").innerHTML = `<p class="muted">Writing the summary. This takes about 20 seconds…</p>`;
+    try { const d = await call("summary", { month: m }); S.summary[m] = d.summary; }
+    catch (e) { toast(e.message); }
+    render();
+  };
+}
+
+/* ---------- boot ---------- */
+(async () => {
+  if (key){
+    $("#gate").hidden = true; $("#app").hidden = false; $("#view").innerHTML = `<div class="empty">Opening the books…</div>`;
+    try { await unlock(key); }
+    catch (e){ $("#app").hidden = true; $("#gate").hidden = false; if (e.locked){ try { localStorage.removeItem(KEY_STORE); } catch {} key = ""; $("#gateErr").textContent = "The bookkeeping passcode changed. Enter the new one."; } else $("#gateErr").textContent = "Can't reach the books right now. Check your connection and reload."; }
+  }
+})();
+</script>
+</body>
+</html>
