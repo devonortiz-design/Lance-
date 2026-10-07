@@ -1,11 +1,5 @@
 import { SUPABASE_URL, SB_HEADERS, SESSION_ID, DB_URL } from "./config";
 
-// Staff calendar RPCs use their own code check and talk to Supabase directly.
-function publicHeaders() {
-  const { ["x-lance-key"]: _k, ...rest } = SB_HEADERS;
-  return rest;
-}
-
 async function sbGet(table, params = "") {
   const r = await fetch(`${DB_URL}/${table}?${params}`, { headers: SB_HEADERS });
   return r.ok ? r.json() : [];
@@ -203,21 +197,22 @@ export function parseStaffNoteTags(text) {
   return out;
 }
 
-export async function saveStaffEvent(code, ev) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/staff_event_save`, {
+// The gateway adds the staff calendar code on the server.
+export async function saveStaffEvent(ev) {
+  const r = await fetch(`${DB_URL}/rpc/staff_event_save`, {
     method: "POST",
-    headers: publicHeaders(),
-    body: JSON.stringify({ p_code: code, p: ev }),
+    headers: SB_HEADERS,
+    body: JSON.stringify({ p: ev }),
   });
   if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || `HTTP ${r.status}`); }
   return r.json();
 }
 
-export async function saveStaffNote(code, note) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/staff_note_save`, {
+export async function saveStaffNote(note) {
+  const r = await fetch(`${DB_URL}/rpc/staff_note_save`, {
     method: "POST",
-    headers: publicHeaders(),
-    body: JSON.stringify({ p_code: code, p: note }),
+    headers: SB_HEADERS,
+    body: JSON.stringify({ p: note }),
   });
   if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || `HTTP ${r.status}`); }
   return r.json();

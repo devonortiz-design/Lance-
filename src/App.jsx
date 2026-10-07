@@ -1,7 +1,7 @@
 import React,{useState,useRef,useEffect,useCallback}from"react";
 import{callClaude,speak,readFile,detectDocumentContent,webSearch,formatSearchResults}from"./api";
 import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseVideoTag,parseTaskTag,saveTask,loadOpenTasks,completeTask,deleteTask,parseStaffEventTags,parseStaffNoteTags,saveStaffEvent,saveStaffNote,loadBrainNotes,parseBrainTags,saveBrainNote}from"./memory";
-import{SESSION_ID,SUPABASE_URL,SB_HEADERS,STAFF_CALENDAR_CODE,DB_URL}from"./config";
+import{SESSION_ID,SUPABASE_URL,SB_HEADERS,DB_URL}from"./config";
 import{LanceLogo,SendIcon,SpeakerIcon,StopIcon,DownloadIcon,AttachIcon,CloseIcon}from"./icons";
 
 const DOCX_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-docx";
@@ -1082,7 +1082,7 @@ export default function App(){
     const key=`${msgIdx}:${evIdx}`;
     setStaffEventStatusByIdx(p=>({...p,[key]:"sending"}));
     try{
-      await saveStaffEvent(STAFF_CALENDAR_CODE,ev);
+      await saveStaffEvent(ev);
       setStaffEventStatusByIdx(p=>({...p,[key]:"sent"}));
     }catch(e){setStaffEventStatusByIdx(p=>({...p,[key]:"error"}));console.error("Staff event error:",e)}
   },[]);
@@ -1092,7 +1092,7 @@ export default function App(){
   const handleAddStaffNote=useCallback(async(msgIdx,note)=>{
     setStaffNoteStatusByIdx(p=>({...p,[msgIdx]:"sending"}));
     try{
-      await saveStaffNote(STAFF_CALENDAR_CODE,note);
+      await saveStaffNote(note);
       setStaffNoteStatusByIdx(p=>({...p,[msgIdx]:"sent"}));
     }catch(e){setStaffNoteStatusByIdx(p=>({...p,[msgIdx]:"error"}));console.error("Staff note error:",e)}
   },[]);
