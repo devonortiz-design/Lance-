@@ -394,28 +394,51 @@ function TaskAddedCard({title,due}){
   );
 }
 
-function TasksPanel({tasks,onClose,onComplete,onDelete}){
+function dueLabel(d){if(!d)return null;const today=new Date().toLocaleDateString("en-CA");const t=new Date(d+"T12:00:00");const diff=Math.round((t-new Date(today+"T12:00:00"))/86400000);if(diff<0)return{text:`Overdue · ${t.toLocaleDateString("en-US",{month:"short",day:"numeric"})}`,late:true};if(diff===0)return{text:"Due today",late:false};if(diff===1)return{text:"Due tomorrow",late:false};return{text:`Due ${t.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}`,late:false}}
+function TasksPanel({tasks,onClose,onComplete,onDelete,onAdd}){
+  const[draft,setDraft]=React.useState("");
+  const[doneIds,setDoneIds]=React.useState([]);
+  const[confirmId,setConfirmId]=React.useState(null);
+  const submit=e=>{e.preventDefault();const t=draft.trim();if(!t)return;onAdd({title:t});setDraft("")};
+  const complete=id=>{setDoneIds(d=>[...d,id]);setTimeout(()=>onComplete(id),350)};
   return(
-    <div style={{position:"fixed",inset:0,zIndex:500,background:"rgba(13,19,33,0.75)",display:"flex",flexDirection:"column"}} onClick={onClose}>
-      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",margin:"env(safe-area-inset-top,20px) 12px 12px",flex:1,borderRadius:"16px",display:"flex",flexDirection:"column",overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.4)"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",borderBottom:"1px solid rgba(26,35,64,0.1)",flexShrink:0}}>
-          <div style={{fontSize:"15px",fontWeight:700,color:"#1a2340"}}>Open Tasks</div>
-          <button onClick={onClose} style={{background:"rgba(26,35,64,0.08)",border:"none",borderRadius:"50%",width:"32px",height:"32px",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#1a2340",fontSize:"18px"}}>&#215;</button>
-        </div>
-        <div style={{flex:1,overflowY:"auto",padding:"12px 16px"}}>
-          {tasks.length===0?(
-            <div style={{textAlign:"center",color:"#9CA3AF",fontSize:"14px",marginTop:"40px"}}>Nothing on the list right now.</div>
-          ):tasks.map(t=>(
-            <div key={t.id} style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 0",borderBottom:"1px solid #F3F4F6"}}>
-              <button onClick={()=>onComplete(t.id)} style={{width:"22px",height:"22px",borderRadius:"50%",border:"2px solid #D1D5DB",background:"none",cursor:"pointer",flexShrink:0}}/>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:"14px",color:"#1F2937"}}>{t.title}</div>
-                {t.due_date&&<div style={{fontSize:"11px",color:"#9CA3AF"}}>Due {t.due_date}</div>}
-              </div>
-              <button onClick={()=>onDelete(t.id)} style={{background:"none",border:"none",color:"#D1D5DB",fontSize:"18px",cursor:"pointer",padding:"4px"}}>&#215;</button>
+    <div role="dialog" aria-label="Tasks" style={{position:"fixed",inset:0,zIndex:500,background:"var(--bg1)",display:"flex",flexDirection:"column",animation:"fadeIn 200ms cubic-bezier(0.22,1,0.36,1)"}}>
+      <div style={{padding:"calc(14px + env(safe-area-inset-top,0px)) 20px 0",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+        <h2 className="serif" style={{fontSize:"30px",fontWeight:500,color:"var(--text-hi)"}}>Tasks</h2>
+        <button onClick={onClose} aria-label="Close tasks" style={{width:"44px",height:"44px",borderRadius:"14px",border:"1px solid var(--line)",background:"transparent",color:"var(--text-hi)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg>
+        </button>
+      </div>
+      <form onSubmit={submit} style={{padding:"16px 20px 6px",display:"flex",gap:"8px",flexShrink:0}}>
+        <label htmlFor="new-task" style={{position:"absolute",width:"1px",height:"1px",overflow:"hidden",clip:"rect(0 0 0 0)"}}>Add a task</label>
+        <input id="new-task" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Add a task" style={{flex:1,minWidth:0,height:"46px",padding:"0 14px",borderRadius:"14px",background:"var(--surface)",border:"1px solid var(--line)",color:"var(--text-hi)",fontSize:"16px",outline:"none"}}/>
+        <button type="submit" disabled={!draft.trim()} style={{height:"46px",padding:"0 16px",borderRadius:"14px",border:"none",background:draft.trim()?"var(--gold)":"var(--surface-hi)",color:draft.trim()?"#0D1420":"var(--text-lo)",fontSize:"15px",fontWeight:600,cursor:draft.trim()?"pointer":"default"}}>Add</button>
+      </form>
+      <div style={{padding:"4px 20px 0",fontSize:"13px",color:"var(--text-lo)",flexShrink:0}}>{tasks.length===0?"":`${tasks.length} open · Tell Lance about anything you need to do and it lands here.`}</div>
+      <div style={{flex:1,overflowY:"auto",padding:"10px 12px calc(16px + env(safe-area-inset-bottom,0px))"}}>
+        {tasks.length===0?(
+          <div style={{textAlign:"center",padding:"56px 24px"}}>
+            <div className="serif" style={{fontSize:"22px",color:"var(--text-hi)"}}>Nothing open.</div>
+            <div style={{fontSize:"14px",color:"var(--text-lo)",marginTop:"6px",lineHeight:1.5}}>Add a task above, or tell Lance "remind me to call Brother Mike."</div>
+          </div>
+        ):tasks.map(t=>{const due=dueLabel(t.due_date);const done=doneIds.includes(t.id);return(
+          <div key={t.id} style={{display:"flex",alignItems:"center",gap:"8px",padding:"6px 8px",borderRadius:"14px",opacity:done?0.45:1,transition:"opacity 300ms"}}>
+            <button onClick={()=>complete(t.id)} aria-label={`Mark done: ${t.title}`} style={{width:"44px",height:"44px",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",background:"none",border:"none",cursor:"pointer"}}>
+              <span style={{width:"24px",height:"24px",borderRadius:"12px",border:`2px solid ${done?"var(--gold)":"var(--line-hi)"}`,background:done?"var(--gold)":"transparent",display:"flex",alignItems:"center",justifyContent:"center"}}>{done&&(<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#0D1420" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7.5l2.5 2.5L11 4.5"/></svg>)}</span>
+            </button>
+            <div style={{flex:1,minWidth:0,padding:"8px 0"}}>
+              <div style={{fontSize:"16px",lineHeight:1.35,color:"var(--text-hi)",textDecoration:done?"line-through":"none",overflowWrap:"anywhere"}}>{t.title}</div>
+              {due&&(<div style={{fontSize:"13px",marginTop:"2px",color:due.late?"#E0A15A":"var(--text-lo)"}}>{due.text}</div>)}
             </div>
-          ))}
-        </div>
+            {confirmId===t.id?(
+              <div style={{display:"flex",gap:"6px",flexShrink:0}}>
+                <button onClick={()=>{setConfirmId(null);onDelete(t.id)}} style={{minHeight:"40px",padding:"0 12px",borderRadius:"12px",border:"none",background:"#C2502E",color:"#fff",fontSize:"14px",fontWeight:600,cursor:"pointer"}}>Delete</button>
+                <button onClick={()=>setConfirmId(null)} style={{minHeight:"40px",padding:"0 12px",borderRadius:"12px",border:"1px solid var(--line)",background:"transparent",color:"var(--text-hi)",fontSize:"14px",cursor:"pointer"}}>Keep</button>
+              </div>
+            ):(
+              <button onClick={()=>setConfirmId(t.id)} aria-label={`Delete task: ${t.title}`} style={{width:"40px",height:"40px",flexShrink:0,borderRadius:"12px",border:"none",background:"none",color:"var(--text-lo)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}><TrashIcon/></button>
+            )}
+          </div>);})}
       </div>
     </div>
   );
@@ -545,7 +568,8 @@ textarea::placeholder{color:var(--text-lo)}
 .mic-btn.idle{background:var(--glass);color:var(--text-lo);border:1px solid var(--line);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5)}
 .mic-btn.listening{background:#D4AF5A;color:#0D1420;border:1px solid var(--gold-hi);animation:micPulse 1.4s ease-in-out infinite}
 .saved-backdrop{position:fixed;inset:0;background:rgba(6,8,15,0.7);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);z-index:390;animation:fadeIn 280ms cubic-bezier(0.22,1,0.36,1)}
-.saved-panel{position:fixed;right:0;top:0;bottom:0;width:min(360px,100vw);background:var(--bg1);border-left:1px solid var(--line);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);z-index:400;display:flex;flex-direction:column;animation:slideIn 300ms cubic-bezier(0.22,1,0.36,1);border-top-left-radius:28px;border-bottom-left-radius:28px;box-shadow:inset 1px 0 0 rgba(255,255,255,0.06),-8px 0 32px rgba(0,0,0,0.3)}
+@media(max-width:560px){.saved-panel{width:100vw!important;border-left:none!important;border-radius:0!important}}
+.saved-panel{position:fixed;right:0;top:0;bottom:0;width:min(400px,100vw);background:var(--bg1);border-left:1px solid var(--line);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);z-index:400;display:flex;flex-direction:column;animation:slideIn 300ms cubic-bezier(0.22,1,0.36,1);border-top-left-radius:28px;border-bottom-left-radius:28px;box-shadow:inset 1px 0 0 rgba(255,255,255,0.06),-8px 0 32px rgba(0,0,0,0.3)}
 .saved-item{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:background 180ms cubic-bezier(0.22,1,0.36,1);color:var(--text-mid);font-size:15px;letter-spacing:-0.01em}
 .saved-item:hover{background:rgba(255,255,255,0.04)}
 .saved-item:active{transform:scale(0.99)}
@@ -634,13 +658,13 @@ textarea::placeholder{color:var(--text-lo)}
 
 /* History Item */
 .hist-item {
-  padding: 11px 14px;
+  padding: 12px 12px;
   border-radius: 12px;
   margin: 2px 8px;
   transition: background 160ms cubic-bezier(0.22,1,0.36,1);
   cursor: pointer;
-  color: var(--text-mid);
-  font-size: 15px;
+  color: var(--text-hi);
+  font-size: 16px;
 }
 
 .hist-item:active {
@@ -648,7 +672,7 @@ textarea::placeholder{color:var(--text-lo)}
 }
 
 .hist-item.current {
-  background: rgba(212,175,90,0.10);
+  background: var(--surface-hi);
   color: var(--text-hi);
 }
 
@@ -708,7 +732,7 @@ textarea::placeholder{color:var(--text-lo)}
 .file-tile:disabled{opacity:0.7}
 .app-icon{font-family:inherit}
 .ghost-btn{font-family:inherit}
-.proj-row.current{background:rgba(212,175,90,0.10);color:var(--text-hi)}
+.proj-row.current{background:var(--surface-hi);color:var(--text-hi)}
 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}}`;
 
@@ -788,6 +812,7 @@ export default function App(){
   const[listening,setListening]=useState(false);
   const[downloadingIdx,setDownloadingIdx]=useState(null);
   const[showSaved,setShowSaved]=useState(false);
+  const[libQuery,setLibQuery]=useState("");
   const[editingId,setEditingId]=useState(null);
   const[smsStatusByIdx,setSmsStatusByIdx]=useState({});
   const[previewDoc,setPreviewDoc]=useState(null);
@@ -1245,7 +1270,7 @@ export default function App(){
     {/* Drag overlay */}
     {dragOver&&(<div style={{position:"fixed",inset:0,background:"rgba(212,175,90,0.10)",border:"2px dashed rgba(212,175,90,0.5)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><div style={{color:"#fff",fontSize:"18px",fontWeight:600}}>Drop file or screenshot</div></div>)}
 
-    {showTasks&&(<TasksPanel tasks={openTasks} onClose={()=>setShowTasks(false)} onComplete={handleCompleteTask} onDelete={handleDeleteTask}/>)}
+    {showTasks&&(<TasksPanel tasks={openTasks} onClose={()=>setShowTasks(false)} onComplete={handleCompleteTask} onDelete={handleDeleteTask} onAdd={handleAddTask}/>)}
 
     {/* Document preview overlay */}
     {previewDoc&&(<DocPreviewModal
@@ -1312,13 +1337,23 @@ export default function App(){
     {/* Library panel: projects + full chat history */}
     {showSaved&&(<div className="saved-backdrop" onClick={()=>setShowSaved(false)}/>)}
     {showSaved&&(<div className="saved-panel">
-      <div style={{padding:"calc(16px + env(safe-area-inset-top)) 16px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <div style={{color:"var(--text-hi)",fontSize:"17px",fontWeight:600,letterSpacing:"-0.02em"}}>Library</div>
-        <button onClick={()=>setShowSaved(false)} style={{background:"var(--glass)",border:"1px solid var(--line)",borderRadius:"50%",cursor:"pointer",color:"var(--text-mid)",fontSize:"18px",lineHeight:1,width:"36px",height:"36px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>&#215;</button>
+      <div style={{padding:"calc(14px + env(safe-area-inset-top,0px)) 20px 0",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <h2 className="serif" style={{fontSize:"30px",fontWeight:500,color:"var(--text-hi)"}}>Library</h2>
+        <button onClick={()=>setShowSaved(false)} aria-label="Close library" style={{width:"44px",height:"44px",borderRadius:"14px",border:"1px solid var(--line)",background:"transparent",color:"var(--text-hi)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg>
+        </button>
       </div>
-      <div style={{display:"flex",gap:"8px",padding:"0 16px 12px"}}>
-        <button className="ghost-btn" style={{flex:1}} onClick={()=>{clearChat();setShowSaved(false)}}>+ New chat</button>
-        <button className="ghost-btn" style={{flex:1}} onClick={()=>{setProjFormMode("new");setProjName("");setProjDesc("");setProjEditId(null)}}>+ New project</button>
+      <div style={{padding:"16px 20px 12px",display:"flex",flexDirection:"column",gap:"10px"}}>
+        <label htmlFor="lib-search" style={{position:"absolute",width:"1px",height:"1px",overflow:"hidden",clip:"rect(0 0 0 0)"}}>Search chats</label>
+        <div style={{display:"flex",alignItems:"center",gap:"10px",height:"46px",padding:"0 14px",borderRadius:"14px",background:"var(--surface)",border:"1px solid var(--line)",color:"var(--text-lo)"}}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><circle cx="8" cy="8" r="5"/><path d="M12 12l4 4"/></svg>
+          <input id="lib-search" type="text" enterKeyHint="search" autoComplete="off" value={libQuery} onChange={e=>setLibQuery(e.target.value)} placeholder="Search chats" style={{flex:1,minWidth:0,border:"none",background:"transparent",color:"var(--text-hi)",fontSize:"16px",outline:"none"}}/>
+          {libQuery&&(<button onClick={()=>setLibQuery("")} aria-label="Clear search" style={{width:"32px",height:"32px",border:"none",background:"none",color:"var(--text-lo)",cursor:"pointer",fontSize:"18px"}}>×</button>)}
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:"10px"}}>
+          <button onClick={()=>{clearChat();setShowSaved(false)}} style={{height:"46px",borderRadius:"14px",border:"none",background:"var(--gold)",color:"#0D1420",fontSize:"15px",fontWeight:600,cursor:"pointer"}}>New chat</button>
+          <button onClick={()=>{setProjFormMode("new");setProjName("");setProjDesc("");setProjEditId(null)}} style={{height:"46px",borderRadius:"14px",border:"1px solid var(--line)",background:"transparent",color:"var(--text-hi)",fontSize:"15px",fontWeight:500,cursor:"pointer"}}>New project</button>
+        </div>
       </div>
       {projFormMode&&(<div style={{margin:"0 12px 12px",padding:"12px",background:"var(--glass)",border:"1px solid var(--line)",borderRadius:"14px"}}>
         <input autoFocus value={projName} onChange={e=>setProjName(e.target.value)} placeholder="Project name" style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid var(--line)",borderRadius:"10px",color:"var(--text-hi)",fontSize:"15px",padding:"9px 11px",marginBottom:"8px",outline:"none",fontFamily:"inherit"}}/>
@@ -1329,12 +1364,15 @@ export default function App(){
         </div>
       </div>)}
       <div style={{flex:1,overflowY:"auto",paddingBottom:"12px"}}>
-        {projects.length>0&&(<div className="eyebrow">Projects</div>)}
-        {projects.map(p=>(<div key={p.id} className={`proj-row${activeProjectId===p.id?" current":""}`} onClick={()=>setActiveProjectId(activeProjectId===p.id?null:p.id)}>
+        {projects.length>0&&!libQuery.trim()&&(<div className="eyebrow">Projects</div>)}
+        {projects.filter(()=>!libQuery.trim()).map(p=>(<div key={p.id} className={`proj-row${activeProjectId===p.id?" current":""}`} onClick={()=>setActiveProjectId(activeProjectId===p.id?null:p.id)}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"6px"}}>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:"15px",fontWeight:600,color:activeProjectId===p.id?"var(--gold-hi)":"var(--text-hi)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</div>
-              <div style={{fontSize:"12px",color:"var(--text-lo)",marginTop:"2px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{savedConvos.filter(c=>c.project_id===p.id&&c.active!==false).length} chats{activeProjectId===p.id?" \u00b7 active":""}</div>
+            <div style={{flex:1,minWidth:0,display:"flex",alignItems:"center",gap:"12px"}}>
+              <span style={{width:"34px",height:"34px",borderRadius:"10px",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",background:activeProjectId===p.id?"#2B2617":"var(--surface)",border:activeProjectId===p.id?"none":"1px solid var(--line)",color:activeProjectId===p.id?"var(--gold-hi)":"var(--text-lo)"}}><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"><path d="M2 4.5h4l1.5 1.5H14v6.5H2z"/></svg></span>
+              <span style={{minWidth:0}}>
+                <span style={{display:"block",fontSize:"16px",fontWeight:500,color:"var(--text-hi)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</span>
+                <span style={{display:"block",fontSize:"13px",color:activeProjectId===p.id?"var(--gold)":"var(--text-lo)",marginTop:"1px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{activeProjectId===p.id?"Active · new chats follow its instructions":(()=>{const n=savedConvos.filter(c=>c.project_id===p.id&&c.active!==false).length;return n===1?"1 chat":`${n} chats`})()}</span>
+              </span>
             </div>
             <div style={{display:"flex",gap:"2px",flexShrink:0}} onClick={e=>e.stopPropagation()}>
               <button className="speak-btn" onClick={()=>{setProjFormMode("edit");setProjEditId(p.id);setProjName(p.name);setProjDesc(p.description||"")}} title="Edit"><PencilIcon/></button>
@@ -1342,8 +1380,8 @@ export default function App(){
             </div>
           </div>
         </div>))}
-        {pinnedConvos.length>0&&(<div className="eyebrow">Pinned</div>)}
-        {pinnedConvos.map(c=>(<div key={c.id} className={`hist-item${activeConvoId===c.id?" current":""}`} onClick={()=>handleLoadConvo(c)}>
+        {pinnedConvos.filter(c=>!libQuery.trim()||(c.title||"").toLowerCase().includes(libQuery.trim().toLowerCase())).length>0&&(<div className="eyebrow">Pinned</div>)}
+        {pinnedConvos.filter(c=>!libQuery.trim()||(c.title||"").toLowerCase().includes(libQuery.trim().toLowerCase())).map(c=>(<div key={c.id} className={`hist-item${activeConvoId===c.id?" current":""}`} onClick={()=>handleLoadConvo(c)}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"6px"}}>
             <div style={{flex:1,minWidth:0}}>
               {editingId===c.id?(<input autoFocus value={editTitle} onChange={e=>setEditTitle(e.target.value)} onClick={e=>e.stopPropagation()} onBlur={commitRename} onKeyDown={e=>{if(e.key==="Enter"){e.target.blur()}if(e.key==="Escape"){setEditingId(null);setEditTitle("")}}} style={{background:"rgba(255,255,255,0.08)",border:"1px solid var(--gold)",borderRadius:"8px",color:"var(--text-hi)",fontSize:"14px",padding:"3px 7px",width:"100%",outline:"none",fontFamily:"inherit"}}/>):(<div style={{fontSize:"15px",color:"inherit",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.title}</div>)}
@@ -1355,8 +1393,8 @@ export default function App(){
             </div>
           </div>
         </div>))}
-        {(()=>{const list=allSaved.filter(c=>!c.pinned&&(!activeProjectId||c.project_id===activeProjectId));let lastGroup=null;const out=[];
-          if(list.length===0){out.push(<div key="empty" style={{padding:"24px 16px",color:"var(--text-lo)",fontSize:"14px",textAlign:"center"}}>{activeProjectId?"No chats in this project yet":"No chats yet"}</div>);}
+        {(()=>{const lq=libQuery.trim().toLowerCase();const hit=c=>!lq||(c.title||"").toLowerCase().includes(lq);const list=allSaved.filter(c=>!c.pinned&&(lq?hit(c):(!activeProjectId||c.project_id===activeProjectId)));let lastGroup=null;const out=[];
+          if(list.length===0){out.push(<div key="empty" style={{padding:"24px 16px",color:"var(--text-lo)",fontSize:"14px",textAlign:"center"}}>{libQuery.trim()?`No chats match "${libQuery.trim()}"`:activeProjectId?"No chats in this project yet":"No chats yet"}</div>);}
           list.forEach(c=>{const g=chatGroupLabel(c.updated_at||c.created_at);
             if(g!==lastGroup){out.push(<div key={"g"+g} className="eyebrow">{activeProjectId?`${g} \u00b7 in project`:g}</div>);lastGroup=g;}
             out.push(<div key={c.id} className={`hist-item${activeConvoId===c.id?" current":""}`} onClick={()=>handleLoadConvo(c)}>
