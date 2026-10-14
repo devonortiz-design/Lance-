@@ -52,7 +52,13 @@ export async function callClaude(messages, facts, sessions, fileContents = [], p
       throw new Error("Lance could not reach the model. Check your connection and try again.");
     }
 
-    if (!d.error && res.ok) return d.content?.[0]?.text || "";
+    if (!d.error && res.ok) {
+      const txt = (d.content || []).filter(b => b && b.type === "text").map(b => b.text || "").join("");
+      if (txt.trim()) return txt;
+      lastMsg = "Lance sent back an empty reply (" + (d.stop_reason || "no reason") + "). Try again.";
+      if (attempt < MAX_TRIES - 1) { await wait(600); continue; }
+      break;
+    }
     if (res.status === 401) throw new Error("Lance needs his unlock passcode again. Close and reopen Lance, then enter it.");
 
     lastMsg = d.error?.message || `Request failed (${res.status}).`;
