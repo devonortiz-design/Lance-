@@ -200,3 +200,25 @@ export function detectDocumentContent(text, userRequest) {
 
   return namedTypes || requestedNoun;
 }
+
+
+// Silent auto-filing: pick the best folder for a chat. Returns a folder name or "".
+export async function classifyChat(messages, folders = []) {
+  const convo = messages.slice(0, 8).map(m => (m.role === "user" ? "Pastor: " : "Lance: ") + String(m.content || "").replace(/\s+/g, " ").slice(0, 300)).join("\n");
+  const list = folders.length
+    ? folders.map(f => "- " + f.name + (f.examples.length ? " (for example: " + f.examples.join("; ") + ")" : "")).join("\n")
+    : "(no folders yet)";
+  const system = "You file chats into folders. Reply with ONLY the folder name, nothing else. Prefer an existing folder. If no existing folder fits and the chat has a clear subject, reply with a new folder name of two to four words, title case, no punctuation. If the chat is only a greeting, a test, or too thin to file, reply NONE.";
+  const user = "Folders:\n" + list + "\n\nChat:\n" + convo + "\n\nFolder name:";
+  const res = await fetch("https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-claude", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-lance-key": getLanceKey() },
+    body: JSON.stringify({ model: MODEL, max_tokens: 30, system, messages: [{ role: "user", content: user }] }),
+  });
+  const d = await res.json();
+  if (!res.ok || d.error) return "";
+  const txt = (d.content || []).filter(b => b && b.type === "text").map(b => b.text || "").join("").trim();
+  const name = txt.split("\n")[0].replace(/^["'\s]+|["'.\s]+$/g, "");
+  if (!name || /^none$/i.test(name) || name.length > 40) return "";
+  return name;
+}

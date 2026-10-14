@@ -1,5 +1,5 @@
 import React,{useState,useRef,useEffect,useCallback}from"react";
-import{callClaude,speak,readFile,detectDocumentContent,webSearch,formatSearchResults}from"./api";
+import{callClaude,classifyChat,speak,readFile,detectDocumentContent,webSearch,formatSearchResults}from"./api";
 import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseVideoTag,parseTaskTag,saveTask,loadOpenTasks,completeTask,deleteTask,parseStaffEventTags,parseStaffNoteTags,saveStaffEvent,saveStaffNote,loadBrainNotes,parseBrainTags,saveBrainNote}from"./memory";
 import{SESSION_ID,SUPABASE_URL,SB_HEADERS,DB_URL}from"./config";
 import{LanceLogo,SendIcon,SpeakerIcon,StopIcon,DownloadIcon,AttachIcon,CloseIcon}from"./icons";
@@ -853,6 +853,7 @@ export default function App(){
   const chatIdRef=useRef(null);
   useEffect(()=>{chatIdRef.current=activeConvoId},[activeConvoId]);
   const projRef=useRef(null);
+  const classifiedRef=useRef(new Set());
   useEffect(()=>{projRef.current=activeProjectId},[activeProjectId]);
   const activeProject=projects.find(p=>p.id===activeProjectId)||null;
 
@@ -1023,6 +1024,26 @@ export default function App(){
         if(rows&&rows[0]?.id){chatIdRef.current=rows[0].id;setActiveConvoId(rows[0].id);}
       }
       loadPinned().then(cc=>{if(Array.isArray(cc))setSavedConvos(cc)}).catch(()=>{});
+      // Silent auto-filing: once a chat has two exchanges and no folder, file it by topic.
+      const cid=chatIdRef.current;
+      if(cid&&clean.length>=4&&!projRef.current&&!classifiedRef.current.has(cid)){
+        classifiedRef.current.add(cid);
+        (async()=>{
+          try{
+            const[projs,chats]=await Promise.all([loadProjectsDb(),loadPinned()]);
+            const pl=Array.isArray(projs)?projs:[];const cl=Array.isArray(chats)?chats:[];
+            const cur=cl.find(c=>c.id===cid);if(cur&&cur.project_id)return;
+            const folders=pl.map(p=>({name:p.name,examples:cl.filter(c=>c.project_id===p.id).slice(0,3).map(c=>(c.title||"").slice(0,40))}));
+            const name=await classifyChat(clean,folders);if(!name)return;
+            let proj=pl.find(p=>(p.name||"").toLowerCase()===name.toLowerCase());
+            if(!proj){const made=await createProjectRow(name,"");proj=made&&made[0];}
+            if(!proj||!proj.id)return;
+            await updateChatRow(cid,{project_id:proj.id});
+            const[p2,c2]=await Promise.all([loadProjectsDb(),loadPinned()]);
+            if(Array.isArray(p2))setProjects(p2);if(Array.isArray(c2))setSavedConvos(c2);
+          }catch(e){}
+        })();
+      }
     }catch(e){}
   },[]);
 
