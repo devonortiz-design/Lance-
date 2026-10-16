@@ -2,15 +2,40 @@ export function buildSystem(facts, profile, sessions, project, brain) {
   var brainBlock = '';
   if (Array.isArray(brain) && brain.length > 0) {
     var kindLabel = { sermon: 'Sermon seed', study: 'Study', idea: 'Idea', task: 'Task', prayer: 'Prayer' };
+    var meta = function(n) {
+      return '[' + (kindLabel[n.kind] || n.kind) + (n.pinned ? ', pinned' : '') + (n.done ? ', done' : '') + (n.example ? ', EXAMPLE' : '') + '] ' + (n.title || 'Untitled');
+    };
+    var extras = function(n) {
+      var s = '';
+      if (n.refs && n.refs.length) s += ' (Scripture: ' + n.refs.join('; ') + ')';
+      if (n.tags && n.tags.length) s += ' (tags: ' + n.tags.join(', ') + ')';
+      return s;
+    };
+    var full = brain.filter(function(n) { return n.full; });
+    var rest = brain.filter(function(n) { return !n.full; });
     brainBlock = '\n\n=== PASTOR\'S NOTEBOOK (SECOND BRAIN) ===\n'
-      + 'Pinned and most recent entries from the notebook Pastor keeps on his phone. Draw on these when they bear on the question, name the entry when you use it, and connect entries he has not connected himself. Entries marked EXAMPLE are samples, not his real notes.\n'
-      + brain.map(function(n) {
-          var line = '- [' + (kindLabel[n.kind] || n.kind) + (n.pinned ? ', pinned' : '') + (n.done ? ', done' : '') + (n.example ? ', EXAMPLE' : '') + '] ' + (n.title || 'Untitled');
-          if (n.body) line += ': ' + String(n.body).replace(/\s+/g, ' ').slice(0, 400);
-          if (n.refs && n.refs.length) line += ' (Scripture: ' + n.refs.join('; ') + ')';
-          if (n.tags && n.tags.length) line += ' (tags: ' + n.tags.join(', ') + ')';
-          return line;
-        }).join('\n');
+      + 'The notebook Pastor keeps on his phone. Draw on it when it bears on the question, name the entry when you use it, and connect entries he has not connected himself. Entries marked EXAMPLE are samples, not his real notes.\n'
+      + 'Claude artifact links (claude.ai/artifact/... or claude.ai/code/artifact/...) never open from here. When Pastor sends one, look below for a notebook entry holding that link: if one is there, you have its full contents, so answer from them and do not ask him to paste anything. If none holds it, tell him plainly to ask Claude to save the contents to the notebook. Never save a note that holds only a link.\n';
+    if (full.length) {
+      brainBlock += '\n--- ENTRIES MATCHING THIS QUESTION (complete text) ---\n'
+        + full.map(function(n) {
+            var body = String(n.body || '');
+            if (body.length > 12000) body = body.slice(0, 12000) + '\n[entry continues beyond this point]';
+            return '### ' + meta(n) + extras(n) + '\n' + body;
+          }).join('\n\n');
+    }
+    if (rest.length) {
+      brainBlock += '\n\n--- OTHER PINNED AND RECENT ENTRIES (previews only) ---\n'
+        + 'These show the first lines only. If Pastor asks about one, say you only see the opening and ask him to name its topic or passage so the full entry loads; never fill in the rest from guesswork.\n'
+        + rest.map(function(n) {
+            var line = '- ' + meta(n);
+            if (n.body) {
+              var b = String(n.body).replace(/\s+/g, ' ');
+              line += ': ' + b.slice(0, 400) + (b.length > 400 ? ' [preview]' : '');
+            }
+            return line + extras(n);
+          }).join('\n');
+    }
   }
 
   var projectBlock = '';

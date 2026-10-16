@@ -274,6 +274,66 @@ export async function loadBrainNotes() {
   return out;
 }
 
+// ─── Notebook lookup for the current question ──────────────────────
+// The prompt only carries short previews of recent notes. Before each answer,
+// Lance searches the WHOLE notebook for notes tied to what Pastor just said
+// (a Claude artifact link, a Scripture reference, or the topic words) and
+// reads the best matches in full, however old they are.
+const ARTIFACT_RE = /claude\.ai\/(?:code\/)?artifact\/([A-Za-z0-9_-]{8,})/gi;
+const STOP = new Set("the and for that this with from have what your about into them they their there then than when where which while would could should will just like want need make made does did done been being were was are is it its it's you yours our ours his her him she he we me my mine can cant can't not dont don't yes no okay ok please thanks thank lance pastor note notes notebook save saved see now still also some any all one two get got let lets let's tell show read open look find more much very really here".split(" "));
+
+export function extractArtifactIds(text) {
+  const out = []; let m;
+  ARTIFACT_RE.lastIndex = 0;
+  while ((m = ARTIFACT_RE.exec(text || ""))) if (!out.includes(m[1])) out.push(m[1]);
+  return out;
+}
+
+function lookupTerms(text) {
+  const clean = String(text || "").replace(/https?:\/\/\S+/gi, " ").replace(ARTIFACT_RE, " ").toLowerCase();
+  const words = clean.match(/[a-z][a-z'-]{3,}/g) || [];
+  const out = [];
+  for (const w of words) {
+    const t = w.replace(/'s$/, "").replace(/['-]/g, "");
+    if (t.length < 4 || STOP.has(t) || out.includes(t)) continue;
+    out.push(t);
+  }
+  return out.slice(0, 8);
+}
+
+export async function findRelevantNotes(text, limit = 5) {
+  const ids = extractArtifactIds(text);
+  const refs = parseScriptureRefs(text).map(r => r.replace(/:.*$/, "")); // book + chapter
+  const terms = lookupTerms(text);
+  if (!ids.length && !refs.length && !terms.length) return [];
+
+  const pats = [...ids, ...refs, ...terms].map(p => p.replace(/[",()*\\]/g, " ").trim()).filter(Boolean);
+  const ors = [];
+  for (const p of pats) { ors.push(`title.ilike."*${p}*"`, `body.ilike."*${p}*"`); }
+  const cols = "select=id,title,body,kind,tags,refs,pinned,done,example,updated_at";
+  let rows = [];
+  try {
+    rows = await sbGet("brain_notes", `${cols}&example=is.false&or=(${encodeURIComponent(ors.join(","))})&order=updated_at.desc&limit=40`);
+  } catch { return []; }
+  if (!Array.isArray(rows)) return [];
+
+  const scored = rows.map(n => {
+    const hay = ((n.title || "") + "\n" + (n.body || "") + "\n" + (n.tags || []).join(" ") + "\n" + (n.refs || []).join(" ")).toLowerCase();
+    const title = (n.title || "").toLowerCase();
+    let s = 0;
+    for (const id of ids) if (hay.includes(id.toLowerCase())) s += 100;
+    for (const r of refs) if (hay.includes(r.toLowerCase())) s += 6;
+    for (const t of terms) { if (title.includes(t)) s += 3; else if (hay.includes(t)) s += 1; }
+    return { n, s };
+  });
+  // A link or a Scripture match always counts; topic words need at least two hits.
+  return scored
+    .filter(x => x.s >= 2)
+    .sort((a, b) => b.s - a.s)
+    .slice(0, limit)
+    .map(x => ({ ...x.n, full: true }));
+}
+
 const BRAIN_KINDS = ["sermon", "study", "idea", "task", "prayer"];
 export function parseBrainTags(text) {
   const re = /\[BRAIN:\s*([^\]]+)\]/gi;

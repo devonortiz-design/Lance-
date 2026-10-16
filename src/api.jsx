@@ -1,8 +1,27 @@
 import { MODEL, VOICE_URL, DOCX_URL, SEARCH_URL, getLanceKey } from "./config";
 import { buildSystem } from "./system";
+import { findRelevantNotes } from "./memory";
+
+// Text of Pastor's last few messages, so a follow-up like "do you see it now?"
+// still finds the note the earlier message pointed at.
+function recentUserText(messages) {
+  return messages.filter(m => m.role === "user").slice(-3).map(m => {
+    if (typeof m.content === "string") return m.content;
+    if (Array.isArray(m.content)) return m.content.filter(b => b && b.type === "text").map(b => b.text).join(" ");
+    return "";
+  }).join("\n");
+}
 
 export async function callClaude(messages, facts, sessions, fileContents = [], profile = [], project = null, brain = []) {
   const apiMessages = [...messages];
+
+  // Pull the notebook entries this question is about, in full.
+  let focus = [];
+  try { focus = await findRelevantNotes(recentUserText(messages)); } catch { focus = []; }
+  if (focus.length) {
+    const fullIds = new Set(focus.map(n => n.id));
+    brain = [...focus, ...(brain || []).filter(n => !fullIds.has(n.id))];
+  }
 
   if (fileContents.length > 0) {
     const fileBlocks = fileContents.map(f => {
