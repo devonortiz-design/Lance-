@@ -1,4 +1,5 @@
 import React,{useState,useRef,useEffect,useCallback}from"react";
+import{DianePanel,loadDianeQueue}from"./diane";
 import{callClaude,classifyChat,speak,readFile,detectDocumentContent,webSearch,formatSearchResults}from"./api";
 import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseVideoTag,parseTaskTag,saveTask,loadOpenTasks,completeTask,deleteTask,parseStaffEventTags,parseStaffNoteTags,saveStaffEvent,saveStaffNote,loadBrainNotes,parseBrainTags,saveBrainNote}from"./memory";
 import{SESSION_ID,SUPABASE_URL,SB_HEADERS,DB_URL}from"./config";
@@ -837,6 +838,9 @@ export default function App(){
   const refreshBrain=useCallback(()=>{loadBrainNotes().then(n=>{if(Array.isArray(n))setBrainNotes(n)}).catch(()=>{})},[]);
   const handleBrainTags=useCallback((raw)=>{const notes=parseBrainTags(raw);if(!notes.length)return;Promise.all(notes.map(n=>saveBrainNote(n).catch(e=>console.error(e)))).then(refreshBrain)},[refreshBrain]);
   const[showTasks,setShowTasks]=useState(false);
+  const[showDiane,setShowDiane]=useState(false);
+  const[dianeDrafts,setDianeDrafts]=useState(0);
+  useEffect(()=>{loadDianeQueue().then(r=>setDianeDrafts(r.filter(x=>x.status==="draft").length)).catch(()=>{})},[showDiane]);
     const[editTitle,setEditTitle]=useState("");
   const[savedConvos,setSavedConvos]=useState([]);
   const[projects,setProjects]=useState([]);
@@ -1294,6 +1298,7 @@ export default function App(){
     {/* Drag overlay */}
     {dragOver&&(<div style={{position:"fixed",inset:0,background:"rgba(212,175,90,0.10)",border:"2px dashed rgba(212,175,90,0.5)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><div style={{color:"#fff",fontSize:"18px",fontWeight:600}}>Drop file or screenshot</div></div>)}
 
+    {showDiane&&(<DianePanel onClose={()=>setShowDiane(false)} onCount={setDianeDrafts}/>)}
     {showTasks&&(<TasksPanel tasks={openTasks} onClose={()=>setShowTasks(false)} onComplete={handleCompleteTask} onDelete={handleDeleteTask} onAdd={handleAddTask}/>)}
 
     {/* Document preview overlay */}
@@ -1461,6 +1466,9 @@ export default function App(){
     {!isEmpty&&(<IconBtn onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} label={teachMode?"Read aloud is on":"Read aloud is off"} active={teachMode}>
       <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h2.5L9 3v10L5.5 10H3z"/>{teachMode?(<path d="M11.5 5.5a3.5 3.5 0 010 5M13 3.8a6 6 0 010 8.4"/>):(<path d="M11.5 6l3 4M14.5 6l-3 4"/>)}</svg>
     </IconBtn>)}
+    <IconBtn onClick={()=>setShowDiane(true)} label={`Open Diane, ${dianeDrafts} to review`} badge={dianeDrafts||null}>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="14" height="10" rx="2"/><path d="M3.5 6.5l6.5 5 6.5-5"/></svg>
+    </IconBtn>
     <IconBtn onClick={()=>setShowTasks(true)} label={`Open tasks, ${openTasks.length} open`} badge={openTasks.length||null}>
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10.5l3.5 3.5L16 5.5"/></svg>
     </IconBtn>
