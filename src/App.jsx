@@ -1,7 +1,8 @@
 import React,{useState,useRef,useEffect,useCallback}from"react";
 import{callClaude,classifyChat,speak,readFile,detectDocumentContent,webSearch,formatSearchResults}from"./api";
 import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseVideoTag,parseTaskTag,saveTask,loadOpenTasks,completeTask,deleteTask,parseStaffEventTags,parseStaffNoteTags,saveStaffEvent,saveStaffNote,loadBrainNotes,parseBrainTags,saveBrainNote}from"./memory";
-import{SESSION_ID,SUPABASE_URL,SB_HEADERS,DB_URL}from"./config";
+import{SESSION_ID,SUPABASE_URL,SB_HEADERS,DB_URL,getLanceKey}from"./config";
+import{VoiceEngine,SpeechChunker}from"./voice";
 import NotifyCard,{registerWorker}from"./push";
 import{LanceLogo,SendIcon,SpeakerIcon,StopIcon,DownloadIcon,AttachIcon,CloseIcon}from"./icons";
 
@@ -11,6 +12,43 @@ const FLYER_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-fly
 const SMS_URL="https://dtqmzdteomgjresjfrog.supabase.co/functions/v1/lance-sms";
 const WATCH_VIDEO_URL="/api/watch-video";
 const TTS_URL=`${SUPABASE_URL}/functions/v1/lance-tts`;
+const STT_URL=`${SUPABASE_URL}/functions/v1/lance-stt`;
+// One spoken clip for talk mode: raw MP3 bytes, or null when the voice service is down.
+async function fetchSpeechClip(text){
+  try{
+    const r=await fetch(TTS_URL,{method:"POST",headers:{"Content-Type":"application/json","x-lance-key":getLanceKey()},body:JSON.stringify({text})});
+    if(!r.ok||!(r.headers.get("content-type")||"").includes("audio"))return null;
+    return await r.arrayBuffer();
+  }catch(e){return null}
+}
+
+// Lance's reply on the talk screen. The sentence he is saying is bright, what he
+// already said stays readable, what is still coming is dimmer. Scrolls by itself
+// to follow him, and you can scroll back up to reread.
+function VoiceTranscript({pieces,current,full}){
+  const boxRef=useRef(null);const curRef=useRef(null);const stickRef=useRef(true);
+  const segs=[];let cursor=0;
+  pieces.forEach((p,i)=>{
+    const at=full.indexOf(p,cursor);
+    if(at===-1)return;
+    if(at>cursor&&segs.length)segs[segs.length-1].text+=full.slice(cursor,at);
+    segs.push({text:p,i});cursor=at+p.length;
+  });
+  const tail=full.slice(cursor);
+  useEffect(()=>{
+    const box=boxRef.current;if(!box||!stickRef.current)return;
+    if(curRef.current){const c=curRef.current;const top=c.offsetTop-box.offsetTop;if(top<box.scrollTop||top+c.offsetHeight>box.scrollTop+box.clientHeight)box.scrollTo({top:Math.max(0,top-24),behavior:"smooth"})}
+    else box.scrollTop=box.scrollHeight;
+  },[current,full.length]);
+  const onScroll=()=>{const b=boxRef.current;if(!b)return;
+    // Stop following if you scrolled up to reread; start again when you come back down.
+    stickRef.current=b.scrollHeight-b.scrollTop-b.clientHeight<80||(curRef.current&&Math.abs(curRef.current.offsetTop-b.offsetTop-b.scrollTop)<b.clientHeight)};
+  if(!full.trim())return(<div style={{marginTop:"18px",height:"20px"}}/>);
+  return(<div ref={boxRef} onScroll={onScroll} className="serif" aria-live="polite" style={{marginTop:"18px",alignSelf:"stretch",maxHeight:"36vh",overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"4px 14px",fontSize:"19px",lineHeight:1.5,textAlign:"left",whiteSpace:"pre-wrap",maskImage:"linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%)",WebkitMaskImage:"linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%)"}}>
+    {segs.map(s=>(<span key={s.i} ref={s.i===current?curRef:null} style={{color:s.i===current?"var(--gold-hi)":s.i<current?"var(--text-hi)":"var(--text-mid)",transition:"color 200ms"}}>{s.text}</span>))}
+    {tail&&(<span style={{color:"var(--text-lo)"}}>{tail}</span>)}
+  </div>);
+}
 const SERMON_URL=`${SUPABASE_URL}/functions/v1/lance-sermon-prep`;
 const EXAM_URL=`${SUPABASE_URL}/functions/v1/lance-exam-gen`;
 const DEVOTION_URL=`${SUPABASE_URL}/functions/v1/lance-devotion`;
@@ -1022,10 +1060,85 @@ export default function App(){
     if(!SR){alert("Try Safari on iPhone for voice input.");return}
     startListening();
   },[listening,startListening]);
+  // ─── Talk mode engine (one open mic, own pause detection, barge-in) ───
+  const engineRef=useRef(null);
+  const sendTextRef=useRef(null);
+  const loadingRef=useRef(false);
+  const replyAbortRef=useRef(null);
+  const[engineMode,setEngineMode]=useState("off");
+  const[voiceBusy,setVoiceBusy]=useState(null); // "transcribing" | "thinking" | null
+  const[voiceNote,setVoiceNote]=useState("");
+  const liveRef=useRef({pieces:[],current:-1});
+  const[liveTick,setLiveTick]=useState(0);
+  const bumpLive=useCallback(()=>setLiveTick(t=>t+1),[]);
+  const afterReply=useCallback(()=>{
+    const eng=engineRef.current;if(!eng)return;
+    setSpeakingIdx(null);
+    const lv=liveRef.current;if(lv&&lv.pieces.length){lv.current=lv.pieces.length;bumpLive()}
+    if(micMutedRef.current)eng.pause();else eng.listen();
+  },[bumpLive]);
+  const transcribe=useCallback(async(wav)=>{
+    const eng=engineRef.current;if(!eng)return;
+    setVoiceBusy("transcribing");setVoiceNote("");
+    let text="";
+    try{
+      const r=await fetch(STT_URL,{method:"POST",headers:{"Content-Type":"audio/wav","x-lance-key":getLanceKey()},body:wav});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.error||"stt "+r.status);
+      text=String(d.text||"").trim();
+    }catch(e){
+      console.error("Lance could not transcribe:",e);
+      setVoiceBusy(null);setVoiceNote("I missed that. Say it again.");
+      if(engineRef.current)afterReply();
+      return;
+    }
+    // Ignore stray noise the transcriber turns into nothing or a filler sound.
+    if(!text||/^[\s.,!?-]*$/.test(text)||/^\(?(uh|um|hmm|mm|ah)\)?[.!?]?$/i.test(text)){setVoiceBusy(null);afterReply();return}
+    // If Lance is still finishing the reply you cut off, wait for that to close out.
+    for(let i=0;i<60&&loadingRef.current;i++)await new Promise(r=>setTimeout(r,50));
+    if(!engineRef.current)return;
+    sendTextRef.current&&sendTextRef.current(text,true);
+  },[afterReply]);
+  const startEngine=useCallback(async()=>{
+    const eng=new VoiceEngine({
+      onLevel:(lvl)=>{const w=[0.5,0.8,1,0.8,0.5];setMicLevels(w.map(x=>Math.min(1,lvl*x*(0.85+Math.random()*0.3))))},
+      onState:(m)=>{setEngineMode(m);if(m==="capturing")setVoiceNote("")},
+      onUtterance:(wav)=>{transcribe(wav)},
+      onBargeIn:()=>{
+        // You talked over Lance: his voice stops at once, the reply text stays on screen.
+        setSpeakingIdx(null);
+        if(replyAbortRef.current){try{replyAbortRef.current.abort()}catch(e){}}
+      },
+    });
+    engineRef.current=eng;
+    eng.muted=micMutedRef.current;
+    await eng.start();
+    return eng;
+  },[transcribe]);
+  const stopEngine=useCallback(()=>{
+    if(replyAbortRef.current){try{replyAbortRef.current.abort()}catch(e){}}
+    if(engineRef.current){engineRef.current.stop();engineRef.current=null}
+    setEngineMode("off");setVoiceBusy(null);setVoiceNote("");
+    liveRef.current={pieces:[],current:-1};
+  },[]);
+  useEffect(()=>{if(engineRef.current)engineRef.current.muted=micMuted;if(engineRef.current&&!micMuted&&engineRef.current.mode==="paused"&&!voiceBusy&&!loadingRef.current)engineRef.current.listen()},[micMuted,voiceBusy]);
+  useEffect(()=>()=>{if(engineRef.current)engineRef.current.stop()},[]);
+
   const toggleVoiceConversation=useCallback((forceStart)=>{
     if(teachMode&&forceStart!==true){
-      setTeachMode(false);stopSpeaking();
+      setTeachMode(false);stopSpeaking();stopEngine();
       if(listening){recognitionRef.current?.stop();setListening(false)}
+      return;
+    }
+    // New talk mode: an open mic Lance listens to himself. Needs no speech
+    // recognition from the browser, so it works the same on every phone.
+    if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&(window.AudioContext||window.webkitAudioContext)){
+      setTeachMode(true);
+      startEngine().catch(e=>{
+        console.error("Talk mode could not open the mic:",e);
+        stopEngine();
+        setVoiceNote("Lance needs microphone access. Allow it in Settings, then try again.");
+      });
       return;
     }
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -1043,7 +1156,7 @@ export default function App(){
       voiceAudioUnlockRef.current.play().catch(()=>{});
     }
     setTeachMode(true);startListening();
-  },[teachMode,listening,startListening,stopSpeaking]);
+  },[teachMode,listening,startListening,stopSpeaking,startEngine,stopEngine]);
 
   // Autosave: every conversation persists without a save button
   const autosaveChat=useCallback(async(msgs)=>{
@@ -1262,6 +1375,32 @@ export default function App(){
     const next=[...messages,{role:"user",content:t}];
     setMessages(next);setLoading(true);
     saveMessage("user",t).catch(()=>{});
+    // Talk mode: stream the reply and speak each sentence as soon as it exists.
+    const eng=viaVoice?engineRef.current:null;
+    let speakToken=0,chunker=null,live=null,ctrl=null;
+    const replyIdx=next.length;
+    const speakPieces=(pieces)=>{
+      if(!eng||!pieces.length)return;
+      for(const p of pieces){
+        const i=live.pieces.length;live.pieces.push(p);
+        eng.enqueue(speakToken,fetchSpeechClip(p),{onStart:()=>{if(liveRef.current!==live)return;live.current=i;setVoiceBusy(null);setSpeakingIdx(replyIdx);bumpLive()}});
+      }
+      bumpLive();
+    };
+    let onDelta=null;
+    if(eng){
+      eng.pause();setVoiceBusy("thinking");
+      speakToken=eng.beginSpeech();chunker=new SpeechChunker();
+      live={pieces:[],current:-1};liveRef.current=live;
+      ctrl=new AbortController();replyAbortRef.current=ctrl;
+      setMessages([...next,{role:"assistant",content:"",streaming:true}]);
+      let pending=null;
+      onDelta=(full)=>{
+        pending=full;
+        if(!onDelta._raf){onDelta._raf=requestAnimationFrame(()=>{onDelta._raf=null;const shown=stripMemoryTags(pending).replace(/\[[A-Z_]+:[^\]]*$/,"");setMessages(m=>{const c=[...m];if(c[replyIdx]&&c[replyIdx].streaming)c[replyIdx]={...c[replyIdx],content:shown};return c})})}
+        speakPieces(chunker.take(full));
+      };
+    }
     try{
       const intent=detectIntent(t);let raw="";
       if(intent==="devotion"){const res=await fetch(DEVOTION_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({})});const data=await res.json();raw=data.content||"Could not generate devotion.";}
@@ -1269,12 +1408,22 @@ export default function App(){
       else if(intent==="exam"){const res=await fetch(EXAM_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({topic:t,questionCount:20})});const data=await res.json();raw=data.content||"Could not generate exam.";}
       else{
         let searchContext="";
-        const needsSearch=/\b(latest|current|recent|today|news|2024|2025|2026|price|weather|who is|what is|how much|when did|search|look up|find out|research)\b/i.test(t);
+        // Out loud, only search when asked plainly; a search adds seconds of silence.
+        const needsSearch=viaVoice?/\b(search|look up|google|latest|news|today|tonight|weather|price|score)\b/i.test(t):/\b(latest|current|recent|today|news|2024|2025|2026|price|weather|who is|what is|how much|when did|search|look up|find out|research)\b/i.test(t);
         if(needsSearch&&t.length>10){try{const sd=await webSearch(t,5);if(sd.results?.length>0){searchContext="\n\n[WEB SEARCH RESULTS for: "+t+"]\n"+formatSearchResults(sd)+"\n[END SEARCH RESULTS]"}}catch(e){}}
         let apiMessages=next;
         if(searchContext){const last=next[next.length-1];const lc=typeof last.content==="string"?last.content:t;apiMessages=[...next.slice(0,-1),{role:"user",content:lc+searchContext}];}
         const cleanMessages=apiMessages.map(({role,content})=>({role,content}));
-        raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile,activeProject,brainNotes,viaVoice);
+        raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile,activeProject,brainNotes,viaVoice,onDelta?{onDelta,signal:ctrl.signal}:{});
+      }
+      if(eng){
+        if(onDelta&&onDelta._raf){cancelAnimationFrame(onDelta._raf);onDelta._raf=null}
+        if(ctrl&&ctrl.signal.aborted){/* you cut in; nothing more is spoken */}
+        else{speakPieces(chunker.take(raw,true));}
+        if(live.pieces.length===0)setVoiceBusy(null);
+        eng.finishSpeech(speakToken,afterReply);
+        if(replyAbortRef.current===ctrl)replyAbortRef.current=null;
+        if(!raw.trim())raw=ctrl&&ctrl.signal.aborted?"(You cut in.)":"";
       }
       const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=(intent==="sermon"||intent==="exam")?true:detectDocumentContent(clean,recentUserIntent(next));
       const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw),brainData:parseBrainTags(raw)}];setMessages(finalMsgs);
@@ -1286,10 +1435,15 @@ export default function App(){
       }
       if(tags.some(t=>t.type==="memory")){loadMemory().then(f=>{if(Array.isArray(f))setMemoryFacts(f)}).catch(()=>{});}
       if(msgCount.current%4===0){saveSession("general",`${t.slice(0,90)}${t.length>90?"…":""}`,msgCount.current).catch(()=>{});}
-      if(teachMode||viaVoice)speakText(clean,idx);if(isDoc)setDocxIdx(idx);
-    }catch(e){setMessages([...next,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);}
+      if(!eng&&(teachMode||viaVoice))speakText(clean,idx);if(isDoc)setDocxIdx(idx);
+    }catch(e){
+      setMessages([...next,{role:"assistant",content:`Something went wrong: ${e.message}`,isDoc:false}]);
+      if(eng){setVoiceBusy(null);setVoiceNote("Lance hit a snag. Say that again.");eng.stopSpeaking();afterReply();}
+    }
     setLoading(false);
-  },[loading,messages,memoryFacts,profile,recentSessions,teachMode,stopSpeaking,speakText,activeProject,autosaveChat,brainNotes,handleBrainTags]);
+  },[loading,messages,memoryFacts,profile,recentSessions,teachMode,stopSpeaking,speakText,activeProject,autosaveChat,brainNotes,handleBrainTags,afterReply,bumpLive]);
+  sendTextRef.current=sendText;
+  loadingRef.current=loading;
 
   const send=useCallback(async(textOverride)=>{
     const t=(textOverride||input).trim();
@@ -1344,12 +1498,25 @@ export default function App(){
     {voiceSession&&teachMode&&(()=>{
       const lastUser=[...messages].reverse().find(m=>m.role==="user");
       const lastLance=[...messages].reverse().find(m=>m.role==="assistant");
-      const state=micMuted?"Muted":listening?"Listening":loading?"Thinking":speakingIdx!==null?"Speaking":"Your turn";
-      const hint=micMuted?"Tap Mute again to let Lance hear you.":state==="Speaking"?"Talk over Lance anytime to cut in.":"Lance answers out loud when you pause.";
-      const quote=state==="Speaking"&&lastLance?lastLance.content:(lastUser?.content||"");
+      const usingEngine=engineMode!=="off";
+      const state=micMuted?"Muted"
+        :usingEngine?(engineMode==="capturing"?"Listening":voiceBusy==="transcribing"?"Got it":voiceBusy==="thinking"||loading?"Thinking":engineMode==="speaking"?"Speaking":"Your turn")
+        :listening?"Listening":loading?"Thinking":speakingIdx!==null?"Speaking":"Your turn";
+      const hint=voiceNote||(micMuted?"Tap Mute again to let Lance hear you.":state==="Speaking"?"Talk over Lance or tap him to cut in.":state==="Thinking"||state==="Got it"?"Lance starts talking as soon as his first sentence is ready.":"Just talk. Lance answers when you pause.");
       const endVoice=()=>{setVoiceSession(false);toggleVoiceConversation()};
       const toggleMute=()=>setMicMuted(m=>{const next=!m;if(next){if(recognitionRef.current){try{recognitionRef.current.abort()}catch(e){}}if(interruptRecRef.current){try{interruptRecRef.current.abort()}catch(e){}interruptRecRef.current=null}setListening(false)}return next});
-      const bars=listening?micLevels:[0.25,0.5,0.8,0.45,0.65,0.3,0.5];
+      const bars=(listening||usingEngine)&&!micMuted?micLevels:[0.25,0.5,0.8,0.45,0.65,0.3,0.5];
+      // Tapping Lance while he talks stops him and hands you the floor.
+      const tapOrb=()=>{
+        const eng=engineRef.current;
+        if(eng&&(engineMode==="speaking"||eng.isSpeaking)){eng.stopSpeaking();setSpeakingIdx(null);if(!micMuted)eng.listen();return}
+        if(!eng&&speakingIdx!==null){stopSpeaking();if(!micMuted)startListening()}
+      };
+      // What shows under Lance: his reply as it arrives, the sentence he is saying lit up.
+      const live=liveRef.current;
+      const replyText=lastLance&&usingEngine?SpeechChunker.clean(lastLance.content||""):"";
+      const showReply=usingEngine&&lastLance&&(state==="Speaking"||state==="Thinking"||(state==="Your turn"&&replyText));
+      void liveTick;
       return(<div role="dialog" aria-label="Voice conversation with Lance" style={{position:"fixed",inset:0,zIndex:350,background:"var(--bg0)",display:"flex",flexDirection:"column",alignItems:"center",padding:"calc(16px + env(safe-area-inset-top,0px)) 20px calc(28px + env(safe-area-inset-bottom,0px))",animation:"fadeIn 200ms cubic-bezier(0.22,1,0.36,1)"}}>
         <div style={{alignSelf:"stretch",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <span className="eyebrow2">{activeProject?`Voice · ${activeProject.name}`:"Voice"}</span>
@@ -1358,7 +1525,7 @@ export default function App(){
           </button>
         </div>
         <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"0",width:"100%",maxWidth:"420px"}}>
-          <div style={{width:"220px",height:"220px",borderRadius:"50%",border:"1px solid var(--line)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div onClick={tapOrb} role="button" aria-label={state==="Speaking"?"Stop Lance":"Lance"} style={{width:"200px",height:"200px",flexShrink:0,borderRadius:"50%",border:"1px solid var(--line)",display:"flex",alignItems:"center",justifyContent:"center",cursor:state==="Speaking"?"pointer":"default",WebkitTapHighlightColor:"transparent"}}>
             <div style={{width:"172px",height:"172px",borderRadius:"50%",border:`1px solid ${listening?"rgba(212,175,90,0.55)":"rgba(212,175,90,0.22)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"border-color 200ms"}}>
               <div style={{width:"126px",height:"126px",borderRadius:"50%",background:"var(--surface)",border:"2px solid var(--gold)",display:"flex",alignItems:"center",justifyContent:"center",animation:state==="Speaking"?"breathe 1.6s ease-in-out infinite":"none"}}><ArrowMark size={48}/></div>
             </div>
@@ -1367,7 +1534,9 @@ export default function App(){
             {bars.map((lvl,i)=>(<span key={i} style={{width:"4px",height:`${8+lvl*26}px`,borderRadius:"2px",background:micMuted?"var(--line-hi)":"var(--gold)",transition:"height 60ms linear"}}/>))}
           </div>
           <div aria-live="polite" style={{marginTop:"10px",fontSize:"20px",fontWeight:600,color:"var(--text-hi)"}}>{state}</div>
-          {quote&&(<div className="serif" style={{marginTop:"22px",padding:"0 12px",textAlign:"center",fontSize:"21px",lineHeight:1.4,color:"var(--text-hi)",display:"-webkit-box",WebkitLineClamp:4,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{state==="Speaking"?quote:`“${quote}”`}</div>)}
+          {lastUser?.content&&(<div style={{marginTop:"14px",padding:"0 12px",textAlign:"center",fontSize:"15px",lineHeight:1.45,color:"var(--text-lo)",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>You: “{lastUser.content}”</div>)}
+          {showReply?(<VoiceTranscript pieces={live.pieces} current={live.current} full={replyText}/>)
+            :(!usingEngine&&(state==="Speaking"&&lastLance?(<div className="serif" style={{marginTop:"18px",padding:"0 12px",textAlign:"left",fontSize:"19px",lineHeight:1.45,color:"var(--text-hi)",maxHeight:"34vh",overflowY:"auto",WebkitOverflowScrolling:"touch",alignSelf:"stretch"}}>{lastLance.content}</div>):null))}
           <div style={{marginTop:"12px",textAlign:"center",fontSize:"14px",lineHeight:1.5,color:"var(--text-lo)"}}>{hint}</div>
         </div>
         <div style={{display:"flex",gap:"28px",alignItems:"flex-start"}}>

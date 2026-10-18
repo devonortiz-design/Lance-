@@ -12,7 +12,35 @@ function recentUserText(messages) {
   }).join("\n");
 }
 
-export async function callClaude(messages, facts, sessions, fileContents = [], profile = [], project = null, brain = [], viaVoice = false) {
+// Reads Anthropic's server-sent events and hands each new bit of text to onDelta.
+async function readStream(res, onDelta, signal) {
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "", text = "", stop = null, err = null;
+  while (true) {
+    if (signal && signal.aborted) { try { reader.cancel(); } catch (e) {} break; }
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let nl;
+    while ((nl = buf.indexOf("\n")) !== -1) {
+      const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
+      if (!line.startsWith("data:")) continue;
+      let ev; try { ev = JSON.parse(line.slice(5)); } catch (e) { continue; }
+      if (ev.type === "content_block_delta" && ev.delta && ev.delta.type === "text_delta") {
+        text += ev.delta.text; onDelta(text, ev.delta.text);
+      } else if (ev.type === "message_delta" && ev.delta) {
+        stop = ev.delta.stop_reason || stop;
+      } else if (ev.type === "error") {
+        err = (ev.error && ev.error.message) || "Stream error";
+      }
+    }
+  }
+  return { text, stop, err };
+}
+
+export async function callClaude(messages, facts, sessions, fileContents = [], profile = [], project = null, brain = [], viaVoice = false, opts = {}) {
+  const onDelta = typeof opts.onDelta === "function" ? opts.onDelta : null;
   const apiMessages = [...messages];
 
   // Pull the notebook entries this question is about, in full.
@@ -43,8 +71,9 @@ export async function callClaude(messages, facts, sessions, fileContents = [], p
   const body = JSON.stringify({
     model: MODEL,
     max_tokens: 4096,
-    system: buildSystem(facts, profile, sessions, project, brain) + (viaVoice ? "\n\nPastor is talking to you out loud and you are being read aloud. Answer in a few short spoken sentences. Go longer only if he asks for depth." : ""),
+    system: buildSystem(facts, profile, sessions, project, brain) + (viaVoice ? "\n\nPastor is talking to you out loud and you are being read aloud. Answer in a few short spoken sentences. Go longer only if he asks for depth. Speak in plain sentences: no headings, bullets, numbered lists, or symbols. Put your first, most direct sentence first and keep it short." : ""),
     messages: apiMessages,
+    ...(onDelta ? { stream: true } : {}),
   });
 
   // Anthropic sometimes returns a transient overload ("high demand") or rate limit.
@@ -63,9 +92,20 @@ export async function callClaude(messages, facts, sessions, fileContents = [], p
         method: "POST",
         headers: { "Content-Type": "application/json", "x-lance-key": getLanceKey() },
         body,
+        signal: opts.signal,
       });
+      if (onDelta && res.ok && (res.headers.get("content-type") || "").includes("event-stream")) {
+        const out = await readStream(res, onDelta, opts.signal);
+        if (out.text.trim()) return out.text;
+        if (opts.signal && opts.signal.aborted) return out.text;
+        lastMsg = out.err || "Lance sent back an empty reply. Try again.";
+        if (retryable(529, lastMsg) && attempt < MAX_TRIES - 1) { await wait(800 * 2 ** attempt); continue; }
+        if (attempt < MAX_TRIES - 1) { await wait(600); continue; }
+        break;
+      }
       d = await res.json();
     } catch (e) {
+      if (opts.signal && opts.signal.aborted) return "";
       lastMsg = e.message || "Network error.";
       if (attempt < MAX_TRIES - 1) { await wait(800 * 2 ** attempt + Math.random() * 400); continue; }
       throw new Error("Lance could not reach the model. Check your connection and try again.");
