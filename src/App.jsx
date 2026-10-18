@@ -884,7 +884,9 @@ export default function App(){
 
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"})},[messages,loading]);
 
+  const speakTokenRef=useRef(0);
   const stopSpeaking=useCallback(()=>{
+    speakTokenRef.current++;
     if(audioRef.current){audioRef.current.pause();audioRef.current=null}
     if(interruptRecRef.current){try{interruptRecRef.current.abort()}catch(e){}interruptRecRef.current=null}
     setSpeakingIdx(null);setLoadingIdx(null);
@@ -919,27 +921,58 @@ export default function App(){
   },[stopInterruptListener]);
   const speakText=useCallback(async(text,idx)=>{
     stopSpeaking();setLoadingIdx(idx);
-    try{
-      const res=await fetch(TTS_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
-      if(res.ok&&res.headers.get("content-type")?.includes("audio")){
-        const blob=await res.blob();const url=URL.createObjectURL(blob);
-        // Reuse the gesture-unlocked element from voice mode if we have one -- a fresh
-        // Audio() here has no tie to any user gesture and iOS will silently refuse to play it.
-        const audio=voiceModeRef.current&&voiceAudioUnlockRef.current?voiceAudioUnlockRef.current:new Audio();
-        audio.src=url;
-        audio.onplay=()=>{setLoadingIdx(null);setSpeakingIdx(idx);if(voiceModeRef.current)startInterruptListener()};
-        audio.onended=()=>{stopInterruptListener();setSpeakingIdx(null);if(audioRef.current===audio)audioRef.current=null;URL.revokeObjectURL(url);if(voiceModeRef.current){setTimeout(()=>startListening(),700)}};
-        audio.onerror=()=>{stopInterruptListener();setSpeakingIdx(null);if(audioRef.current===audio)audioRef.current=null};
-        audioRef.current=audio;audio.play().catch(()=>{setSpeakingIdx(null);setLoadingIdx(null)});
-      }else{
-        setLoadingIdx(null);setSpeakingIdx(idx);
-        if(voiceModeRef.current)startInterruptListener();
-        const utt=new SpeechSynthesisUtterance(text.slice(0,2000));
-        utt.rate=0.95;utt.onend=()=>{stopInterruptListener();setSpeakingIdx(null);if(voiceModeRef.current){setTimeout(()=>startListening(),700)}};
-        window.speechSynthesis.speak(utt);
-        audioRef.current={pause:()=>window.speechSynthesis.cancel()};
+    const token=++speakTokenRef.current;
+    // Cut the reply into pieces and ask for them all at once. The first piece is short,
+    // so Lance starts talking after one quick request instead of waiting on the whole reply.
+    const splitForSpeech=(t)=>{
+      const sentences=String(t).replace(/\s+/g," ").trim().match(/[^.!?]+[.!?]*\s*/g)||[String(t)];
+      const out=[];let cur="";
+      for(const sn of sentences){
+        const limit=out.length===0?220:650;
+        if(cur&&(cur+sn).length>limit){out.push(cur.trim());cur=sn}else{cur+=sn}
       }
-    }catch(e){setLoadingIdx(null);setSpeakingIdx(null)}
+      if(cur.trim())out.push(cur.trim());
+      return out.slice(0,8);
+    };
+    const fetchPiece=async(piece)=>{
+      const res=await fetch(TTS_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:piece})});
+      if(!res.ok||!res.headers.get("content-type")?.includes("audio"))throw new Error("no audio");
+      return URL.createObjectURL(await res.blob());
+    };
+    const pieces=splitForSpeech(text);
+    const jobs=pieces.map(p=>fetchPiece(p));
+    jobs.forEach(j=>j.catch(()=>{}));
+    try{
+      const firstUrl=await jobs[0];
+      if(token!==speakTokenRef.current){URL.revokeObjectURL(firstUrl);return}
+      // Reuse the gesture-unlocked element from voice mode if we have one -- a fresh
+      // Audio() here has no tie to any user gesture and iOS will silently refuse to play it.
+      const audio=voiceModeRef.current&&voiceAudioUnlockRef.current?voiceAudioUnlockRef.current:new Audio();
+      audioRef.current=audio;
+      const finish=()=>{stopInterruptListener();setSpeakingIdx(null);setLoadingIdx(null);if(audioRef.current===audio)audioRef.current=null;if(voiceModeRef.current&&token===speakTokenRef.current){setTimeout(()=>startListening(),700)}};
+      const playAt=async(i,url)=>{
+        if(token!==speakTokenRef.current){URL.revokeObjectURL(url);return}
+        audio.src=url;
+        audio.onplay=()=>{if(i===0){setLoadingIdx(null);setSpeakingIdx(idx);if(voiceModeRef.current)startInterruptListener()}};
+        audio.onended=async()=>{
+          URL.revokeObjectURL(url);
+          if(token!==speakTokenRef.current)return;
+          if(i+1>=jobs.length){finish();return}
+          try{const nextUrl=await jobs[i+1];playAt(i+1,nextUrl)}catch(e){finish()}
+        };
+        audio.onerror=()=>{URL.revokeObjectURL(url);finish()};
+        audio.play().catch(()=>{setSpeakingIdx(null);setLoadingIdx(null)});
+      };
+      playAt(0,firstUrl);
+    }catch(e){
+      if(token!==speakTokenRef.current)return;
+      setLoadingIdx(null);setSpeakingIdx(idx);
+      if(voiceModeRef.current)startInterruptListener();
+      const utt=new SpeechSynthesisUtterance(text.slice(0,2000));
+      utt.rate=0.95;utt.onend=()=>{stopInterruptListener();setSpeakingIdx(null);if(voiceModeRef.current){setTimeout(()=>startListening(),700)}};
+      window.speechSynthesis.speak(utt);
+      audioRef.current={pause:()=>window.speechSynthesis.cancel()};
+    }
   },[stopSpeaking,startInterruptListener,stopInterruptListener]);
 
   const stopMicMeter=useCallback(()=>{
@@ -1241,7 +1274,7 @@ export default function App(){
         let apiMessages=next;
         if(searchContext){const last=next[next.length-1];const lc=typeof last.content==="string"?last.content:t;apiMessages=[...next.slice(0,-1),{role:"user",content:lc+searchContext}];}
         const cleanMessages=apiMessages.map(({role,content})=>({role,content}));
-        raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile,activeProject,brainNotes);
+        raw=await callClaude(cleanMessages,memoryFacts,recentSessions,[],profile,activeProject,brainNotes,viaVoice);
       }
       const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=(intent==="sermon"||intent==="exam")?true:detectDocumentContent(clean,recentUserIntent(next));
       const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw),brainData:parseBrainTags(raw)}];setMessages(finalMsgs);

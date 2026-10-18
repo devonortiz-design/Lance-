@@ -264,8 +264,8 @@ export function parseScriptureRefs(text) {
 export async function loadBrainNotes() {
   const cols = "select=id,title,body,kind,tags,refs,pinned,done,example,updated_at";
   const [pinned, recent] = await Promise.all([
-    sbGet("brain_notes", `${cols}&pinned=eq.true&order=updated_at.desc&limit=20`),
-    sbGet("brain_notes", `${cols}&order=updated_at.desc&limit=40`),
+    sbGet("brain_notes", `${cols}&id=not.like.pray-*&pinned=eq.true&order=updated_at.desc&limit=8`),
+    sbGet("brain_notes", `${cols}&id=not.like.pray-*&order=updated_at.desc&limit=10`),
   ]);
   const seen = new Set(); const out = [];
   for (const n of [...(Array.isArray(pinned) ? pinned : []), ...(Array.isArray(recent) ? recent : [])]) {
@@ -301,8 +301,14 @@ function lookupTerms(text) {
   return out.slice(0, 8);
 }
 
-export async function findRelevantNotes(text, limit = 5) {
+// Lance reads whole notebook entries only when Pastor points at the notebook:
+// an artifact link, or words like "my notes" or "second brain". A Scripture
+// reference or a topic word alone never pulls an entry into the answer.
+const NOTEBOOK_INTENT = /\b(note ?book|second brain|my notes?|in my notes|i saved|i wrote down|i jotted|did i save|what did i (?:save|write)|from my (?:notes?|notebook))\b/i;
+
+export async function findRelevantNotes(text, limit = 3) {
   const ids = extractArtifactIds(text);
+  if (!ids.length && !NOTEBOOK_INTENT.test(text || "")) return [];
   const refs = parseScriptureRefs(text).map(r => r.replace(/:.*$/, "")); // book + chapter
   const terms = lookupTerms(text);
   if (!ids.length && !refs.length && !terms.length) return [];
@@ -313,7 +319,7 @@ export async function findRelevantNotes(text, limit = 5) {
   const cols = "select=id,title,body,kind,tags,refs,pinned,done,example,updated_at";
   let rows = [];
   try {
-    rows = await sbGet("brain_notes", `${cols}&example=is.false&or=(${encodeURIComponent(ors.join(","))})&order=updated_at.desc&limit=40`);
+    rows = await sbGet("brain_notes", `${cols}&example=is.false&id=not.like.pray-*&or=(${encodeURIComponent(ors.join(","))})&order=updated_at.desc&limit=40`);
   } catch { return []; }
   if (!Array.isArray(rows)) return [];
 

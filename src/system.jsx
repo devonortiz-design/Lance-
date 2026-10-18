@@ -14,7 +14,7 @@ export function buildSystem(facts, profile, sessions, project, brain) {
     var full = brain.filter(function(n) { return n.full; });
     var rest = brain.filter(function(n) { return !n.full; });
     brainBlock = '\n\n=== PASTOR\'S NOTEBOOK (SECOND BRAIN) ===\n'
-      + 'The notebook Pastor keeps on his phone. Draw on it when it bears on the question, name the entry when you use it, and connect entries he has not connected himself. Entries marked EXAMPLE are samples, not his real notes.\n'
+      + 'The notebook Pastor keeps on his phone. ANSWER WHAT HE ASKED FIRST, from your own knowledge and the Bible. Touch the notebook only when he mentions it, asks what he saved, or an entry below is plainly the material he is working on right now. Never list, summarize, or connect entries he did not ask about. Entries marked EXAMPLE are samples, not his real notes.\n'
       + 'Claude artifact links (claude.ai/artifact/... or claude.ai/code/artifact/...) never open from here. When Pastor sends one, look below for a notebook entry holding that link: if one is there, you have its full contents, so answer from them and do not ask him to paste anything. If none holds it, tell him plainly to ask Claude to save the contents to the notebook. Never save a note that holds only a link.\n';
     if (full.length) {
       brainBlock += '\n--- ENTRIES MATCHING THIS QUESTION (complete text) ---\n'
@@ -31,7 +31,7 @@ export function buildSystem(facts, profile, sessions, project, brain) {
             var line = '- ' + meta(n);
             if (n.body) {
               var b = String(n.body).replace(/\s+/g, ' ');
-              line += ': ' + b.slice(0, 400) + (b.length > 400 ? ' [preview]' : '');
+              line += ': ' + b.slice(0, 120) + (b.length > 120 ? ' [preview]' : '');
             }
             return line + extras(n);
           }).join('\n');

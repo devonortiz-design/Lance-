@@ -12,7 +12,7 @@ function recentUserText(messages) {
   }).join("\n");
 }
 
-export async function callClaude(messages, facts, sessions, fileContents = [], profile = [], project = null, brain = []) {
+export async function callClaude(messages, facts, sessions, fileContents = [], profile = [], project = null, brain = [], viaVoice = false) {
   const apiMessages = [...messages];
 
   // Pull the notebook entries this question is about, in full.
@@ -43,7 +43,7 @@ export async function callClaude(messages, facts, sessions, fileContents = [], p
   const body = JSON.stringify({
     model: MODEL,
     max_tokens: 4096,
-    system: buildSystem(facts, profile, sessions, project, brain),
+    system: buildSystem(facts, profile, sessions, project, brain) + (viaVoice ? "\n\nPastor is talking to you out loud and you are being read aloud. Answer in a few short spoken sentences. Go longer only if he asks for depth." : ""),
     messages: apiMessages,
   });
 
