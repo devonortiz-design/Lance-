@@ -1,0 +1,7 @@
+{
+  "appId": "org.vbcfremont.lance",
+  "appName": "Lance",
+  "webDir": "build",
+  "ios": { "contentInset": "always", "backgroundColor": "#000000" },
+  "server": { "iosScheme": "capacitor" }
+}

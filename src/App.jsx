@@ -827,7 +827,7 @@ function HomeView({upcoming,tasks,notes,onOpenTasks,onStart}){
         {starts.map(([label,prompt])=>(<button key={label} onClick={()=>onStart(prompt)} style={{minHeight:"40px",padding:"0 14px",borderRadius:"20px",border:"1px solid var(--line)",background:"transparent",color:"var(--text-hi)",fontSize:"14px",cursor:"pointer"}}>{label}</button>))}
       </div>
     </div>
-    <NotifyCard/>
+    {!(typeof window!=="undefined"&&window.Capacitor?.isNativePlatform?.())&&<NotifyCard/>}
   </div>);
 }
 function IconBtn({onClick,label,children,active,badge,style}){return(<button onClick={onClick} aria-label={label} title={label} style={{position:"relative",width:"44px",height:"44px",borderRadius:"14px",border:`1px solid ${active?"var(--gold)":"var(--line)"}`,background:active?"rgba(212,175,90,0.14)":"var(--surface)",color:active?"var(--gold-hi)":"var(--text-hi)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,...style}}>{children}{badge?(<span style={{position:"absolute",top:"-5px",right:"-5px",minWidth:"20px",height:"20px",padding:"0 5px",borderRadius:"10px",background:"var(--gold)",color:"#0D1420",fontSize:"12px",fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center"}}>{badge}</span>):null}</button>)}
