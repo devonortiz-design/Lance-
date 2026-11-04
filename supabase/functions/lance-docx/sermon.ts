@@ -15,7 +15,7 @@ const SANS = "Jost";
 // Font files live in the Lance repo (public/fonts). Fetched once per cold start, then cached.
 const FONT_SOURCES = [
   "https://lance-roan.vercel.app/fonts/",
-  "https://raw.githubusercontent.com/devonortiz-design/lance-/main/public/fonts/",
+  "https://raw.githubusercontent.com/devonortiz-design/Lance-/main/public/fonts/",
 ];
 const EMBEDS: { family: string; slot: string; file: string; guid: string }[] = [
   { family: "Cinzel", slot: "embedRegular", file: "Cinzel-Regular", guid: "6E1C5A0B-3F2D-4A8E-9B71-0C4D2E5F6A11" },
