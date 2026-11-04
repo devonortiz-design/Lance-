@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { buildSermonDocx, isSermonNotes } from "./sermon.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -12,8 +13,9 @@ serve(async (req: Request) => {
   try {
     const { text, filename } = await req.json();
     if (!text) return new Response("Missing text", { status: 400 });
-    const clean = normalizeText(String(text));
-    const docx = buildDocx(clean);
+    const sermon = isSermonNotes(String(text));
+    const clean = normalizeText(String(text), sermon);
+    const docx = sermon ? await buildSermonDocx(clean, zip) : buildDocx(clean);
     const name = (String(filename || "lance-document")).replace(/\.docx$/, "") + ".docx";
     return new Response(docx, {
       headers: {
@@ -56,15 +58,17 @@ function dropChatTail(s: string): string {
   return s;
 }
 
-function normalizeText(s: string): string {
-  let out = s
-    .replace(/\s*\u2014\s*/g, ", ")
+function normalizeText(s: string, sermon = false): string {
+  let out = s.replace(/\s*\u2014\s*/g, ", ");
+  // Sermon notes keep curly quotes, en dashes, and ellipses for the typeset look
+  if (!sermon) out = out
     .replace(/\u2013/g, "-")
     .replace(/\u2018/g, "'")
     .replace(/\u2019/g, "'")
     .replace(/\u201C/g, '"')
     .replace(/\u201D/g, '"')
-    .replace(/\u2026/g, "...")
+    .replace(/\u2026/g, "...");
+  out = out
     .replace(/\u2022/g, "-")
     .replace(/\u00A0/g, " ")
     .replace(/\s*\(KJV\)/g, "")
