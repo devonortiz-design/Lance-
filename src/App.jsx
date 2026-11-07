@@ -1,6 +1,6 @@
 import React,{useState,useRef,useEffect,useCallback}from"react";
-import{callClaude,classifyChat,speak,readFile,detectDocumentContent,webSearch,formatSearchResults}from"./api";
-import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseVideoTag,parseTaskTag,saveTask,loadOpenTasks,completeTask,deleteTask,parseStaffEventTags,parseStaffNoteTags,saveStaffEvent,saveStaffNote,loadBrainNotes,parseBrainTags,saveBrainNote}from"./memory";
+import{callClaude,classifyChat,speak,readFile,detectDocumentContent,webSearch,formatSearchResults,resetCalendarCache}from"./api";
+import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseVideoTag,parseTaskTag,saveTask,loadOpenTasks,completeTask,deleteTask,parseStaffEventTags,parseStaffNoteTags,parseStaffDeleteTags,saveStaffEvent,saveStaffNote,deleteStaffEvent,loadBrainNotes,parseBrainTags,saveBrainNote}from"./memory";
 import{SESSION_ID,SUPABASE_URL,SB_HEADERS,DB_URL,getLanceKey}from"./config";
 import{VoiceEngine,SpeechChunker}from"./voice";
 import NotifyCard,{registerWorker}from"./push";
@@ -372,7 +372,7 @@ function StaffEventRow({ev,status,onAdd}){
         <div style={{fontSize:"11px",color:"#6B7280"}}>{label}{ev.location?` · ${ev.location}`:""}{ev.repeat==="weekly"?" · weekly":""}</div>
       </div>
       <button onClick={onAdd} disabled={status==="sending"||status==="sent"} style={{flexShrink:0,background:status==="sent"?"#E8F5EC":"linear-gradient(135deg,#1a2340,#0d1321)",color:status==="sent"?"#1F7A44":"#fff",border:"none",borderRadius:"7px",padding:"7px 11px",fontSize:"12px",fontWeight:600,cursor:status==="sent"?"default":"pointer",fontFamily:"inherit",minWidth:"56px"}}>
-        {status==="sending"?"…":status==="sent"?"Added":status==="error"?"Retry":"Add"}
+        {status==="sending"?"…":status==="sent"?(ev.id?"Updated":"Added"):status==="error"?"Retry":(ev.id?"Update":"Add")}
       </button>
     </div>
   );
@@ -396,6 +396,24 @@ function StaffEventsCard({events,statusByEventIdx,onAdd,onAddAll}){
         )}
       </div>
       {events.map((ev,i)=>(<StaffEventRow key={i} ev={ev} status={statusByEventIdx[i]||"idle"} onAdd={()=>onAdd(i)}/>))}
+    </div>
+  );
+}
+
+function StaffDeleteCard({items,statusByIdx,onRemove}){
+  return(
+    <div style={{background:"rgba(255,255,255,0.97)",border:"1px solid rgba(160,40,40,0.25)",borderRadius:"12px",padding:"12px",marginTop:"6px",maxWidth:"340px",boxShadow:"0 2px 12px rgba(0,0,0,0.1)"}}>
+      <div style={{fontSize:"12px",fontWeight:600,color:"#6B7280",marginBottom:"8px"}}>Remove from staff calendar · {items.length}</div>
+      {items.map((d,i)=>{const st=statusByIdx[i]||"idle";return(
+        <div key={i} style={{display:"flex",alignItems:"center",gap:"10px",padding:"9px 10px",borderRadius:"9px",background:"rgba(0,0,0,0.02)",marginBottom:"6px"}}>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:"13px",fontWeight:600,color:"#1a2340",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{d.title||"Event"}</div>
+            <div style={{fontSize:"11px",color:"#6B7280"}}>{d.date}</div>
+          </div>
+          <button onClick={()=>onRemove(i)} disabled={st==="sending"||st==="sent"} style={{flexShrink:0,background:st==="sent"?"#E8F5EC":"#fff",color:st==="sent"?"#1F7A44":"#A02828",border:st==="sent"?"none":"1px solid #A02828",borderRadius:"7px",padding:"7px 11px",fontSize:"12px",fontWeight:600,cursor:st==="sent"?"default":"pointer",fontFamily:"inherit",minWidth:"64px"}}>
+            {st==="sending"?"…":st==="sent"?"Removed":st==="error"?"Retry":"Remove"}
+          </button>
+        </div>)})}
     </div>
   );
 }
@@ -867,6 +885,7 @@ export default function App(){
   useEffect(()=>{micMutedRef.current=micMuted},[micMuted]);
   const[staffEventStatusByIdx,setStaffEventStatusByIdx]=useState({});
   const[staffNoteStatusByIdx,setStaffNoteStatusByIdx]=useState({});
+  const[staffDeleteStatus,setStaffDeleteStatus]=useState({});
   const[openTasks,setOpenTasks]=useState([]);
   const[brainNotes,setBrainNotes]=useState([]);
   const[upcoming,setUpcoming]=useState(null);
@@ -1321,11 +1340,22 @@ export default function App(){
       else{setVideoStateByIdx(p=>({...p,[idx]:{status:"error",error:data.error||"Video watch failed."}}))}
     }catch(e){setVideoStateByIdx(p=>({...p,[idx]:{status:"error",error:e.message}}))}
   },[]);
+  const refreshUpcoming=useCallback(()=>{
+    resetCalendarCache();
+    fetch(`${DB_URL}/upcoming?days=7`,{headers:{...SB_HEADERS,"x-lance-key":getLanceKey()}}).then(r=>r.ok?r.json():null).then(d=>{if(d&&Array.isArray(d.events))setUpcoming(d)}).catch(()=>{});
+  },[]);
+  const handleDeleteStaffEvent=useCallback(async(msgIdx,i,d)=>{
+    const key=`${msgIdx}:${i}`;
+    setStaffDeleteStatus(p=>({...p,[key]:"sending"}));
+    try{await deleteStaffEvent(d.id);setStaffDeleteStatus(p=>({...p,[key]:"sent"}));refreshUpcoming()}
+    catch(e){setStaffDeleteStatus(p=>({...p,[key]:"error"}));console.error("Staff delete error:",e)}
+  },[refreshUpcoming]);
   const handleAddStaffEvent=useCallback(async(msgIdx,evIdx,ev)=>{
     const key=`${msgIdx}:${evIdx}`;
     setStaffEventStatusByIdx(p=>({...p,[key]:"sending"}));
     try{
       await saveStaffEvent(ev);
+      refreshUpcoming();
       setStaffEventStatusByIdx(p=>({...p,[key]:"sent"}));
     }catch(e){setStaffEventStatusByIdx(p=>({...p,[key]:"error"}));console.error("Staff event error:",e)}
   },[]);
@@ -1426,7 +1456,7 @@ export default function App(){
         if(!raw.trim())raw=ctrl&&ctrl.signal.aborted?"(You cut in.)":"";
       }
       const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=(intent==="sermon"||intent==="exam")?true:detectDocumentContent(clean,recentUserIntent(next));
-      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw),brainData:parseBrainTags(raw)}];setMessages(finalMsgs);
+      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw),staffDeletesData:parseStaffDeleteTags(raw),brainData:parseBrainTags(raw)}];setMessages(finalMsgs);
       const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}handleBrainTags(raw);autosaveChat(finalMsgs);msgCount.current+=2;
       saveMessage("assistant",clean).catch(()=>{});
       for(const tag of tags){
@@ -1459,7 +1489,7 @@ export default function App(){
         const cleanMessages=next.map(({role,content})=>({role,content}));
         const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile,activeProject,brainNotes);
         const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw),brainData:parseBrainTags(raw)}];setMessages(finalMsgs);
+        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw),staffDeletesData:parseStaffDeleteTags(raw),brainData:parseBrainTags(raw)}];setMessages(finalMsgs);
       const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}handleBrainTags(raw);autosaveChat(finalMsgs);msgCount.current+=2;
         saveMessage("assistant",clean).catch(()=>{});
         if(teachMode)speakText(clean,idx);
@@ -1692,8 +1722,11 @@ export default function App(){
           <span className="serif" style={{fontSize:"18px",lineHeight:1.3}}>{n.title||"Untitled"}</span>
           {n.refs?.length>0&&(<span style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>{n.refs.map(r=>(<span key={r} className="serif" style={{fontSize:"13px",padding:"3px 9px",borderRadius:"8px",background:"#2B2617",color:"#E3C574"}}>{r}</span>))}</span>)}
         </a>))}
-                {m.staffEventsData?.length>0?(
-          <StaffEventsCard events={m.staffEventsData} statusByEventIdx={Object.fromEntries(m.staffEventsData.map((_,ei)=>[ei,staffEventStatusByIdx[`${i}:${ei}`]||"idle"]))} onAdd={(ei)=>handleAddStaffEvent(i,ei,m.staffEventsData[ei])} onAddAll={()=>handleAddAllStaffEvents(i,m.staffEventsData)}/>
+                {(m.staffEventsData?.length>0||m.staffDeletesData?.length>0)?(
+          <>
+          {m.staffEventsData?.length>0&&<StaffEventsCard events={m.staffEventsData} statusByEventIdx={Object.fromEntries(m.staffEventsData.map((_,ei)=>[ei,staffEventStatusByIdx[`${i}:${ei}`]||"idle"]))} onAdd={(ei)=>handleAddStaffEvent(i,ei,m.staffEventsData[ei])} onAddAll={()=>handleAddAllStaffEvents(i,m.staffEventsData)}/>}
+          {m.staffDeletesData?.length>0&&<StaffDeleteCard items={m.staffDeletesData} statusByIdx={Object.fromEntries(m.staffDeletesData.map((_,di)=>[di,staffDeleteStatus[`${i}:${di}`]||"idle"]))} onRemove={(di)=>handleDeleteStaffEvent(i,di,m.staffDeletesData[di])}/>}
+          </>
         ):m.staffNotesData?.length>0?(
           <StaffNoteCard note={m.staffNotesData[0]} status={staffNoteStatusByIdx[i]||"idle"} onAdd={()=>handleAddStaffNote(i,m.staffNotesData[0])}/>
         ):m.taskData?.title?(

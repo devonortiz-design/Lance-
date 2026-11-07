@@ -2,7 +2,7 @@
 // PostgREST request with the service role key. Only Lance's own tables pass.
 // Staff calendar saves go through here too: the gateway adds the staff code
 // on the server, so Lance's website never carries it. /upcoming returns the
-// next week of staff calendar events plus the regular service times.
+// next days (up to 60) of staff calendar events plus the regular service times.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
@@ -12,7 +12,8 @@ const TABLES = new Set([
   "lance_profile", "lance_sessions", "lance_conversations", "lance_tasks",
   "lance_pinned", "brain_notes", "diane_queue",
 ]);
-const STAFF_RPCS = new Set(["staff_event_save", "staff_note_save"]);
+const STAFF_RPCS = new Set(["staff_event_save", "staff_note_save", "staff_event_delete"]);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
@@ -68,13 +69,16 @@ const dow = (iso: string) => new Date(iso + "T12:00:00Z").getUTCDay();
 async function upcoming(days: number) {
   const today = pacificToday();
   const end = addDays(today, days);
-  const sel = "select=title,category,event_date,start_time,location,repeat_weekly,repeat_until";
+  const sel = "select=id,title,category,event_date,start_time,end_time,location,repeat_weekly,repeat_until,staff_notes";
   const [oneOff, weekly] = await Promise.all([
-    fetch(`${SB_URL}/rest/v1/staff_calendar?${sel}&event_date=gte.${today}&event_date=lte.${end}&repeat_weekly=is.false&limit=200`, { headers: svc }).then(r => r.ok ? r.json() : []),
+    fetch(`${SB_URL}/rest/v1/staff_calendar?${sel}&event_date=gte.${today}&event_date=lte.${end}&repeat_weekly=is.false&limit=300`, { headers: svc }).then(r => r.ok ? r.json() : []),
     fetch(`${SB_URL}/rest/v1/staff_calendar?${sel}&repeat_weekly=is.true&event_date=lte.${end}&limit=200`, { headers: svc }).then(r => r.ok ? r.json() : []),
   ]);
-  const out: { date: string; start: string; title: string; cat: string; loc: string }[] = [];
-  const push = (date: string, e: any) => out.push({ date, start: (e.start_time || "").slice(0, 5), title: e.title, cat: e.category || "Other", loc: e.location || "" });
+  const out: { id: string; date: string; start: string; end: string; title: string; cat: string; loc: string; notes: string }[] = [];
+  const push = (date: string, e: any) => out.push({
+    id: e.id || "", date, start: (e.start_time || "").slice(0, 5), end: (e.end_time || "").slice(0, 5),
+    title: e.title, cat: e.category || "Other", loc: e.location || "", notes: String(e.staff_notes || "").slice(0, 200),
+  });
   for (const e of oneOff) push(e.event_date, e);
   for (const e of weekly) {
     for (let i = 0; i <= days; i++) {
@@ -89,7 +93,7 @@ async function upcoming(days: number) {
     for (const s of SERVICES) {
       if (dow(d) !== s.dow) continue;
       const covered = out.some(e => e.date === d && e.cat === "Service" && e.start === s.start);
-      if (!covered) out.push({ date: d, start: s.start, title: s.title, cat: "Service", loc: "" });
+      if (!covered) out.push({ id: "", date: d, start: s.start, end: "", title: s.title, cat: "Service", loc: "", notes: "" });
     }
   }
   out.sort((a, b) => (a.date + (a.start || "00:00")).localeCompare(b.date + (b.start || "00:00")));
@@ -112,7 +116,7 @@ Deno.serve(async (req) => {
   if (table === "check") return json(200, { ok: true });
 
   if (table === "upcoming") {
-    const days = Math.min(14, Math.max(1, Number(url.searchParams.get("days")) || 7));
+    const days = Math.min(60, Math.max(1, Number(url.searchParams.get("days")) || 7));
     try { return json(200, await upcoming(days)); } catch (e) { return json(500, { error: String(e) }); }
   }
 
@@ -123,12 +127,21 @@ Deno.serve(async (req) => {
     try { input = await req.json(); } catch { return json(400, { error: "bad_body" }); }
     const code = await staffCode();
     if (!code) return json(500, { error: "no_staff_code" });
+    let payload: Record<string, unknown>;
+    if (fn === "staff_event_delete") {
+      const id = String(input?.p?.id ?? input?.id ?? "");
+      if (!UUID.test(id)) return json(400, { error: "bad_id" });
+      payload = { p_code: code, p_id: id };
+    } else {
+      payload = { p_code: code, p: input.p ?? {} };
+    }
     const up = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, {
       method: "POST",
       headers: { ...svc, "Content-Type": "application/json" },
-      body: JSON.stringify({ p_code: code, p: input.p ?? {} }),
+      body: JSON.stringify(payload),
     });
-    return new Response(await up.text(), { status: up.status, headers: { ...CORS, "Content-Type": "application/json" } });
+    const text = await up.text();
+    return new Response(text || "null", { status: up.status, headers: { ...CORS, "Content-Type": "application/json" } });
   }
 
   if (!TABLES.has(table)) return json(404, { error: "unknown_table" });

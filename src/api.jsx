@@ -1,4 +1,4 @@
-import { MODEL, VOICE_URL, DOCX_URL, SEARCH_URL, getLanceKey } from "./config";
+import { MODEL, VOICE_URL, DOCX_URL, SEARCH_URL, DB_URL, SB_HEADERS, getLanceKey } from "./config";
 import { buildSystem } from "./system";
 import { findRelevantNotes } from "./memory";
 
@@ -39,13 +39,35 @@ async function readStream(res, onDelta, signal) {
   return { text, stop, err };
 }
 
+// The staff calendar for the next 60 days, read only. Cached for five minutes so
+// a reply does not wait on it, and cleared after Lance changes the calendar.
+let calCache = { at: 0, data: null };
+export function resetCalendarCache() { calCache = { at: 0, data: null }; }
+async function loadCalendar() {
+  if (calCache.data && Date.now() - calCache.at < 5 * 60 * 1000) return calCache.data;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 3500);
+  try {
+    const r = await fetch(`${DB_URL}/upcoming?days=60`, { headers: { ...SB_HEADERS, "x-lance-key": getLanceKey() }, signal: ctrl.signal });
+    if (r.ok) {
+      const d = await r.json();
+      if (d && Array.isArray(d.events)) { calCache = { at: Date.now(), data: d }; return d; }
+    }
+  } catch { /* fall through to the last good copy */ } finally { clearTimeout(timer); }
+  return calCache.data;
+}
+
 export async function callClaude(messages, facts, sessions, fileContents = [], profile = [], project = null, brain = [], viaVoice = false, opts = {}) {
   const onDelta = typeof opts.onDelta === "function" ? opts.onDelta : null;
   const apiMessages = [...messages];
 
   // Pull the notebook entries this question is about, in full.
   let focus = [];
-  try { focus = await findRelevantNotes(recentUserText(messages)); } catch { focus = []; }
+  const [calendar, focusFound] = await Promise.all([
+    loadCalendar(),
+    findRelevantNotes(recentUserText(messages)).catch(() => []),
+  ]);
+  focus = focusFound || [];
   if (focus.length) {
     const fullIds = new Set(focus.map(n => n.id));
     brain = [...focus, ...(brain || []).filter(n => !fullIds.has(n.id))];
@@ -71,7 +93,7 @@ export async function callClaude(messages, facts, sessions, fileContents = [], p
   const body = JSON.stringify({
     model: MODEL,
     max_tokens: 4096,
-    system: buildSystem(facts, profile, sessions, project, brain) + (viaVoice ? "\n\nPastor is talking to you out loud and you are being read aloud. Answer in a few short spoken sentences. Go longer only if he asks for depth. Speak in plain sentences: no headings, bullets, numbered lists, or symbols. Put your first, most direct sentence first and keep it short." : ""),
+    system: buildSystem(facts, profile, sessions, project, brain, calendar) + (viaVoice ? "\n\nPastor is talking to you out loud and you are being read aloud. Answer in a few short spoken sentences. Go longer only if he asks for depth. Speak in plain sentences: no headings, bullets, numbered lists, or symbols. Put your first, most direct sentence first and keep it short." : ""),
     messages: apiMessages,
     ...(onDelta ? { stream: true } : {}),
   });

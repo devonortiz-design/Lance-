@@ -68,7 +68,7 @@ export function parseMemoryTags(text) {
 }
 
 export function stripMemoryTags(t) {
-  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[VIDEO:[^\]]+\]/gi, "").replace(/\[TASK:[^\]]+\]/gi, "").replace(/\[STAFF_EVENT:[^\]]+\]/gi, "").replace(/\[STAFF_NOTE:[^\]]+\]/gi, "").replace(/\[BRAIN:[^\]]+\]/gi, "").trim();
+  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[VIDEO:[^\]]+\]/gi, "").replace(/\[TASK:[^\]]+\]/gi, "").replace(/\[STAFF_EVENT:[^\]]+\]/gi, "").replace(/\[STAFF_NOTE:[^\]]+\]/gi, "").replace(/\[STAFF_DELETE:[^\]]+\]/gi, "").replace(/\[BRAIN:[^\]]+\]/gi, "").trim();
 }
 
 export function parseVideoTag(text) {
@@ -165,6 +165,7 @@ export function parseStaffEventTags(text) {
       fields[key] = val;
     });
     out.push({
+      id: fields.id || "",
       title: fields.title || "",
       date: fields.date || "",
       start: fields.start || "",
@@ -198,11 +199,38 @@ export function parseStaffNoteTags(text) {
 }
 
 // The gateway adds the staff calendar code on the server.
+export function parseStaffDeleteTags(text) {
+  const re = /\[STAFF_DELETE:\s*([^\]]+)\]/gi;
+  const out = [];
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const fields = {};
+    m[1].split("|").forEach(pair => {
+      const eq = pair.indexOf("=");
+      if (eq === -1) return;
+      fields[pair.slice(0, eq).trim().toLowerCase()] = pair.slice(eq + 1).trim();
+    });
+    if (fields.id) out.push({ id: fields.id, title: fields.title || "", date: fields.date || "" });
+  }
+  return out;
+}
+
+export async function deleteStaffEvent(id) {
+  const r = await fetch(`${DB_URL}/rpc/staff_event_delete`, {
+    method: "POST",
+    headers: SB_HEADERS,
+    body: JSON.stringify({ p: { id } }),
+  });
+  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || e.error || `HTTP ${r.status}`); }
+  return true;
+}
+
 export async function saveStaffEvent(ev) {
+  // The calendar function reads loc and cat, so send those names too.
   const r = await fetch(`${DB_URL}/rpc/staff_event_save`, {
     method: "POST",
     headers: SB_HEADERS,
-    body: JSON.stringify({ p: ev }),
+    body: JSON.stringify({ p: { ...ev, loc: ev.loc ?? ev.location ?? "", cat: ev.cat ?? ev.category ?? "Other", by: "Pastor" } }),
   });
   if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || `HTTP ${r.status}`); }
   return r.json();
