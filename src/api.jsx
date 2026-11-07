@@ -39,7 +39,7 @@ async function readStream(res, onDelta, signal) {
   return { text, stop, err };
 }
 
-// The staff calendar for the next 60 days, read only. Cached for five minutes so
+// The staff calendar for the next 400 days, read only. Cached for five minutes so
 // a reply does not wait on it, and cleared after Lance changes the calendar.
 let calCache = { at: 0, data: null };
 export function resetCalendarCache() { calCache = { at: 0, data: null }; }
@@ -48,7 +48,7 @@ async function loadCalendar() {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 3500);
   try {
-    const r = await fetch(`${DB_URL}/upcoming?days=60`, { headers: { ...SB_HEADERS, "x-lance-key": getLanceKey() }, signal: ctrl.signal });
+    const r = await fetch(`${DB_URL}/upcoming?days=400`, { headers: { ...SB_HEADERS, "x-lance-key": getLanceKey() }, signal: ctrl.signal });
     if (r.ok) {
       const d = await r.json();
       if (d && Array.isArray(d.events)) { calCache = { at: Date.now(), data: d }; return d; }

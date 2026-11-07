@@ -1,6 +1,7 @@
 export function buildSystem(facts, profile, sessions, project, brain, calendar) {
   var calendarBlock = '';
   if (calendar === null) {
+    var calEnd = new Date(new Date(calendar.today + 'T12:00:00Z').getTime() + 400 * 86400000).toISOString().slice(0, 10);
     calendarBlock = '\n\n=== STAFF CALENDAR ===\nThe staff calendar did not load just now. If Pastor asks about it, tell him it did not load and to try again in a moment. Do not guess what is on it.';
   } else if (calendar && Array.isArray(calendar.events)) {
     var routine = { 'Sunday morning service': 1, 'Sunday evening service': 1, 'Wednesday service': 1 };
@@ -12,8 +13,8 @@ export function buildSystem(facts, profile, sessions, project, brain, calendar) 
         var tm = e.start ? e.start + (e.end ? '-' + e.end : '') : 'no time';
         return wk[dd.getUTCDay()] + ' ' + e.date + ' | ' + tm + ' | ' + e.title + ' | ' + e.cat + (e.loc ? ' | ' + e.loc : '') + (e.notes ? ' | notes: ' + e.notes : '') + (e.id ? ' | id=' + e.id : '');
       });
-    calendarBlock = '\n\n=== STAFF CALENDAR (live from the shared calendar, next 60 days, today is ' + calendar.today + ') ===\n'
-      + 'Pastor can ask you about this calendar. Read it to answer what is coming up, whether a date or time is free, and what is planned on a day. Quote dates and times exactly as listed. If something is not on the list, say it is not on the calendar. Never say you cannot see the calendar. This list covers only the next 60 days, so say so when he asks about later dates. Regular services are not listed: Sunday 9 AM and 5 PM, Wednesday 7 PM. Bring up the calendar only when it bears on what he asked. Change it only when he asks you to, using the STAFF_EVENT and STAFF_DELETE tags, and never otherwise.\n'
+    calendarBlock = '\n\n=== STAFF CALENDAR (live from the shared calendar, next 13 months, through ' + calEnd + ', today is ' + calendar.today + ') ===\n'
+      + 'Pastor can ask you about this calendar. Read it to answer what is coming up, whether a date or time is free, and what is planned on a day. Quote dates and times exactly as listed. If something is not on the list, say it is not on the calendar. Never say you cannot see the calendar. This list covers the next 13 months, through ' + calEnd + '. If he asks about a date after that, tell him the list ends on that date. Regular services are not listed: Sunday 9 AM and 5 PM, Wednesday 7 PM. Bring up the calendar only when it bears on what he asked. Change it only when he asks you to, using the STAFF_EVENT and STAFF_DELETE tags, and never otherwise.\n'
       + (calLines.length ? calLines.join('\n') : '(nothing besides the regular services in this window)');
   }
   var brainBlock = '';

@@ -2,7 +2,7 @@
 // PostgREST request with the service role key. Only Lance's own tables pass.
 // Staff calendar saves go through here too: the gateway adds the staff code
 // on the server, so Lance's website never carries it. /upcoming returns the
-// next days (up to 60) of staff calendar events plus the regular service times.
+// next days (up to 400) of staff calendar events plus the regular service times.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
   if (table === "check") return json(200, { ok: true });
 
   if (table === "upcoming") {
-    const days = Math.min(60, Math.max(1, Number(url.searchParams.get("days")) || 7));
+    const days = Math.min(400, Math.max(1, Number(url.searchParams.get("days")) || 7));
     try { return json(200, await upcoming(days)); } catch (e) { return json(500, { error: String(e) }); }
   }
 
