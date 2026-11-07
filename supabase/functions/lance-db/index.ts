@@ -66,12 +66,12 @@ function addDays(iso: string, n: number) {
 }
 const dow = (iso: string) => new Date(iso + "T12:00:00Z").getUTCDay();
 
-async function upcoming(days: number) {
-  const today = pacificToday();
+async function upcoming(days: number, from?: string) {
+  const today = from || pacificToday();
   const end = addDays(today, days);
   const sel = "select=id,title,category,event_date,start_time,end_time,location,repeat_weekly,repeat_until,staff_notes";
   const [oneOff, weekly] = await Promise.all([
-    fetch(`${SB_URL}/rest/v1/staff_calendar?${sel}&event_date=gte.${today}&event_date=lte.${end}&repeat_weekly=is.false&limit=300`, { headers: svc }).then(r => r.ok ? r.json() : []),
+    fetch(`${SB_URL}/rest/v1/staff_calendar?${sel}&event_date=gte.${today}&event_date=lte.${end}&repeat_weekly=is.false&limit=1000`, { headers: svc }).then(r => r.ok ? r.json() : []),
     fetch(`${SB_URL}/rest/v1/staff_calendar?${sel}&repeat_weekly=is.true&event_date=lte.${end}&limit=200`, { headers: svc }).then(r => r.ok ? r.json() : []),
   ]);
   const out: { id: string; date: string; start: string; end: string; title: string; cat: string; loc: string; notes: string }[] = [];
@@ -116,8 +116,10 @@ Deno.serve(async (req) => {
   if (table === "check") return json(200, { ok: true });
 
   if (table === "upcoming") {
-    const days = Math.min(400, Math.max(1, Number(url.searchParams.get("days")) || 7));
-    try { return json(200, await upcoming(days)); } catch (e) { return json(500, { error: String(e) }); }
+    const fromQ = url.searchParams.get("from") || "";
+    const from = /^\d{4}-\d{2}-\d{2}$/.test(fromQ) ? fromQ : undefined;
+    const days = Math.min(from ? 800 : 400, Math.max(1, Number(url.searchParams.get("days")) || 7));
+    try { return json(200, await upcoming(days, from)); } catch (e) { return json(500, { error: String(e) }); }
   }
 
   if (table.startsWith("rpc/")) {

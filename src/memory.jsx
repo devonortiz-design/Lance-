@@ -402,7 +402,7 @@ export async function saveBrainNote(note) {
   return r.json();
 }
 
-// [CALENDAR_DOC: start=YYYY-MM|months=1] asks for a Word monthly calendar of the staff calendar.
+// [CALENDAR_DOC: start=YYYY-MM|months=1|from=YYYY] asks for a Word monthly calendar of the staff calendar.
 export function parseCalendarDocTag(text) {
   const m = /\[CALENDAR_DOC:\s*([^\]]*)\]/i.exec(text || "");
   if (!m) return null;
@@ -411,5 +411,5 @@ export function parseCalendarDocTag(text) {
     const eq = pair.indexOf("=");
     if (eq !== -1) f[pair.slice(0, eq).trim().toLowerCase()] = pair.slice(eq + 1).trim();
   });
-  return { start: f.start || "", months: Math.min(12, Math.max(1, parseInt(f.months, 10) || 1)) };
+  return { start: f.start || "", from: /^\d{4}$/.test(f.from || "") ? f.from : "", months: Math.min(12, Math.max(1, parseInt(f.months, 10) || 1)) };
 }

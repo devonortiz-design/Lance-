@@ -416,7 +416,7 @@ function CalendarDocCard({data}){
   return(
     <div style={{background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",padding:"12px",marginTop:"6px",maxWidth:"340px",boxShadow:"0 2px 12px rgba(0,0,0,0.1)"}}>
       <div style={{fontSize:"13px",fontWeight:600,color:"#1a2340"}}>Word calendar</div>
-      <div style={{fontSize:"11px",color:"#6B7280",margin:"2px 0 8px"}}>{data.start||"This month"} · {data.months} month{data.months>1?"s":""} · landscape, one page each</div>
+      <div style={{fontSize:"11px",color:"#6B7280",margin:"2px 0 8px"}}>{data.start||"This month"}{data.from?" · carried from "+data.from:""} · {data.months} month{data.months>1?"s":""} · landscape, one page each</div>
       <button onClick={go} disabled={st==="sending"} style={{background:st==="sent"?"#E8F5EC":"#1a2340",color:st==="sent"?"#1F7A44":"#fff",border:"none",borderRadius:"8px",padding:"9px 14px",fontSize:"13px",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
         {st==="sending"?"Building…":st==="sent"?"Downloaded. Tap for another copy":st==="error"?"Could not build. Tap to retry":"Download .docx"}
       </button>
