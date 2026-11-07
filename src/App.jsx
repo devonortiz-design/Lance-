@@ -1,6 +1,6 @@
 import React,{useState,useRef,useEffect,useCallback}from"react";
 import{callClaude,classifyChat,speak,readFile,detectDocumentContent,webSearch,formatSearchResults,resetCalendarCache}from"./api";
-import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseVideoTag,parseTaskTag,saveTask,loadOpenTasks,completeTask,deleteTask,parseStaffEventTags,parseStaffNoteTags,parseStaffDeleteTags,saveStaffEvent,saveStaffNote,deleteStaffEvent,loadBrainNotes,parseBrainTags,saveBrainNote}from"./memory";
+import{loadMemory,loadProfile,loadRecentSessions,saveMessage,saveMemoryFact,saveProfileFact,saveSession,parseMemoryTags,stripMemoryTags,parseFlyerTag,parseSmsTag,parseCalendarDocTag,parseVideoTag,parseTaskTag,saveTask,loadOpenTasks,completeTask,deleteTask,parseStaffEventTags,parseStaffNoteTags,parseStaffDeleteTags,saveStaffEvent,saveStaffNote,deleteStaffEvent,loadBrainNotes,parseBrainTags,saveBrainNote}from"./memory";
 import{SESSION_ID,SUPABASE_URL,SB_HEADERS,DB_URL,getLanceKey}from"./config";
 import{VoiceEngine,SpeechChunker}from"./voice";
 import NotifyCard,{registerWorker}from"./push";
@@ -396,6 +396,30 @@ function StaffEventsCard({events,statusByEventIdx,onAdd,onAddAll}){
         )}
       </div>
       {events.map((ev,i)=>(<StaffEventRow key={i} ev={ev} status={statusByEventIdx[i]||"idle"} onAdd={()=>onAdd(i)}/>))}
+    </div>
+  );
+}
+
+function CalendarDocCard({data}){
+  const[st,setSt]=useState("idle");
+  const go=async()=>{
+    setSt("sending");
+    try{
+      const{buildCalendarDocx}=await import("./calendarDoc.jsx");
+      const blob=await buildCalendarDocx(data);
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");a.href=url;a.download="Staff Calendar"+(data.start?" "+data.start:"")+".docx";
+      document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
+      setSt("sent");
+    }catch(e){setSt("error")}
+  };
+  return(
+    <div style={{background:"rgba(255,255,255,0.97)",border:"1px solid rgba(26,35,64,0.15)",borderRadius:"12px",padding:"12px",marginTop:"6px",maxWidth:"340px",boxShadow:"0 2px 12px rgba(0,0,0,0.1)"}}>
+      <div style={{fontSize:"13px",fontWeight:600,color:"#1a2340"}}>Word calendar</div>
+      <div style={{fontSize:"11px",color:"#6B7280",margin:"2px 0 8px"}}>{data.start||"This month"} · {data.months} month{data.months>1?"s":""} · landscape, one page each</div>
+      <button onClick={go} disabled={st==="sending"} style={{background:st==="sent"?"#E8F5EC":"#1a2340",color:st==="sent"?"#1F7A44":"#fff",border:"none",borderRadius:"8px",padding:"9px 14px",fontSize:"13px",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+        {st==="sending"?"Building…":st==="sent"?"Downloaded. Tap for another copy":st==="error"?"Could not build. Tap to retry":"Download .docx"}
+      </button>
     </div>
   );
 }
@@ -1456,7 +1480,7 @@ export default function App(){
         if(!raw.trim())raw=ctrl&&ctrl.signal.aborted?"(You cut in.)":"";
       }
       const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=(intent==="sermon"||intent==="exam")?true:detectDocumentContent(clean,recentUserIntent(next));
-      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw),staffDeletesData:parseStaffDeleteTags(raw),brainData:parseBrainTags(raw)}];setMessages(finalMsgs);
+      const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw),staffDeletesData:parseStaffDeleteTags(raw),calendarDocData:parseCalendarDocTag(raw),brainData:parseBrainTags(raw)}];setMessages(finalMsgs);
       const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}handleBrainTags(raw);autosaveChat(finalMsgs);msgCount.current+=2;
       saveMessage("assistant",clean).catch(()=>{});
       for(const tag of tags){
@@ -1489,7 +1513,7 @@ export default function App(){
         const cleanMessages=next.map(({role,content})=>({role,content}));
         const raw=await callClaude(cleanMessages,memoryFacts,recentSessions,filesToSend,profile,activeProject,brainNotes);
         const tags=parseMemoryTags(raw);const clean=stripMemoryTags(raw);const idx=next.length;const isDoc=detectDocumentContent(clean,recentUserIntent(next));
-        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw),staffDeletesData:parseStaffDeleteTags(raw),brainData:parseBrainTags(raw)}];setMessages(finalMsgs);
+        const finalMsgs=[...next,{role:"assistant",content:clean,isDoc,flyerData:parseFlyerTag(raw),smsData:parseSmsTag(raw),videoData:parseVideoTag(raw),taskData:parseTaskTag(raw),staffEventsData:parseStaffEventTags(raw),staffNotesData:parseStaffNoteTags(raw),staffDeletesData:parseStaffDeleteTags(raw),calendarDocData:parseCalendarDocTag(raw),brainData:parseBrainTags(raw)}];setMessages(finalMsgs);
       const _taskTag=parseTaskTag(raw);if(_taskTag?.title){handleAddTask(_taskTag)}handleBrainTags(raw);autosaveChat(finalMsgs);msgCount.current+=2;
         saveMessage("assistant",clean).catch(()=>{});
         if(teachMode)speakText(clean,idx);
@@ -1730,6 +1754,7 @@ export default function App(){
           <span className="serif" style={{fontSize:"18px",lineHeight:1.3}}>{n.title||"Untitled"}</span>
           {n.refs?.length>0&&(<span style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>{n.refs.map(r=>(<span key={r} className="serif" style={{fontSize:"13px",padding:"3px 9px",borderRadius:"8px",background:"#2B2617",color:"#E3C574"}}>{r}</span>))}</span>)}
         </a>))}
+                {m.calendarDocData&&<CalendarDocCard data={m.calendarDocData}/>}
                 {(m.staffEventsData?.length>0||m.staffDeletesData?.length>0)?(
           <>
           {m.staffEventsData?.length>0&&<StaffEventsCard events={m.staffEventsData} statusByEventIdx={Object.fromEntries(m.staffEventsData.map((_,ei)=>[ei,staffEventStatusByIdx[`${i}:${ei}`]||"idle"]))} onAdd={(ei)=>handleAddStaffEvent(i,ei,m.staffEventsData[ei])} onAddAll={()=>handleAddAllStaffEvents(i,m.staffEventsData)}/>}

@@ -43,7 +43,7 @@ async function readStream(res, onDelta, signal) {
 // a reply does not wait on it, and cleared after Lance changes the calendar.
 let calCache = { at: 0, data: null };
 export function resetCalendarCache() { calCache = { at: 0, data: null }; }
-async function loadCalendar() {
+export async function loadCalendar() {
   if (calCache.data && Date.now() - calCache.at < 5 * 60 * 1000) return calCache.data;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 3500);

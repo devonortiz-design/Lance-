@@ -68,7 +68,7 @@ export function parseMemoryTags(text) {
 }
 
 export function stripMemoryTags(t) {
-  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[VIDEO:[^\]]+\]/gi, "").replace(/\[TASK:[^\]]+\]/gi, "").replace(/\[STAFF_EVENT:[^\]]+\]/gi, "").replace(/\[STAFF_NOTE:[^\]]+\]/gi, "").replace(/\[STAFF_DELETE:[^\]]+\]/gi, "").replace(/\[BRAIN:[^\]]+\]/gi, "").trim();
+  return t.replace(/\[MEMORY:[^\]]+\]/gi, "").replace(/\[PROFILE:[^\]]+\]/gi, "").replace(/\[FLYER:[^\]]+\]/gi, "").replace(/\[TEXT:[^\]]+\]/gi, "").replace(/\[VIDEO:[^\]]+\]/gi, "").replace(/\[TASK:[^\]]+\]/gi, "").replace(/\[STAFF_EVENT:[^\]]+\]/gi, "").replace(/\[STAFF_NOTE:[^\]]+\]/gi, "").replace(/\[STAFF_DELETE:[^\]]+\]/gi, "").replace(/\[CALENDAR_DOC:[^\]]*\]/gi, "").replace(/\[BRAIN:[^\]]+\]/gi, "").trim();
 }
 
 export function parseVideoTag(text) {
@@ -400,4 +400,16 @@ export async function saveBrainNote(note) {
   });
   if (!r.ok) throw new Error(`Notebook save failed (${r.status})`);
   return r.json();
+}
+
+// [CALENDAR_DOC: start=YYYY-MM|months=1] asks for a Word monthly calendar of the staff calendar.
+export function parseCalendarDocTag(text) {
+  const m = /\[CALENDAR_DOC:\s*([^\]]*)\]/i.exec(text || "");
+  if (!m) return null;
+  const f = {};
+  m[1].split("|").forEach(pair => {
+    const eq = pair.indexOf("=");
+    if (eq !== -1) f[pair.slice(0, eq).trim().toLowerCase()] = pair.slice(eq + 1).trim();
+  });
+  return { start: f.start || "", months: Math.min(12, Math.max(1, parseInt(f.months, 10) || 1)) };
 }
