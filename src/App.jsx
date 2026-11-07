@@ -1498,7 +1498,15 @@ export default function App(){
     }else{sendText(t);}
   },[input,loading,messages,memoryFacts,profile,recentSessions,pendingFiles,teachMode,stopSpeaking,speakText,sendText,activeProject,autosaveChat,brainNotes,handleBrainTags]);
 
-  const handleKeyDown=e=>{};
+  // Enter sends. Shift+Enter starts a new line. On a phone or tablet with the
+  // touch keyboard, Return keeps making a new line because the Send button is right there.
+  const handleKeyDown=e=>{
+    if(e.key!=="Enter"||e.shiftKey||e.nativeEvent?.isComposing)return;
+    const hasKeyboard=typeof window!=="undefined"&&window.matchMedia&&window.matchMedia("(pointer: fine)").matches;
+    if(!hasKeyboard)return;
+    e.preventDefault();
+    send();
+  };
   const clearChat=()=>{stopSpeaking();setMessages([]);setPendingFiles([]);setDocxIdx(null);setActiveConvoId(null);chatIdRef.current=null;msgCount.current=0};
 
   const pinnedConvos=savedConvos.filter(c=>c.pinned&&c.active!==false);
