@@ -13,8 +13,8 @@ async function fetchRange(from, days) {
   } finally { clearTimeout(timer); }
 }
 
-// Events worth carrying into a new year: birthdays, anniversaries, holidays and anything marked annual.
-const CARRY_CAT = { Birthday: 1, Anniversary: 1, Holiday: 1 };
+// Events worth carrying into a new year: birthdays, anniversaries and anything marked annual. Holidays are not copied because their dates move.
+const CARRY_CAT = { Birthday: 1, Anniversary: 1 };
 const CARRY_TITLE = /annual|anniversar/i;
 function bumpOrdinal(title, n) {
   return title.replace(/\b(\d+)(st|nd|rd|th)\b/, (_, d) => {
