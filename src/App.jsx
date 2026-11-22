@@ -583,6 +583,10 @@ function SaveIcon(){return(<svg width="13" height="13" viewBox="0 0 13 13" fill=
 function TrashIcon(){return(<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 3h9M4 3V2h4v1M5 5.5v4M7 5.5v4M2 3l.8 7.2A1 1 0 003.8 11h4.4a1 1 0 001-.8L10 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>)}
 function PencilIcon(){return(<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg>)}
 
+function renderRich(t){try{const txt=renderText0(t);if(!txt)return "";
+const inl=(l,k)=>{const parts=l.split(/(\*\*[^*]+\*\*)/g);return parts.map((p,j)=>/^\*\*[^*]+\*\*$/.test(p)?<strong key={k+"-"+j} style={{fontWeight:650}}>{p.slice(2,-2)}</strong>:p)};
+return txt.split("\n").map((l,i)=>{const b=/^\u2022 /.test(l);return <div key={i} style={b?{paddingLeft:"1.3em",textIndent:"-1.1em",marginTop:"0.35em"}:{minHeight:l?undefined:"0.7em"}}>{inl(l,i)}</div>})}catch(e){return String(t||"")}}
+function renderText0(t){if(!t)return "";return t.replace(/#{1,6} /g,"").replace(/\*\*\*(.*?)\*\*\*/g,"**$1**").replace(/(^|[^*])\*(?!\*)(.*?)\*(?!\*)/g,"$1$2").replace(/__(.*?)__/g,"$1").replace(/`(.*?)`/g,"$1").replace(/^[-*] /gm,"\u2022 ").replace(/^---+$/gm,"").replace(/\n\n\n+/g,"\n\n").trim()}
 function renderText(t){try{if(!t)return "";return t.replace(/#{1,6} /g,"").replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1").replace(/__(.*?)__/g,"$1").replace(/`(.*?)`/g,"$1").replace(/^[-*] /gm,"\u2022 ").replace(/^---+$/gm,"").replace(/\n\n\n+/g,"\n\n").trim()}catch(e){return String(t||"")}}
 
 const CSS=`:root{--bg0:#0A101A;--bg1:#0D1420;--surface:#151E2D;--surface-hi:#1B2436;--gold:#D4AF5A;--gold-hi:#E3C574;--gold-lo:#A8823A;--cyan:#6F86B0;--cyan-hi:#9AA9C8;--cyan-lo:#3B4A66;--glass:#151E2D;--glass-hi:#1B2436;--line:#24304A;--line-hi:#2E3B57;--text-hi:#ECE7DC;--text-mid:rgba(236,231,220,0.72);--text-lo:#8D97AA;--serif:"Newsreader",Georgia,"Times New Roman",serif;--sans:"Instrument Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -1762,9 +1766,9 @@ export default function App(){
 
   {messages.map((m,i)=>(<div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",animation:"fadeUp 0.2s cubic-bezier(0.22,1,0.36,1) both",marginBottom:"4px"}}>
     <div style={{maxWidth:m.role==="user"?"84%":"100%",minWidth:0,display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start",gap:"6px"}}>
-      <div style={{position:"relative",padding:m.role==="user"?"11px 15px":"2px 2px",background:m.role==="user"?"var(--line)":"transparent",borderRadius:m.role==="user"?"20px":"0",color:"var(--text-hi)",fontSize:m.role==="user"?"16px":"18px",lineHeight:m.role==="user"?"1.5":"1.65",fontFamily:m.role==="user"?"var(--sans)":"var(--serif)",letterSpacing:m.role==="user"?"0":"0.003em",whiteSpace:"pre-wrap",fontWeight:400,overflowWrap:"anywhere"}}>
+      <div style={{position:"relative",padding:m.role==="user"?"11px 15px":"2px 2px",background:m.role==="user"?"var(--line)":"transparent",borderRadius:m.role==="user"?"20px":"0",color:"var(--text-hi)",fontSize:m.role==="user"?"17px":"19px",lineHeight:m.role==="user"?"1.45":"1.5",fontFamily:m.role==="user"?"var(--sans)":"var(--serif)",letterSpacing:"0",whiteSpace:"pre-wrap",fontWeight:m.role==="user"?400:500,overflowWrap:"anywhere"}}>
         {m.imagePreview&&(<img src={m.imagePreview} alt="screenshot" style={{maxWidth:"100%",borderRadius:"10px",marginBottom:"10px",display:"block"}}/>)}
-        {renderText(m.content)}
+        {m.role==="user"?renderText(m.content):renderRich(m.content)}
       </div>
       {m.role==="assistant"&&(<div style={{paddingLeft:"4px"}}>
         <div style={{display:"flex",alignItems:"center",gap:"2px",marginBottom:m.isDoc?"4px":"0"}}>
