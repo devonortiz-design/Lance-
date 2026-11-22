@@ -650,7 +650,19 @@ textarea::placeholder{color:var(--text-lo)}
 .mic-btn.listening{background:#D4AF5A;color:#0D1420;border:1px solid var(--gold-hi);animation:micPulse 1.4s ease-in-out infinite}
 .saved-backdrop{position:fixed;inset:0;background:rgba(6,8,15,0.7);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);z-index:390;animation:fadeIn 280ms cubic-bezier(0.22,1,0.36,1)}
 @media(max-width:560px){.saved-panel{width:100vw!important;border-left:none!important;border-radius:0!important}}
-.saved-panel{position:fixed;right:0;top:0;bottom:0;width:min(400px,100vw);background:var(--bg1);border-left:1px solid var(--line);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);z-index:400;display:flex;flex-direction:column;animation:slideIn 300ms cubic-bezier(0.22,1,0.36,1);border-top-left-radius:28px;border-bottom-left-radius:28px;box-shadow:inset 1px 0 0 rgba(255,255,255,0.06),-8px 0 32px rgba(0,0,0,0.3)}
+.shell{background:var(--bg1)}
+.sidebar{width:288px;flex-shrink:0;background:var(--bg0);border-right:1px solid var(--line);display:flex;flex-direction:column;height:100%;min-height:0}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%}
+.new-chat{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:46px;border-radius:14px;border:none;background:var(--gold);color:#0D1420;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+.nav-row{display:flex;align-items:center;gap:12px;width:100%;height:42px;padding:0 12px;border-radius:12px;border:none;background:transparent;color:var(--text-mid);font-size:15px;cursor:pointer;font-family:inherit}
+.nav-row:hover{background:var(--surface)}
+.count-pill{min-width:22px;height:22px;padding:0 7px;border-radius:11px;background:var(--surface-hi);color:var(--gold-hi);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.side-foot{display:flex;align-items:center;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--surface-hi);border:1px solid var(--gold-lo);color:var(--gold-hi);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.composer:focus-within{border-color:var(--gold-lo)}
+.only-desktop{display:none}
+@media(min-width:900px){.only-mobile{display:none!important}.only-desktop{display:block}.saved-backdrop{display:none}}
+@media(max-width:899px){.sidebar{position:fixed;left:0;top:0;bottom:0;width:min(86vw,320px);z-index:400;transform:translateX(-104%);transition:transform 260ms cubic-bezier(0.22,1,0.36,1);box-shadow:8px 0 40px rgba(0,0,0,0.45)}.sidebar.open{transform:none}}
 .saved-item{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:background 180ms cubic-bezier(0.22,1,0.36,1);color:var(--text-mid);font-size:15px;letter-spacing:-0.01em}
 .saved-item:hover{background:rgba(255,255,255,0.04)}
 .saved-item:active{transform:scale(0.99)}
@@ -872,7 +884,7 @@ function HomeView({upcoming,tasks,notes,onOpenTasks,onStart}){
     {!(typeof window!=="undefined"&&window.Capacitor?.isNativePlatform?.())&&<NotifyCard/>}
   </div>);
 }
-function IconBtn({onClick,label,children,active,badge,style}){return(<button onClick={onClick} aria-label={label} title={label} style={{position:"relative",width:"44px",height:"44px",borderRadius:"14px",border:`1px solid ${active?"var(--gold)":"var(--line)"}`,background:active?"rgba(212,175,90,0.14)":"var(--surface)",color:active?"var(--gold-hi)":"var(--text-hi)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,...style}}>{children}{badge?(<span style={{position:"absolute",top:"-5px",right:"-5px",minWidth:"20px",height:"20px",padding:"0 5px",borderRadius:"10px",background:"var(--gold)",color:"#0D1420",fontSize:"12px",fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center"}}>{badge}</span>):null}</button>)}
+function IconBtn({onClick,label,children,active,badge,style,className}){return(<button className={className} onClick={onClick} aria-label={label} title={label} style={{position:"relative",width:"44px",height:"44px",borderRadius:"14px",border:`1px solid ${active?"var(--gold)":"var(--line)"}`,background:active?"rgba(212,175,90,0.14)":"var(--surface)",color:active?"var(--gold-hi)":"var(--text-hi)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,...style}}>{children}{badge?(<span style={{position:"absolute",top:"-5px",right:"-5px",minWidth:"20px",height:"20px",padding:"0 5px",borderRadius:"10px",background:"var(--gold)",color:"#0D1420",fontSize:"12px",fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center"}}>{badge}</span>):null}</button>)}
 const ArrowMark=({size=26})=>(<svg width={size} height={size*30/26} viewBox="0 0 26 30" aria-hidden="true"><path d="M13 1 L24 28 L13 22 Z" fill="#D4AF5A"/><path d="M13 1 L2 28 L13 22 Z" fill="#A8823A"/></svg>);
 
 export default function App(){
@@ -1538,7 +1550,7 @@ export default function App(){
   const isEmpty=messages.length===0;
 
   return(<><style>{CSS}</style>
-  <div style={{height:"100%",display:"flex",flexDirection:"column",background:"transparent",position:"relative",zIndex:1}} onDragOver={e=>{e.preventDefault();setDragOver(true)}} onDragLeave={()=>setDragOver(false)} onDrop={onDrop}>
+  <div className="shell" style={{height:"100%",display:"flex",flexDirection:"row",background:"transparent",position:"relative",zIndex:1}} onDragOver={e=>{e.preventDefault();setDragOver(true)}} onDragLeave={()=>setDragOver(false)} onDrop={onDrop}>
 
     {/* Drag overlay */}
     {dragOver&&(<div style={{position:"fixed",inset:0,background:"rgba(212,175,90,0.10)",border:"2px dashed rgba(212,175,90,0.5)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><div style={{color:"#fff",fontSize:"18px",fontWeight:600}}>Drop file or screenshot</div></div>)}
@@ -1624,10 +1636,10 @@ export default function App(){
 
     {/* Library panel: projects + full chat history */}
     {showSaved&&(<div className="saved-backdrop" onClick={()=>setShowSaved(false)}/>)}
-    {showSaved&&(<div className="saved-panel">
-      <div style={{padding:"calc(14px + env(safe-area-inset-top,0px)) 20px 0",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <h2 className="serif" style={{fontSize:"30px",fontWeight:500,color:"var(--text-hi)"}}>Library</h2>
-        <button onClick={()=>setShowSaved(false)} aria-label="Close library" style={{width:"44px",height:"44px",borderRadius:"14px",border:"1px solid var(--line)",background:"transparent",color:"var(--text-hi)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+    <aside className={"sidebar"+(showSaved?" open":"")} aria-label="Chats and projects">
+      <div style={{padding:"calc(14px + env(safe-area-inset-top,0px)) 14px 2px 18px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",alignItems:"center",gap:"10px"}}><ArrowMark size={22}/><span className="serif" style={{fontSize:"24px",fontWeight:600,color:"var(--text-hi)",letterSpacing:"-0.01em"}}>Lance</span></div>
+        <button className="only-mobile" onClick={()=>setShowSaved(false)} aria-label="Close menu" style={{width:"40px",height:"40px",borderRadius:"12px",border:"none",background:"transparent",color:"var(--text-mid)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg>
         </button>
       </div>
@@ -1638,10 +1650,17 @@ export default function App(){
           <input id="lib-search" type="text" enterKeyHint="search" autoComplete="off" value={libQuery} onChange={e=>setLibQuery(e.target.value)} placeholder="Search chats" style={{flex:1,minWidth:0,border:"none",background:"transparent",color:"var(--text-hi)",fontSize:"16px",outline:"none"}}/>
           {libQuery&&(<button onClick={()=>setLibQuery("")} aria-label="Clear search" style={{width:"32px",height:"32px",border:"none",background:"none",color:"var(--text-lo)",cursor:"pointer",fontSize:"18px"}}>×</button>)}
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:"10px"}}>
-          <button onClick={()=>{clearChat();setShowSaved(false)}} style={{height:"46px",borderRadius:"14px",border:"none",background:"var(--gold)",color:"#0D1420",fontSize:"15px",fontWeight:600,cursor:"pointer"}}>New chat</button>
-          <button onClick={()=>{setProjFormMode("new");setProjName("");setProjDesc("");setProjEditId(null)}} style={{height:"46px",borderRadius:"14px",border:"1px solid var(--line)",background:"transparent",color:"var(--text-hi)",fontSize:"15px",fontWeight:500,cursor:"pointer"}}>New project</button>
-        </div>
+        <button className="new-chat" onClick={()=>{clearChat();setShowSaved(false)}}>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M10 4v12M4 10h12"/></svg>New chat
+          </button>
+          <button className="nav-row" onClick={()=>{setShowTasks(true);setShowSaved(false)}}>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10.5l3.5 3.5L16 5.5"/></svg>
+            <span style={{flex:1,textAlign:"left"}}>Tasks</span>{openTasks.length>0&&(<span className="count-pill">{openTasks.length}</span>)}
+          </button>
+          <button className="nav-row" onClick={()=>{setProjFormMode("new");setProjName("");setProjDesc("");setProjEditId(null)}}>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6.5a1.5 1.5 0 011.5-1.5h3l1.5 2h6.5A1.5 1.5 0 0117 8.5v6a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 013 14.5z"/></svg>
+            <span style={{flex:1,textAlign:"left"}}>New project</span>
+          </button>
       </div>
       {projFormMode&&(<div style={{margin:"0 12px 12px",padding:"12px",background:"var(--glass)",border:"1px solid var(--line)",borderRadius:"14px"}}>
         <input autoFocus value={projName} onChange={e=>setProjName(e.target.value)} placeholder="Project name" style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid var(--line)",borderRadius:"10px",color:"var(--text-hi)",fontSize:"15px",padding:"9px 11px",marginBottom:"8px",outline:"none",fontFamily:"inherit"}}/>
@@ -1707,12 +1726,18 @@ export default function App(){
         </div>
         <button className="ghost-btn" onClick={()=>setActiveProjectId(null)}>Leave</button>
       </div>)}
-    </div>)}
+      <div className="side-foot"><span className="avatar">PO</span><span style={{minWidth:0}}><span style={{display:"block",fontSize:"14px",fontWeight:600,color:"var(--text-hi)"}}>Pastor Ortiz</span><span style={{display:"block",fontSize:"12px",color:"var(--text-lo)"}}>Victory Baptist Church</span></span></div>
+    </aside>
 
+    <div className="main">
     {/* Header */}
 <header style={{position:"relative",paddingTop:"env(safe-area-inset-top,0px)",background:"var(--bg1)",borderBottom:isEmpty?"1px solid transparent":"1px solid var(--line)",flexShrink:0}}>
-<div style={{minHeight:"64px",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:"10px"}}>
-  <button onClick={()=>{if(!isEmpty)clearChat()}} aria-label={isEmpty?"Lance":"Back to home"} style={{display:"flex",alignItems:"center",gap:"10px",minWidth:0,background:"none",border:"none",color:"inherit",cursor:isEmpty?"default":"pointer",padding:0,textAlign:"left"}}>
+<div style={{minHeight:"60px",padding:"8px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:"10px"}}>
+  <button className="only-mobile" onClick={()=>setShowSaved(true)} aria-label="Open menu" style={{width:"44px",height:"44px",marginLeft:"-8px",borderRadius:"12px",border:"none",background:"transparent",color:"var(--text-hi)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
+    <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M3 5.5h14M3 10h14M3 14.5h9"/></svg>
+  </button>
+  <span className="only-desktop serif" style={{flex:1,minWidth:0,fontSize:"17px",color:"var(--text-mid)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{activeProject?activeProject.name:(isEmpty?"":((savedConvos.find(c=>c.id===activeConvoId)||{}).title||"New chat"))}</span>
+  <button className="only-mobile" onClick={()=>{if(!isEmpty)clearChat()}} aria-label={isEmpty?"Lance":"Back to home"} style={{display:"flex",alignItems:"center",gap:"10px",minWidth:0,background:"none",border:"none",color:"inherit",cursor:isEmpty?"default":"pointer",padding:0,textAlign:"left"}}>
     {!isEmpty&&(<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,color:"var(--text-mid)"}}><path d="M12.5 4L6.5 10l6 6"/></svg>)}
     <span style={{flexShrink:0,display:"flex"}}><ArrowMark size={isEmpty?26:22}/></span>
     <span style={{minWidth:0}}>
@@ -1725,12 +1750,10 @@ export default function App(){
     {!isEmpty&&(<IconBtn onClick={()=>{setTeachMode(t=>!t);if(teachMode)stopSpeaking()}} label={teachMode?"Read aloud is on":"Read aloud is off"} active={teachMode}>
       <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h2.5L9 3v10L5.5 10H3z"/>{teachMode?(<path d="M11.5 5.5a3.5 3.5 0 010 5M13 3.8a6 6 0 010 8.4"/>):(<path d="M11.5 6l3 4M14.5 6l-3 4"/>)}</svg>
     </IconBtn>)}
-    <IconBtn onClick={()=>setShowTasks(true)} label={`Open tasks, ${openTasks.length} open`} badge={openTasks.length||null}>
+    <IconBtn className="only-mobile" onClick={()=>setShowTasks(true)} label={`Open tasks, ${openTasks.length} open`} badge={openTasks.length||null}>
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10.5l3.5 3.5L16 5.5"/></svg>
     </IconBtn>
-    <IconBtn onClick={()=>setShowSaved(s=>!s)} label="Open library" active={showSaved}>
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M3 5h14M3 10h14M3 15h9"/></svg>
-    </IconBtn>
+    
   </div>
 </div></header>
 {/* Chat body */}
@@ -1787,20 +1810,21 @@ export default function App(){
 </div>
 
     {/* Input */}
-    <div style={{position:"relative",padding:"10px 16px calc(14px + env(safe-area-inset-bottom,0px))",background:"var(--bg1)",flexShrink:0}}>
+    <div style={{position:"relative",padding:"6px 16px calc(14px + env(safe-area-inset-bottom,0px))",background:"var(--bg1)",flexShrink:0}}>
+      <div style={{maxWidth:"760px",margin:"0 auto"}}>
       {pendingFiles.length>0&&(<div style={{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"8px"}}>
         {pendingFiles.map((f,i)=>(<div key={i} className="file-chip">
           <span>{f.name.length>20?f.name.slice(0,17)+"…":f.name}</span>
           <button onClick={()=>removeFile(i)} title="Remove" aria-label={`Remove ${f.name}`}><CloseIcon/></button>
         </div>))}
       </div>)}
-      <div style={{display:"flex",alignItems:"flex-end",gap:"6px",background:"var(--surface)",border:"1px solid var(--line-hi)",borderRadius:"26px",padding:"6px 6px 6px 8px"}}>
+      <div className="composer" style={{display:"flex",flexWrap:"wrap",alignItems:"center",gap:"4px",background:"var(--surface)",border:"1px solid var(--line-hi)",borderRadius:"24px",padding:"10px 10px 8px 14px"}}>
         <button onClick={()=>fileRef.current?.click()} aria-label="Attach a file or photo" title="Attach a file or photo" style={{width:"40px",height:"40px",borderRadius:"20px",border:"none",background:"transparent",color:"var(--text-lo)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}}>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M10 4v12M4 10h12"/></svg>
         </button>
         <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.doc,.txt,.xlsx,.xls,.csv,.png,.jpg,.jpeg,.webp,.heic,.heif,.gif,.bmp,image/*" style={{display:"none"}} onChange={e=>{handleFiles(e.target.files);e.target.value=""}}/>
-        <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData?.items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder={isEmpty?"Ask Lance anything":"Message Lance"} aria-label="Message Lance" rows={1} style={{flex:1,minWidth:0,border:"none",background:"transparent",fontSize:"16px",color:"var(--text-hi)",resize:"none",lineHeight:"1.5",maxHeight:"120px",overflowY:"auto",fontWeight:400,fontFamily:"inherit",padding:"8px 0",outline:"none"}}/>
-        <button onClick={toggleMic} aria-label={listening&&!voiceSession?"Stop dictating":"Dictate a message"} title="Dictate a message" style={{width:"40px",height:"40px",borderRadius:"20px",border:"none",background:listening&&!voiceSession?"rgba(212,175,90,0.18)":"transparent",color:listening&&!voiceSession?"var(--gold-hi)":"var(--text-lo)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}}>
+        <textarea ref={inputRef} value={input} onChange={e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}} onKeyDown={handleKeyDown} onPaste={e=>{const items=Array.from(e.clipboardData?.items||[]);const imgItem=items.find(i=>i.type.startsWith("image/"));if(imgItem){e.preventDefault();const file=imgItem.getAsFile();if(file){const reader=new FileReader();reader.onload=()=>{const data=reader.result.split(",")[1];setPendingFiles(prev=>[...prev,{name:"screenshot.png",type:"image",mediaType:file.type||"image/png",data}])};reader.readAsDataURL(file)}}}} placeholder={isEmpty?"Ask Lance anything":"Message Lance"} aria-label="Message Lance" rows={1} style={{flex:1,minWidth:0,border:"none",background:"transparent",fontSize:"16px",color:"var(--text-hi)",resize:"none",lineHeight:"1.5",maxHeight:"200px",overflowY:"auto",fontWeight:400,fontFamily:"inherit",padding:"4px 0 6px",outline:"none",order:-1,flex:"1 1 100%",width:"100%"}}/>
+        <button onClick={toggleMic} aria-label={listening&&!voiceSession?"Stop dictating":"Dictate a message"} title="Dictate a message" style={{marginLeft:"auto",width:"40px",height:"40px",borderRadius:"20px",border:"none",background:listening&&!voiceSession?"rgba(212,175,90,0.18)":"transparent",color:listening&&!voiceSession?"var(--gold-hi)":"var(--text-lo)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}}>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><rect x="7" y="2.5" width="6" height="10" rx="3"/><path d="M4.5 9.5a5.5 5.5 0 0011 0M10 15v2.5"/></svg>
         </button>
         {(input.trim()||pendingFiles.length>0)?(
@@ -1813,6 +1837,8 @@ export default function App(){
           </button>
         )}
       </div>
+      </div>
+    </div>
     </div>
   </div></>);
 }
