@@ -123,7 +123,7 @@ function greeting(){
 
 function recentUserIntent(msgs){
   try{
-    const userTexts=msgs.filter(m=>m.role==="user").slice(-3).map(m=>typeof m.content==="string"?m.content:"");
+    const userTexts=msgs.filter(m=>m.role==="user").slice(-1).map(m=>typeof m.content==="string"?m.content:"");
     return userTexts.join(" . ");
   }catch(e){return ""}
 }

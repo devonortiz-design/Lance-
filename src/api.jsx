@@ -262,10 +262,15 @@ export async function readFile(file) {
 
 export function detectDocumentContent(text, userRequest) {
   if (!text || typeof text !== "string") return false;
-  // Only trigger when the PERSON explicitly asked for something worth keeping --
-  // never based on the response merely looking structured.
+  // 1) The reply is itself a finished sermon or study in Lance's notes format.
+  const marks = [/^##\s+(THE TEXT|EXPOSITION|CONCLUSION)\b/m, /^@@\s+v\./m, /^\+\+\s+[^|]+\|/m, /^!!\s+FOR YOUR WEEK/m, /^>>\s*\d/m];
+  if (marks.filter(p => p.test(text)).length >= 2) return true;
+  // 2) The person asked for something to keep in their LATEST message only,
+  //    and the reply is long enough to be a real document.
+  if (text.length < 700) return false;
   const req = (userRequest || "").toLowerCase();
-
+  const asked = /\b(word|docx)\b|\b(download|printable|handout)\b|\b(turn|put|make|save|convert)\s+(it|that|this|them)\s+(in|into|to|as)\b/.test(req);
+  const verb = /\b(give|make|build|create|write|draft|put together|design|prepare|produce|generate|outline|rebuild|redo|need|want)\b/.test(req);
   // Named document/study types
   const namedTypes = [
     /\bsermon\b/, /\bstudy guide\b/, /\bbible study\b/, /\bexam\b/, /\bquiz\b/,
@@ -279,7 +284,7 @@ export function detectDocumentContent(text, userRequest) {
   // without firing on ordinary conversational replies that merely happen to use these words.
   const requestedNoun = /\b(give|make|build|create|write|draft|put together|design)\s+(me\s+|us\s+)?(a|an|the)\s+[a-z\s]{0,25}?(plan|routine|program|schedule|protocol|regimen|itinerary|checklist|recipe|outline|template|guide|worksheet|handout|report|proposal|letter|memo|essay|document|doc|workout)\b/.test(req);
 
-  return namedTypes || requestedNoun;
+  return asked || (verb && namedTypes) || requestedNoun;
 }
 
 
